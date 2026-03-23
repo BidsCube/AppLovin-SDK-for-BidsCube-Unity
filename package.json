@@ -1,0 +1,33 @@
+{
+  "name": "com.bidscube.sdk",
+  "version": "1.0.0",
+  "displayName": "Bidscube SDK",
+  "description": "Bidscube Unity SDK: direct in-scene ads and AppLovin MAX mediation (early native init). Bundled bidscube-sdk Android AAR + Gradle dependency injection.",
+  "unity": "2020.3",
+  "keywords": [
+    "advertising",
+    "ads",
+    "monetization",
+    "bidscube"
+  ],
+  "author": {
+    "name": "Bidscube",
+    "email": "support@bidscube.com",
+    "url": "https://bidscube.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BidsCube/AppLovin-SDK-Unity.git"
+  },
+  "dependencies": {
+    "com.unity.ugui": "2.0.0",
+    "com.unity.textmeshpro": "3.0.6"
+  },
+  "samples": [
+    {
+      "displayName": "SDK Demo",
+      "description": "Example scenes and scripts demonstrating the Bidscube Unity SDK.",
+      "path": "Samples~/SDK Demo"
+    }
+  ]
+}

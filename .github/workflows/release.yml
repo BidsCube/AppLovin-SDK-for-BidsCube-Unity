@@ -1,0 +1,78 @@
+# GitHub Release on push of tag v* (UPM: com.bidscube.sdk).
+# package.json version must match the tag without "v".
+
+name: Release (GitHub)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse semver from tag
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          echo "RELEASE_VERSION=$TAG" >> "$GITHUB_ENV"
+          echo "Release version: $TAG"
+
+      - name: "Verify package.json matches tag"
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          TAG="$RELEASE_VERSION"
+          PKG=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
+          echo "package.json version: $PKG"
+          test "$PKG" = "$TAG" || { echo "::error::package.json version ($PKG) != tag ($TAG)"; exit 1; }
+          echo "OK: UPM package version matches tag $TAG"
+
+      - name: Validate package.json JSON
+        run: python3 -c "import json; json.load(open('package.json'))"
+
+      - name: Build package archive (no .git)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          NAME="Bidscube-SDK-Unity-${RELEASE_VERSION}"
+          zip -r "$NAME.zip" . -x ".git/*" -x "$NAME.zip"
+          echo "ZIP_NAME=$NAME.zip" >> "$GITHUB_ENV"
+          ls -la "$NAME.zip"
+
+      - name: GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: com.bidscube.sdk ${{ env.RELEASE_VERSION }}
+          generate_release_notes: true
+          files: ${{ env.ZIP_NAME }}
+          body: |
+            ## Unity Package Manager
+
+            Add the dependency in `Packages/manifest.json`:
+
+            ```json
+            "com.bidscube.sdk": "https://github.com/${{ github.repository }}.git#${{ github.ref_name }}"
+            ```
+
+            Or use **Package Manager → Add package from git URL** with the same URL and branch/tag **`${{ github.ref_name }}`**.
+
+            Package version (UPM): **`${{ env.RELEASE_VERSION }}`** — must match the tag (without `v`).
+
+            Asset **`${{ env.ZIP_NAME }}`** = `Bidscube-SDK-Unity-{version}.zip` (repo snapshot without `.git`). Naming table: [`RELEASE.md`](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/RELEASE.md).
+
+            Documentation: [README](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/README.md), [AppLovin MAX](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/Documentation~/APPLOVIN_MAX.md).
