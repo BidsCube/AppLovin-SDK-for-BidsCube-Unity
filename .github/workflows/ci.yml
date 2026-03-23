@@ -39,3 +39,6 @@ jobs:
           assert pkg.get("name") == "com.bidscube.sdk", pkg.get("name")
           print("UPM package name OK: com.bidscube.sdk")
           PY
+
+      - name: Release sanity (Constants + semver)
+        run: bash tools/verify-release-ready.sh

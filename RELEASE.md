@@ -60,7 +60,4 @@ git remote set-url origin git@github.com:BidsCube/AppLovin-SDK-Unity.git
 
 На GitHub: **Settings → General → Repository name** → `AppLovin-SDK-Unity` (або ваше узгоджене ім’я), потім оновіть `package.json` → `repository.url` і посилання в README.
 
-## GitHub Actions
 
-- **CI** (`.github/workflows/ci.yml`) — валідація `package.json` на push/PR.
-- **Release** — лише на push тегів `v*`; `package.json` **має** дорівнювати тегу без `v`.
