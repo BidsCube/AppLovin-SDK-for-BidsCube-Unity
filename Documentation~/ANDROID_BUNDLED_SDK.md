@@ -35,15 +35,15 @@ Bump the filename / docs when the SDK version changes.
 
 ## Gradle: `CheckAarMetadata` / compileSdk
 
-AndroidX **Material 1.12** and сусідні залежності оголошують у AAR-metadata мінімальний **compileSdk** (зазвичай **34+**). Якщо Unity згенерував `unityLibrary` / `launcher` з нижчим `compileSdk`, збірка падає на `CheckAarMetadataWorkAction`.
+AndroidX **Material 1.12** and related dependencies declare a minimum **compileSdk** in AAR metadata (typically **34+**). If Unity generates `unityLibrary` / `launcher` with a lower `compileSdk`, the build fails on `CheckAarMetadataWorkAction`.
 
-Пакет **`BidscubeAndroidGradlePostprocessor`** після генерації Gradle:
+The **`BidscubeAndroidGradlePostprocessor`** runs after Gradle is generated and:
 
-- піднімає числові `compileSdk` / `compileSdkVersion` і `minSdk` у `unityLibrary` та `launcher` (мінімум **compileSdk 34**, **minSdk 26** для узгодження з AAR-metadata залежностей);
-- додає в кореневий **`gradle.properties`** `android.suppressUnsupportedCompileSdk=34,35,36`, якщо Unity збирає з **compileSdk 35–36**, а частина AAR у metadata вказує лише до **34**;
-- використовує **`desugar_jdk_libs:2.1.4`**.
+- Raises numeric `compileSdk` / `compileSdkVersion` and `minSdk` in `unityLibrary` and `launcher` (minimum **compileSdk 34**, **minSdk 26** to satisfy AAR-metadata dependencies);
+- Appends to the root **`gradle.properties`** `android.suppressUnsupportedCompileSdk=34,35,36` when Unity builds with **compileSdk 35–36** while some AAR metadata only declares up to **34**;
+- Uses **`desugar_jdk_libs:2.1.4`**.
 
-У **Player Settings** бажано **Minimum API Level** ≥ **26** (або залиште 24 лише якщо не підключаєте той самий набір Maven-залежностей).
+In **Player Settings**, prefer **Minimum API Level** ≥ **26** (keep **24** only if you do not use the same Maven dependency set).
 
 ## AppLovin MAX (not bundled here)
 

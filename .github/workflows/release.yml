@@ -1,9 +1,11 @@
 # GitHub Release for UPM package com.bidscube.sdk
 #
-# Triggers:
-#   1) Push an annotated tag v* (e.g. v1.0.1) — classic flow; package.json "version" must match tag without "v".
-#   2) workflow_dispatch — run from Actions tab; version is read from package.json on the selected branch;
-#      creates/updates a GitHub Release with the ZIP (uses `gh release create`; creates the tag if missing).
+# The published version is ALWAYS the semver in package.json (e.g. 1.0.1):
+#   • Push tag v*     → RELEASE_VERSION = tag without "v"; must equal package.json["version"].
+#   • workflow_dispatch → RELEASE_VERSION = package.json["version"] on the selected branch
+#                         → creates GitHub Release + tag v{version} (e.g. v1.0.1) via `gh release create`.
+#
+# Artifact name: Bidscube-SDK-Unity-{version}.zip (e.g. Bidscube-SDK-Unity-1.0.1.zip).
 
 name: Release (GitHub)
 
@@ -27,29 +29,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Parse semver from tag
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+      - name: Set RELEASE_VERSION
         run: |
-          TAG="${GITHUB_REF#refs/tags/v}"
-          echo "RELEASE_VERSION=$TAG" >> "$GITHUB_ENV"
-          echo "Release version from tag: $TAG"
-
-      - name: Version from package.json (manual run)
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          V=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            V=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
+            echo "Version source: package.json on branch ${{ github.ref_name }}"
+          else
+            V="${GITHUB_REF#refs/tags/v}"
+            echo "Version source: pushed tag ${{ github.ref_name }}"
+          fi
+          if [ -z "${V:-}" ]; then
+            echo "::error::RELEASE_VERSION is empty (check tag or package.json)."
+            exit 1
+          fi
           echo "RELEASE_VERSION=$V" >> "$GITHUB_ENV"
-          echo "Release version from package.json: $V"
+          echo "::notice::com.bidscube.sdk UPM **$V** → ZIP \`Bidscube-SDK-Unity-${V}.zip\` • Git tag \`v${V}\`"
 
-      - name: Verify package.json matches tag
+      - name: Verify package.json matches tag (tag push only)
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
           set -euo pipefail
           TAG="$RELEASE_VERSION"
           PKG=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
           echo "package.json version: $PKG"
-          test "$PKG" = "$TAG" || { echo "::error::package.json version ($PKG) != tag ($TAG)"; exit 1; }
-          echo "OK: UPM package version matches tag $TAG"
+          echo "Tag (without v): $TAG"
+          test "$PKG" = "$TAG" || { echo "::error::package.json version ($PKG) must equal tag without v ($TAG). For 1.0.1 use tag v1.0.1 and \"version\": \"1.0.1\"."; exit 1; }
+          echo "OK: package.json matches tag v${TAG}"
 
       - name: Validate package.json JSON
         run: python3 -c "import json; json.load(open('package.json'))"
@@ -96,9 +102,8 @@ jobs:
           set -euo pipefail
           TAG_NAME="v${RELEASE_VERSION}"
           ZIP="${{ env.ZIP_NAME }}"
-          # Create release + tag at current commit if tag does not exist yet
           if gh release view "$TAG_NAME" --repo "${{ github.repository }}" 2>/dev/null; then
-            echo "::error::Release $TAG_NAME already exists. Bump package.json or delete the release first."
+            echo "::error::Release $TAG_NAME already exists. Bump package.json (e.g. past 1.0.1) or delete the release first."
             exit 1
           fi
           gh release create "$TAG_NAME" \
@@ -106,4 +111,4 @@ jobs:
             --title "com.bidscube.sdk ${RELEASE_VERSION}" \
             --generate-notes \
             "$ZIP"
-          echo "Created release $TAG_NAME with asset $ZIP"
+          echo "Created release $TAG_NAME with asset $ZIP (UPM ${{ env.RELEASE_VERSION }})"

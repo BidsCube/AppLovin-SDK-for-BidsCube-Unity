@@ -33,7 +33,7 @@
 
 - Bundled **`bidscube-sdk-1.0.0.aar`** under `Runtime/Plugins/Android` and Editor **`BidscubeAndroidGradlePostprocessor`** to inject required Maven dependencies (full Bidscube Android stack without a separate Maven install). See `Documentation~/ANDROID_BUNDLED_SDK.md`.
 - **`package.json` → `repository`** (canonical GitHub URL for releases).
-- **`tools/verify-release-ready.sh`**, **`.github/workflows/ci.yml`**, **`.gitattributes`** — перевірки та підготовка до публікації на GitHub.
+- **`tools/verify-release-ready.sh`**, **`.github/workflows/ci.yml`**, **`.gitattributes`** — checks and repo hygiene for GitHub publication.
 - **`BidscubeIntegrationMode`**: `DirectSdk` vs `AppLovinMaxMediation`.
 - **`SDKConfig`**: `IntegrationMode`, `EnableTestMode`; Android interop forwards **`BaseURL`** / **test mode** to native `SDKConfig.Builder` via method aliases (parity with Flutter).
 - Startup logs: `integrationMode=` in C# and on Android in `BidscubeAndroidSdkInterop`.
@@ -47,4 +47,4 @@
 
 ### Notes
 
-- **UPM `1.0.0`** — перший публічний реліз лінії **AppLovin MAX** (без окремого Level Play bridge). Якщо на репозиторії вже існує старий тег **`v1.0.0`** з іншого коміту, перед публікацією цього релізу видаліть його на origin і створіть тег знову на актуальному коміті (див. `RELEASE.md`).
+- **UPM `1.0.0`** — first public **AppLovin MAX** line release (no separate Level Play bridge). If an old **`v1.0.0`** tag on the remote points at a different commit, delete it on origin and recreate the tag on the current commit before publishing (see `RELEASE.md`).
