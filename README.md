@@ -227,7 +227,9 @@ In **Package Manager**, select **Bidscube SDK** → **Samples** → import **SDK
 
 ## Releasing (maintainers)
 
-Tags **`v*`** must match [`package.json`](package.json) `version`. See [`RELEASE.md`](RELEASE.md) and run [`tools/verify-release-ready.sh`](tools/verify-release-ready.sh) before tagging. CI/CD: [`.github/workflows/ci.yml`](.github/workflows/ci.yml), [`.github/workflows/release.yml`](.github/workflows/release.yml).
+Tags **`v*`** must match [`package.json`](package.json) `version`. See [`RELEASE.md`](RELEASE.md) and run [`tools/verify-release-ready.sh`](tools/verify-release-ready.sh) before tagging.
+
+**GitHub:** workflows live under [`.github/workflows/`](.github/workflows/) — push tag **`v*`** or run **[Release (GitHub)](.github/workflows/release.yml)** manually from the **Actions** tab (requires `.github` on the default branch). CI: [`ci.yml`](.github/workflows/ci.yml).
 
 ---
 

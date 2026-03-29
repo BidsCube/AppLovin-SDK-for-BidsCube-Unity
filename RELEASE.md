@@ -60,4 +60,24 @@ git remote set-url origin git@github.com:BidsCube/AppLovin-SDK-Unity.git
 
 На GitHub: **Settings → General → Repository name** → `AppLovin-SDK-Unity` (або ваше узгоджене ім’я), потім оновіть `package.json` → `repository.url` і посилання в README.
 
+## GitHub Actions (де лежать workflow)
+
+Файли: **`.github/workflows/`** у корені репозиторію пакета. Якщо на GitHub у вкладці **Actions** workflow не з’являються — зазвичай причина одна з таких:
+
+- папка **`.github`** ще **не запушена** на GitHub;
+- workflow є лише на гілці, яка **не** default — GitHub показує workflow з **default branch**;
+- репозиторій **форк** без увімкнених Actions (Settings → Actions).
+
+### CI
+
+- **`ci.yml`** — перевірки на push/PR у `main` / `master`.
+
+### Release (UPM ZIP + GitHub Release)
+
+- **`release.yml`**:
+  1. **Через тег:** після `git push origin v1.0.1` (тег `v*`). Версія в `package.json` має дорівнювати тегу без `v`.
+  2. **Вручну:** **Actions → «Release (GitHub)» → Run workflow** → виберіть гілку (наприклад `main`). Версія береться з `package.json`; створюється GitHub Release з ZIP. Якщо реліз для цього тега вже є — крок завершиться помилкою.
+
+Коротка перевірка локально перед тегом: `./tools/verify-release-ready.sh`.
+
 

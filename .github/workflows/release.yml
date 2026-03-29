@@ -1,5 +1,9 @@
-# GitHub Release on push of tag v* (UPM: com.bidscube.sdk).
-# package.json version must match the tag without "v".
+# GitHub Release for UPM package com.bidscube.sdk
+#
+# Triggers:
+#   1) Push an annotated tag v* (e.g. v1.0.1) — classic flow; package.json "version" must match tag without "v".
+#   2) workflow_dispatch — run from Actions tab; version is read from package.json on the selected branch;
+#      creates/updates a GitHub Release with the ZIP (uses `gh release create`; creates the tag if missing).
 
 name: Release (GitHub)
 
@@ -7,12 +11,13 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -27,9 +32,16 @@ jobs:
         run: |
           TAG="${GITHUB_REF#refs/tags/v}"
           echo "RELEASE_VERSION=$TAG" >> "$GITHUB_ENV"
-          echo "Release version: $TAG"
+          echo "Release version from tag: $TAG"
 
-      - name: "Verify package.json matches tag"
+      - name: Version from package.json (manual run)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          V=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
+          echo "RELEASE_VERSION=$V" >> "$GITHUB_ENV"
+          echo "Release version from package.json: $V"
+
+      - name: Verify package.json matches tag
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
           set -euo pipefail
@@ -43,7 +55,6 @@ jobs:
         run: python3 -c "import json; json.load(open('package.json'))"
 
       - name: Build package archive (no .git)
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         run: |
           set -euo pipefail
           NAME="Bidscube-SDK-Unity-${RELEASE_VERSION}"
@@ -51,7 +62,7 @@ jobs:
           echo "ZIP_NAME=$NAME.zip" >> "$GITHUB_ENV"
           ls -la "$NAME.zip"
 
-      - name: GitHub Release
+      - name: GitHub Release (tag push)
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
@@ -76,3 +87,23 @@ jobs:
             Asset **`${{ env.ZIP_NAME }}`** = `Bidscube-SDK-Unity-{version}.zip` (repo snapshot without `.git`). Naming table: [`RELEASE.md`](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/RELEASE.md).
 
             Documentation: [README](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/README.md), [AppLovin MAX](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/Documentation~/APPLOVIN_MAX.md).
+
+      - name: GitHub Release (manual — workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG_NAME="v${RELEASE_VERSION}"
+          ZIP="${{ env.ZIP_NAME }}"
+          # Create release + tag at current commit if tag does not exist yet
+          if gh release view "$TAG_NAME" --repo "${{ github.repository }}" 2>/dev/null; then
+            echo "::error::Release $TAG_NAME already exists. Bump package.json or delete the release first."
+            exit 1
+          fi
+          gh release create "$TAG_NAME" \
+            --repo "${{ github.repository }}" \
+            --title "com.bidscube.sdk ${RELEASE_VERSION}" \
+            --generate-notes \
+            "$ZIP"
+          echo "Created release $TAG_NAME with asset $ZIP"
