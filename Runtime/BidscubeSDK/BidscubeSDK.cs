@@ -266,14 +266,37 @@ namespace BidscubeSDK
         /// <returns>Request URL</returns>
         public static string BuildRequestURL(string placementId, AdType adType, AdPosition position = AdPosition.Unknown)
         {
+            double? nativeW = null;
+            double? nativeH = null;
+            if (adType == AdType.Native)
+            {
+                if (_configuration?.AdSizeSettings != null)
+                {
+                    var s = _configuration.AdSizeSettings.GetDefaultSize(AdType.Native);
+                    if (s.x > 0 || s.y > 0)
+                    {
+                        nativeW = s.x;
+                        nativeH = s.y;
+                    }
+                }
+
+                if (!nativeW.HasValue)
+                {
+                    nativeW = 1080d;
+                    nativeH = 800d;
+                }
+            }
+
             return URLBuilder.BuildAdRequestURL(
-                _configuration.BaseURL,
+                _configuration,
                 placementId,
                 adType,
                 position,
                 _configuration.DefaultAdTimeoutMs,
-                _configuration.EnableDebugMode
-            );
+                _configuration.EnableDebugMode,
+                null,
+                nativeW,
+                nativeH);
         }
 
         // Banner / Image helpers -------------------------------------------------
@@ -463,7 +486,13 @@ namespace BidscubeSDK
             adViewController.Initialize(placementId, AdType.Video, callback);
 
             // Load ad from URL
-            var url = URLBuilder.BuildAdRequestURL(_configuration.BaseURL, placementId, AdType.Video, effectivePosition, _configuration.DefaultAdTimeoutMs, _configuration.EnableDebugMode);
+            var url = URLBuilder.BuildAdRequestURL(
+                _configuration,
+                placementId,
+                AdType.Video,
+                effectivePosition,
+                _configuration.DefaultAdTimeoutMs,
+                _configuration.EnableDebugMode);
             Logger.Info($"Video ad request URL: {url}");
 
             // Get the VideoAdView from the controller

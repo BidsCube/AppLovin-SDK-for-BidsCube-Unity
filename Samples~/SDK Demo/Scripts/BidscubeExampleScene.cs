@@ -13,6 +13,8 @@ namespace BidscubeSDK.Controllers
         [Header("SDK Configuration")]
         [SerializeField] private string _placementId = "test_placement_123";
         [SerializeField] private string _baseURL = Constants.BaseURL;
+        [Tooltip("Optional: SSP host only (e.g. ssp-bcc-ads.com or 127.0.0.1:8787). Overrides Base URL when non-empty.")]
+        [SerializeField] private string _adRequestAuthority = "";
         [SerializeField] private bool _enableDebugMode = true;
         [SerializeField] private bool _enableLogging = true;
         [SerializeField] private bool _enableTestMode = false;
@@ -111,9 +113,10 @@ namespace BidscubeSDK.Controllers
                 .EnableLogging(_enableLogging)
                 .EnableDebugMode(_enableDebugMode)
                 .EnableTestMode(_enableTestMode)
-                .BaseURL(_baseURL)
                 .DefaultAdTimeout(30000)
                 .DefaultAdPosition(AdPosition.Unknown);
+
+            SampleSspAuthorityConfig.ApplyTo(builder, _baseURL, _adRequestAuthority);
 
             if (_loadIntegrationModeFromPlayerPrefs &&
                 !string.IsNullOrEmpty(_integrationModePlayerPrefsKey) &&

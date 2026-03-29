@@ -35,7 +35,7 @@ Single documented path — native **Bidscube SDK** APIs invoked by the **AppLovi
 ```csharp
 var config = new SDKConfig.Builder()
     .IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)
-    .BaseURL("https://your-endpoint/sdk")   // forwarded to native Android when Builder supports it
+    .AdRequestAuthority("your-ssp-host.example.com")   // forwarded to native Android SDKConfig.Builder.adRequestAuthority when supported
     .EnableTestMode(false)                  // optional; forwarded when native Builder exposes setters
     .Build();
 BidscubeSDK.BidscubeSDK.Initialize(config);

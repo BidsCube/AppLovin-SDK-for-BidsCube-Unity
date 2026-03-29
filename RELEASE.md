@@ -2,14 +2,14 @@
 
 ## Узгоджені імена (конгруентність)
 
-| Що | Формат | Приклад (1.0.0) |
+| Що | Формат | Приклад (1.0.1) |
 |----|--------|------------------|
-| **UPM `package.json` → `version`** | `MAJOR.MINOR.PATCH` без префікса `v` | `1.0.0` |
-| **Git tag** | `v` + той самий semver | `v1.0.0` |
-| **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.0.zip` |
-| **GitHub Release title** (workflow) | `com.bidscube.sdk {version}` | `com.bidscube.sdk 1.0.0` |
+| **UPM `package.json` → `version`** | `MAJOR.MINOR.PATCH` без префікса `v` | `1.0.1` |
+| **Git tag** | `v` + той самий semver | `v1.0.1` |
+| **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.1.zip` |
+| **GitHub Release title** (workflow) | `com.bidscube.sdk {version}` | `com.bidscube.sdk 1.0.1` |
 | **Репозиторій GitHub** (рекомендовано) | `AppLovin-SDK-Unity` | `github.com/BidsCube/AppLovin-SDK-Unity` |
-| **`Constants.SdkVersion`** | Рядок **нативного** Bidscube SDK / AAR | зазвичай збігається з **`bidscube-sdk-*.aar`**; може збігатися з UPM `1.0.0` при узгодженому релізі |
+| **`Constants.SdkVersion`** | Рядок **нативного** Bidscube SDK / AAR | зазвичай збігається з **`bidscube-sdk-*.aar`**; може збігатися з UPM `1.0.1` при узгодженому релізі |
 
 Якщо на remote уже є **інший** коміт під тегом **`v1.0.0`** (наприклад, стара лінія Level Play), **не** пуште новий коміт на той самий тег без узгодження: видаліть старий тег на GitHub (**Releases / Tags** або `git push origin :refs/tags/v1.0.0`) і лише потім створіть **`v1.0.0`** на актуальному коміті, або оберіть новий номер (`1.0.1`, `1.1.0`).
 
@@ -38,16 +38,16 @@
 3. Створити анотований тег:
 
 ```bash
-git tag -a "v1.0.0" -m "com.bidscube.sdk 1.0.0"
-git push origin "v1.0.0"
+git tag -a "v1.0.1" -m "com.bidscube.sdk 1.0.1"
+git push origin "v1.0.1"
 ```
 
-4. Workflow **Release (GitHub)** (`.github/workflows/release.yml`) перевірить `package.json`, збере ZIP без `.git` і створить GitHub Release з файлом **`Bidscube-SDK-Unity-1.0.0.zip`**.
+4. Workflow **Release (GitHub)** (`.github/workflows/release.yml`) перевірить `package.json`, збере ZIP без `.git` і створить GitHub Release з файлом **`Bidscube-SDK-Unity-1.0.1.zip`**.
 
 **Споживачі UPM:**
 
 ```json
-"com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.0"
+"com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.1"
 ```
 
 ## Перейменування репозиторію з LevelPlay

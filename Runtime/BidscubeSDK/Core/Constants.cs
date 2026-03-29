@@ -16,7 +16,13 @@ namespace BidscubeSDK
         public const AdPosition DefaultAdPosition = AdPosition.Unknown;
 
         /// <summary>
-        /// Base URL for ad requests
+        /// Default SSP host for ad requests (authority only — no scheme/path/query).
+        /// Parity with Android <c>DeviceInfo.DEFAULT_AD_REQUEST_AUTHORITY</c>.
+        /// </summary>
+        public const string DefaultAdRequestAuthority = "ssp-bcc-ads.com";
+
+        /// <summary>
+        /// Default HTTPS ad endpoint (<c>https://&lt;DefaultAdRequestAuthority&gt;/sdk</c>) for samples and tests.
         /// </summary>
         public const string BaseURL = "https://ssp-bcc-ads.com/sdk";
 
@@ -28,7 +34,7 @@ namespace BidscubeSDK
         /// <summary>
         /// Unity runtime SDK version (user-agent, diagnostics). Keep in sync with bundled Android AAR and native iOS <c>Constants.sdkVersion</c>.
         /// </summary>
-        public const string SdkVersion = "1.0.0";
+        public const string SdkVersion = "1.0.1";
 
         /// <summary>
         /// Error codes

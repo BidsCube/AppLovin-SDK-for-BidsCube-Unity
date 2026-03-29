@@ -70,16 +70,21 @@ namespace BidscubeSDK
             }
         }
 
-        /// <summary>Parity with Flutter: forward <c>baseURL</c> and test flags when the linked AAR exposes matching <c>SDKConfig.Builder</c> methods.</summary>
+        /// <summary>Parity with Flutter / Android: forward <c>adRequestAuthority</c>, legacy base URL aliases, and test flags.</summary>
         private static void TryApplyOptionalBuilderMethods(AndroidJavaObject builder, SDKConfig cfg)
         {
-            var baseUrl = cfg.BaseURL?.Trim();
-            if (!string.IsNullOrEmpty(baseUrl))
+            var auth = cfg.AdRequestAuthority?.Trim();
+            if (!string.IsNullOrEmpty(auth))
             {
-                if (!TryInvokeBuilderReturnsBuilder(builder, new[] { "baseURL", "setBaseUrl", "setBaseURL" }, baseUrl))
+                if (!TryInvokeBuilderReturnsBuilder(builder, new[] { "adRequestAuthority", "setAdRequestAuthority" }, auth))
                 {
-                    Logger.Warning(
-                        "[BidscubeAndroidSdkInterop] SDKConfig.Builder has no baseURL setter; C# BaseURL not applied on this native SDK version.");
+                    var baseUrl = cfg.BaseURL?.Trim();
+                    if (!string.IsNullOrEmpty(baseUrl) &&
+                        !TryInvokeBuilderReturnsBuilder(builder, new[] { "baseURL", "setBaseUrl", "setBaseURL" }, baseUrl))
+                    {
+                        Logger.Warning(
+                            "[BidscubeAndroidSdkInterop] SDKConfig.Builder has no adRequestAuthority/baseURL setter; C# authority not applied on this native SDK version.");
+                    }
                 }
             }
 

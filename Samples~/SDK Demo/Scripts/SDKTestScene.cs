@@ -13,7 +13,9 @@ namespace BidscubeSDK.Controllers
     {
         [Header("SDK Configuration")]
         [SerializeField] private string _placementId = "";
-        private string _baseURL = Constants.BaseURL;
+        [SerializeField] private string _baseURL = Constants.BaseURL;
+        [Tooltip("Optional: SSP host only. Overrides Base URL when non-empty.")]
+        [SerializeField] private string _adRequestAuthority = "";
         [SerializeField] private bool _enableDebugMode = true;
         [SerializeField] private bool _enableLogging = true;
 #pragma warning disable CS0414
@@ -126,14 +128,16 @@ namespace BidscubeSDK.Controllers
         {
             LogMessage("Initializing Bidscube SDK...");
 
-            var config = new SDKConfig.Builder()
+            var builder = new SDKConfig.Builder()
                 .EnableLogging(_enableLogging)
                 .EnableDebugMode(_enableDebugMode)
-                .BaseURL(_baseURL)
                 .DefaultAdTimeout(30000)
                 .DefaultAdPosition(AdPosition.Unknown)
-                .AdSizeSettings(_adSizeSettings)
-                .Build();
+                .AdSizeSettings(_adSizeSettings);
+
+            SampleSspAuthorityConfig.ApplyTo(builder, _baseURL, _adRequestAuthority);
+
+            var config = builder.Build();
 
             BidscubeSDK.Initialize(config);
 
@@ -547,15 +551,17 @@ namespace BidscubeSDK.Controllers
             var effectivePosition = GetEffectiveAdPosition();
 
             // Use the URLBuilder to create the ad request URL with all required parameters
+            var b = new SDKConfig.Builder();
+            SampleSspAuthorityConfig.ApplyTo(b, _baseURL, _adRequestAuthority);
+            var cfg = b.Build();
             return URLBuilder.BuildAdRequestURL(
-                baseURL: Constants.BaseURL,
-                placementId: placementId,
-                adType: AdType.Image,
-                position: effectivePosition,
-                timeoutMs: 30000,
-                debug: true,
-                ctaText: "Learn More"
-            );
+                cfg,
+                placementId,
+                AdType.Image,
+                effectivePosition,
+                30000,
+                true,
+                "Learn More");
         }
 
         /// <summary>

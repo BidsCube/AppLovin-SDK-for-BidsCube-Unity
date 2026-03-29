@@ -28,7 +28,7 @@ The Bidscube Unity SDK can be installed in two ways:
 2. Click the `+` button in the top-left corner
 3. Select `Add package from git URL...`
 4. Enter the repository URL: `https://github.com/BidsCube/AppLovin-SDK-Unity.git`
-5. Optionally, specify a version tag: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.0`
+5. Optionally, specify a version tag: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.1`
 6. Click `Add`
 7. The SDK will be added as a package dependency
 
@@ -37,7 +37,7 @@ The Bidscube Unity SDK can be installed in two ways:
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.0"
+    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.1"
   }
 }
 ```
@@ -82,7 +82,7 @@ public class GameManager : MonoBehaviour
             .IntegrationMode(BidscubeIntegrationMode.DirectSdk)
             .DefaultAdTimeout(30000)                  // 30 second timeout
             .DefaultAdPosition(AdPosition.Unknown)    // Default position (centered)
-            .BaseURL("https://ssp-bcc-ads.com/sdk")  // Base URL for ad requests
+            .AdRequestAuthority("ssp-bcc-ads.com")  // SSP host (SDK builds https://…/sdk)
             .Build();
 
         // Initialize with configuration
@@ -129,7 +129,8 @@ The `SDKConfig` class allows you to configure various aspects of the SDK:
 | `IntegrationMode` | `BidscubeIntegrationMode` | `DirectSdk` | Direct SDK vs **AppLovin MAX** mediation |
 | `DefaultAdTimeout` | `int` | `30000` | Default ad loading timeout in milliseconds |
 | `DefaultAdPosition` | `AdPosition` | `Unknown` | Default ad position (centered) |
-| `BaseURL` | `string` | `https://ssp-bcc-ads.com/sdk` | Base URL for ad requests (also forwarded to native Android when supported) |
+| `AdRequestAuthority` | `string` | `ssp-bcc-ads.com` | SSP host (optional port / IPv6). Normalized; see `Documentation~/AD_REQUEST_ENDPOINT.md`. |
+| `BaseURL` | `string` (read-only) | `https://ssp-bcc-ads.com/sdk` | Derived: `https://<AdRequestAuthority>/sdk`. Builder alias: `BaseURL(string)` same normalization as `AdRequestAuthority(string)`. |
 
 ### Configuration Builder Pattern
 
@@ -139,7 +140,7 @@ var config = new SDKConfig.Builder()
     .EnableDebugMode(false)
     .DefaultAdTimeout(30000)
     .DefaultAdPosition(AdPosition.Header)
-    .BaseURL("https://your-custom-url.com/sdk")
+    .AdRequestAuthority("your-custom-ssp-host.com")
     .Build();
 
 BidscubeSDK.BidscubeSDK.Initialize(config);

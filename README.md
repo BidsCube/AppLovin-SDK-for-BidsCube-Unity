@@ -11,6 +11,7 @@ UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drive
 - [AppLovin MAX (mediation)](#applovin-max-mediation)
 - [Configuring AppLovin MAX (dashboard)](#configuring-applovin-max-dashboard)
 - [Quick start (BidsCube SDK)](#quick-start-bidscube-sdk)
+- [Ad request endpoint & SSP URLs](#ad-request-endpoint--ssp-urls)
 - [Package layout](#package-layout)
 - [Documentation](#documentation)
 - [Samples](#samples)
@@ -27,7 +28,7 @@ Add to the Unity project **`Packages/manifest.json`**:
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.0"
+    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.1"
   }
 }
 ```
@@ -96,7 +97,7 @@ Mediation is implemented in **native** Bidscube adapters for MAX, not via Unity 
 ```csharp
 var config = new SDKConfig.Builder()
     .IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)
-    .BaseURL("https://your-endpoint/sdk")
+    .AdRequestAuthority("your-ssp-host.example.com")
     .EnableTestMode(false)
     .Build();
 BidscubeSDK.BidscubeSDK.Initialize(config);
@@ -143,7 +144,7 @@ Default mode is **direct** integration — Unity drives ads after init.
 using BidscubeSDK;
 
 var config = new SDKConfig.Builder()
-    .BaseURL("https://ssp-bcc-ads.com/sdk")
+    .AdRequestAuthority("ssp-bcc-ads.com")
     .EnableLogging(true)
     .EnableDebugMode(true)
     .DefaultAdTimeout(30000)
@@ -174,6 +175,14 @@ Implement **`IAdCallback`** (or your project’s callback type) for load / fail 
 
 ---
 
+## Ad request endpoint & SSP URLs
+
+- Set the SSP **host** (and optional **port**) with **`SDKConfig.Builder.AdRequestAuthority(string)`**. Default: **`ssp-bcc-ads.com`** (same as Android `DEFAULT_AD_REQUEST_AUTHORITY`).
+- **`SDKConfig.BaseURL`** is a read-only **`https://<authority>/sdk`** (do not pass full URLs with query — the SDK appends `/sdk` and query parameters per ad type).
+- Full reference (normalization, IPv6, query tables, GET + JSON `adm` / `position`): [`Documentation~/AD_REQUEST_ENDPOINT.md`](Documentation~/AD_REQUEST_ENDPOINT.md).
+
+---
+
 ## Package layout
 
 | Path | Role |
@@ -192,6 +201,7 @@ Implement **`IAdCallback`** (or your project’s callback type) for load / fail 
 | Doc | Purpose |
 |-----|---------|
 | [`Documentation~/INTEGRATION.md`](Documentation~/INTEGRATION.md) | BidsCube SDK usage, configuration, callbacks |
+| [`Documentation~/AD_REQUEST_ENDPOINT.md`](Documentation~/AD_REQUEST_ENDPOINT.md) | **`AdRequestAuthority`**, HTTPS `/sdk` base URL, query params by ad type, SSP response |
 | [`Documentation~/APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md) | MAX mediation, native flow, what not to call from C# |
 | [`Documentation~/ANDROID_BUNDLED_SDK.md`](Documentation~/ANDROID_BUNDLED_SDK.md) | AAR, Gradle injection, `CheckAarMetadata` / compileSdk |
 | [`Documentation~/TEST_PLAN.md`](Documentation~/TEST_PLAN.md) | Minimal QA checklist |

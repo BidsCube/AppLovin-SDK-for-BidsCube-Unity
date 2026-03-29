@@ -1,8 +1,8 @@
 # Minimal test plan (Unity)
 
-## Android: custom `BaseURL`
+## Android: custom SSP host (`AdRequestAuthority`)
 
-1. Build an Android player with `SDKConfig.Builder().BaseURL("https://your-staging-host/...").Build()` and `BidscubeSDK.Initialize(config)`.
+1. Build an Android player with `SDKConfig.Builder().AdRequestAuthority("your-staging-host.com").Build()` and `BidscubeSDK.Initialize(config)` (or `BaseURL("https://your-staging-host/sdk")` — same normalization).
 2. Capture traffic (proxy / logcat network tags per your setup).
 3. Confirm ad requests target the **configured host**, not only the default production URL.
 

@@ -4,69 +4,172 @@ using System.Text;
 namespace BidscubeSDK
 {
     /// <summary>
-    /// URL builder for ad requests
+    /// Builds GET ad-request URLs (query parameters) for each ad type — parity with Android
+    /// <c>ImageAdUrlBuilder</c>, <c>VideoAdUrlBuilder</c>, <c>NativeAdUrlBuilder</c>.
     /// </summary>
-    internal static class URLBuilder
+    /// <summary>Advanced: full ad-request URL construction (same rules as Android URL builders).</summary>
+    public static class URLBuilder
     {
         /// <summary>
-        /// Build ad request URL - matches iOS SDK format
+        /// Builds a full ad request URL (HTTPS base + query). SSP returns JSON UTF-8 body with <c>adm</c> and <c>position</c>.
         /// </summary>
-        /// <param name="baseURL">Base URL</param>
-        /// <param name="placementId">Placement ID</param>
-        /// <param name="adType">Ad type</param>
-        /// <param name="position">Ad position</param>
-        /// <param name="timeoutMs">Timeout in milliseconds</param>
-        /// <param name="debug">Debug mode</param>
-        /// <param name="ctaText">CTA text (optional)</param>
-        /// <returns>Built URL</returns>
-        public static string BuildAdRequestURL(string baseURL, string placementId, AdType adType,
-            AdPosition position, int timeoutMs, bool debug, string ctaText = null)
+        public static string BuildAdRequestURL(
+            SDKConfig config,
+            string placementId,
+            AdType adType,
+            AdPosition positionIgnored = AdPosition.Unknown,
+            int timeoutMsIgnored = 0,
+            bool debugIgnored = false,
+            string ctaTextIgnored = null,
+            double? nativeLogicalWidth = null,
+            double? nativeLogicalHeight = null)
         {
-            // Use iOS SDK format: https://ssp-bcc-ads.com?placementId=20212&c=b&m=api&res=js&app=1&bundle=...&name=...&app_store_url=...&language=...&deviceWidth=...&deviceHeight=...&ua=...&ifa=...&dnt=1&gdpr=1&gdpr_consent=0&us_privacy=1---&ccpa=0&coppa=0
-            var url = new StringBuilder();
-            url.Append(baseURL.TrimEnd('/'));
-            url.Append($"?placementId={placementId}");
-            url.Append($"&c={GetContentType(adType)}");
-            url.Append($"&m=api");
-            url.Append($"&res=js");
-            url.Append($"&app=1");
-            url.Append($"&bundle={Uri.EscapeDataString(DeviceInfo.BundleId)}");
-            url.Append($"&name={Uri.EscapeDataString(DeviceInfo.AppName)}");
-            url.Append($"&app_store_url={Uri.EscapeDataString(DeviceInfo.AppStoreURL)}");
-            url.Append($"&language={Uri.EscapeDataString(DeviceInfo.Language)}");
-            url.Append($"&deviceWidth={DeviceInfo.DeviceWidth}");
-            url.Append($"&deviceHeight={DeviceInfo.DeviceHeight}");
-            url.Append($"&ua={Uri.EscapeDataString(DeviceInfo.UserAgent)}");
-            url.Append($"&ifa={Uri.EscapeDataString(DeviceInfo.AdvertisingIdentifier)}");
-            url.Append($"&dnt={DeviceInfo.DoNotTrack}");
-            url.Append($"&gdpr={DeviceInfo.GDPR}");
-            url.Append($"&gdpr_consent={DeviceInfo.GDPRConsent}");
-            url.Append($"&us_privacy={DeviceInfo.USPrivacy}");
-            url.Append($"&ccpa={DeviceInfo.CCPA}");
-            url.Append($"&coppa={DeviceInfo.COPPA}");
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
 
-            Logger.Info($"Built URL: {url.ToString()}");
-            return url.ToString();
-        }
-
-        /// <summary>
-        /// Get content type for ad type (matches iOS SDK)
-        /// </summary>
-        /// <param name="adType">Ad type</param>
-        /// <returns>Content type string</returns>
-        private static string GetContentType(AdType adType)
-        {
+            var authority = config.AdRequestAuthority;
             switch (adType)
             {
                 case AdType.Image:
-                    return "b"; // banner
+                    return BuildImageAdUrl(authority, placementId);
                 case AdType.Video:
-                    return "v"; // video
+                    return BuildVideoAdUrl(authority, placementId);
                 case AdType.Native:
-                    return "n"; // native
+                    return BuildNativeAdUrl(authority, placementId, nativeLogicalWidth, nativeLogicalHeight);
                 default:
-                    return "b";
+                    return BuildImageAdUrl(authority, placementId);
             }
+        }
+
+        private static string BuildImageAdUrl(string authority, string placementId)
+        {
+            var root = SspAdUriHelper.BuildHttpsSdkBaseUrl(authority).TrimEnd('/');
+            var sb = new StringBuilder(root.Length + 256);
+            sb.Append(root);
+            sb.Append('?');
+            var first = true;
+            void Q(string k, string v)
+            {
+                if (!first)
+                {
+                    sb.Append('&');
+                }
+
+                first = false;
+                sb.Append(k);
+                sb.Append('=');
+                sb.Append(Uri.EscapeDataString(v ?? string.Empty));
+            }
+
+            Q("placementId", placementId);
+            Q("c", "b");
+            Q("m", "api");
+            Q("res", "js");
+            Q("app", "1");
+            Q("bundle", DeviceInfo.BundleId);
+            Q("name", DeviceInfo.AppName);
+            Q("app_store_url", DeviceInfo.AppStoreURL);
+            Q("language", DeviceInfo.Language);
+            Q("deviceWidth", DeviceInfo.DeviceWidth.ToString());
+            Q("deviceHeight", DeviceInfo.DeviceHeight.ToString());
+            Q("ua", DeviceInfo.UserAgent);
+            Q("ifa", DeviceInfo.AdvertisingIdentifier);
+            Q("dnt", DeviceInfo.DoNotTrack.ToString());
+
+            Logger.Info($"Built image ad URL: {sb}");
+            return sb.ToString();
+        }
+
+        private static string BuildVideoAdUrl(string authority, string placementId)
+        {
+            var root = SspAdUriHelper.BuildHttpsSdkBaseUrl(authority).TrimEnd('/');
+            var sb = new StringBuilder(root.Length + 256);
+            sb.Append(root);
+            sb.Append('?');
+            var first = true;
+            void Q(string k, string v)
+            {
+                if (!first)
+                {
+                    sb.Append('&');
+                }
+
+                first = false;
+                sb.Append(k);
+                sb.Append('=');
+                sb.Append(Uri.EscapeDataString(v ?? string.Empty));
+            }
+
+            Q("c", "v");
+            Q("m", "xml");
+            Q("id", placementId);
+            Q("app", "1");
+            Q("w", DeviceInfo.DeviceWidth.ToString());
+            Q("h", DeviceInfo.DeviceHeight.ToString());
+            Q("bundle", DeviceInfo.BundleId);
+            Q("name", DeviceInfo.AppName);
+            Q("app_version", DeviceInfo.AppVersion ?? string.Empty);
+            Q("ifa", DeviceInfo.AdvertisingIdentifier);
+            Q("dnt", DeviceInfo.DoNotTrack.ToString());
+            Q("app_store_url", DeviceInfo.AppStoreURL);
+            Q("ua", DeviceInfo.UserAgent);
+            Q("language", DeviceInfo.Language);
+            Q("deviceWidth", DeviceInfo.DeviceWidth.ToString());
+            Q("deviceHeight", DeviceInfo.DeviceHeight.ToString());
+
+            Logger.Info($"Built video ad URL: {sb}");
+            return sb.ToString();
+        }
+
+        private static string BuildNativeAdUrl(string authority, string placementId, double? adWidth, double? adHeight)
+        {
+            var w = adWidth ?? 1080d;
+            var h = adHeight ?? 800d;
+
+            var root = SspAdUriHelper.BuildHttpsSdkBaseUrl(authority).TrimEnd('/');
+            var sb = new StringBuilder(root.Length + 320);
+            sb.Append(root);
+            sb.Append('?');
+            var first = true;
+            void Q(string k, string v)
+            {
+                if (!first)
+                {
+                    sb.Append('&');
+                }
+
+                first = false;
+                sb.Append(k);
+                sb.Append('=');
+                sb.Append(Uri.EscapeDataString(v ?? string.Empty));
+            }
+
+            Q("c", "n");
+            Q("m", "s");
+            Q("id", placementId);
+            Q("app", "1");
+            Q("bundle", DeviceInfo.BundleId);
+            Q("name", DeviceInfo.AppName);
+            Q("app_version", DeviceInfo.AppVersion ?? string.Empty);
+            Q("ifa", DeviceInfo.AdvertisingIdentifier ?? string.Empty);
+            Q("dnt", DeviceInfo.DoNotTrack.ToString());
+            Q("app_store_url", DeviceInfo.AppStoreURL);
+            Q("ua", DeviceInfo.UserAgent);
+            Q("gdpr", DeviceInfo.GDPR);
+            Q("gdpr_consent", DeviceInfo.GDPRConsentForNativeQuery);
+            Q("us_privacy", DeviceInfo.USPrivacyForNativeQuery);
+            Q("ccpa", DeviceInfo.CcpaForNativeQuery);
+            Q("coppa", DeviceInfo.CoppaBit);
+            Q("language", DeviceInfo.Language);
+            Q("deviceWidth", DeviceInfo.DeviceWidth.ToString());
+            Q("deviceHeight", DeviceInfo.DeviceHeight.ToString());
+            Q("w", w.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            Q("h", h.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+            Logger.Info($"Built native ad URL: {sb}");
+            return sb.ToString();
         }
     }
 }

@@ -16,6 +16,7 @@ namespace BidscubeSDK.Controllers
         [SerializeField] private string _videoAdPlacementId = "19483";
         [SerializeField] private string _nativeAdPlacementId = "19487";
         [SerializeField] private string _baseURL = Constants.BaseURL;
+        [SerializeField] private string _adRequestAuthority = "";
         [SerializeField] private bool _enableDebugMode = true;
         [SerializeField] private bool _enableLogging = true;
 
@@ -118,13 +119,13 @@ namespace BidscubeSDK.Controllers
         {
             LogMessage("Initializing Bidscube SDK...");
 
-            var config = new SDKConfig.Builder()
+            var builder = new SDKConfig.Builder()
                 .EnableLogging(_enableLogging)
                 .EnableDebugMode(_enableDebugMode)
-                .BaseURL(_baseURL)
                 .DefaultAdTimeout(30000)
-                .DefaultAdPosition(AdPosition.Unknown)
-                .Build();
+                .DefaultAdPosition(AdPosition.Unknown);
+            SampleSspAuthorityConfig.ApplyTo(builder, _baseURL, _adRequestAuthority);
+            var config = builder.Build();
 
             BidscubeSDK.Initialize(config);
 

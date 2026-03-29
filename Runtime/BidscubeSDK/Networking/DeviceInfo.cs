@@ -143,6 +143,18 @@ namespace BidscubeSDK
         /// </summary>
         public static string COPPA => "0";
 
+        /// <summary>Native ad URL query: Android uses literal <c>null</c> when consent string is absent.</summary>
+        public static string GDPRConsentForNativeQuery => GDPRConsent ?? "null";
+
+        /// <summary>Native ad URL query: Android uses literal <c>null</c> when absent.</summary>
+        public static string USPrivacyForNativeQuery => USPrivacy ?? "null";
+
+        /// <summary>Native ad URL <c>ccpa</c> param — same source as <c>us_privacy</c> on Android.</summary>
+        public static string CcpaForNativeQuery => USPrivacy ?? "null";
+
+        /// <summary>Native ad URL <c>coppa</c> — <c>1</c> or <c>0</c> (Android <c>isCoppa()</c>).</summary>
+        public static string CoppaBit => COPPA;
+
         /// <summary>
         /// Get network type
         /// </summary>

@@ -1,3 +1,21 @@
+## [1.0.1] - 2026-03-23
+
+### Added
+
+- **`SDKConfig.AdRequestAuthority`** and **`SDKConfig.Builder.AdRequestAuthority(string)`** — SSP host only (optional port / IPv6), default `ssp-bcc-ads.com` (parity with Android `DeviceInfo.DEFAULT_AD_REQUEST_AUTHORITY`). **`Builder.BaseURL(string)`** uses the same normalization (legacy alias).
+- **`AdRequestAuthorityNormalizer`**, **`SspAdUriHelper`** — normalization and `https://<authority>/sdk` construction without breaking `host:port` (Android `SspAdUriHelper` parity).
+- **`Documentation~/AD_REQUEST_ENDPOINT.md`** — ad request endpoint, query tables, mediation notes.
+- **Editor:** menu **Bidscube → Validate SSP URL parity (console)**; samples support **`BIDSCUBE_SSP_AUTHORITY`** (Editor) and optional inspector **Ad Request Authority**.
+
+### Changed
+
+- **`URLBuilder`** — per-ad-type query parameters aligned with Android `ImageAdUrlBuilder`, `VideoAdUrlBuilder`, `NativeAdUrlBuilder` (image/video no longer carry the same GDPR block as native).
+- **`SDKConfig.BaseURL`** — computed getter from `AdRequestAuthority` (always `https://…/sdk`).
+- **`Constants.SdkVersion`** → `1.0.1`.
+- **Android interop** — prefers native **`adRequestAuthority`** on `SDKConfig.Builder`, falls back to **`baseURL`** setters when the AAR has no authority API.
+
+---
+
 ## [1.0.0] - 2026-03-22
 
 ### Breaking

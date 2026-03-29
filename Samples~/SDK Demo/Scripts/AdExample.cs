@@ -54,13 +54,13 @@ namespace BidscubeSDK.Samples
         private void InitializeSDK()
         {
             // Initialize with custom configuration
-            var config = new SDKConfig.Builder()
+            var builder = new SDKConfig.Builder()
                 .EnableLogging(true)
                 .EnableDebugMode(true)
                 .DefaultAdTimeout(30000)
-                .DefaultAdPosition(AdPosition.Unknown)
-                .BaseURL(Constants.BaseURL)
-                .Build();
+                .DefaultAdPosition(AdPosition.Unknown);
+            SampleSspAuthorityConfig.ApplyTo(builder, Constants.BaseURL, string.Empty);
+            var config = builder.Build();
 
             BidscubeSDK.Initialize(config);
             UpdateStatus("SDK initialized");

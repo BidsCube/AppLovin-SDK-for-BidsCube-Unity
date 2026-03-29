@@ -1,7 +1,9 @@
 {
   "name": "BidscubeSDK.Editor",
   "rootNamespace": "BidscubeSDK.Editor",
-  "references": [],
+  "references": [
+    "BidscubeSDK"
+  ],
   "includePlatforms": ["Editor"],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
