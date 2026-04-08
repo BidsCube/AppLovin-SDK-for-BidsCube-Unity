@@ -8,7 +8,7 @@ namespace BidscubeSDK.Controllers
     /// Comprehensive test scene for Bidscube Unity SDK
     /// Demonstrates all SDK functionality with proper UI hierarchy
     /// </summary>
-    public class BidscubeExampleScene : MonoBehaviour, IAdCallback, IConsentCallback
+    public class BidscubeExampleScene : MonoBehaviour, IAdCallback, IConsentCallback, IAdRenderOverride
     {
         [Header("SDK Configuration")]
         [SerializeField] private string _placementId = "test_placement_123";
@@ -372,15 +372,15 @@ namespace BidscubeSDK.Controllers
 
         public void OnInstallButtonClicked(string placementId, string buttonText)
         {
-            LogMessage($"📱 Install button clicked: {placementId} ({buttonText})");
+            LogMessage($"Install button clicked: {placementId} ({buttonText})");
         }
 
-        // Added missing OnAdRenderOverride (IAdCallback)
-        public bool OnAdRenderOverride(string adm, int position)
+        /// <inheritdoc />
+        public bool OnAdRenderOverride(string placementId, string adm, AdType adType, int position)
         {
             int admLen = adm != null ? adm.Length : 0;
-            LogMessage($"OnAdRenderOverride called: position={position}, admLength={admLen}");
-            return false; // Let SDK render by default
+            LogMessage($"OnAdRenderOverride: placementId={placementId}, adType={adType}, position={position}, admLength={admLen}");
+            return false;
         }
 
         #endregion
@@ -389,7 +389,7 @@ namespace BidscubeSDK.Controllers
 
         public void OnConsentInfoUpdated()
         {
-            LogMessage("🔒 Consent info updated");
+            LogMessage("Consent info updated");
         }
 
         public void OnConsentInfoUpdateFailed(System.Exception error)

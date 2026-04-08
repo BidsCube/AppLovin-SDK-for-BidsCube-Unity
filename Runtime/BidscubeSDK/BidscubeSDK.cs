@@ -91,7 +91,7 @@ namespace BidscubeSDK
             {
                 throw new InvalidOperationException(
                     $"{apiName} is not used in AppLovin MAX mediation mode. Load and show ads through MAX (AppLovin Unity plugin or native MAX APIs). " +
-                    "Call BidscubeSDK.Initialize() early so the Bidscube MAX adapter uses the same native SDK instance.");
+                    "Call BidscubeSDK.Initialize() early so the bundled Bidscube MAX adapter uses the same native SDK instance.");
             }
         }
 

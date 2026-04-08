@@ -8,13 +8,17 @@ using UnityEngine;
 namespace BidscubeSDK.Editor.Android
 {
     /// <summary>
-    /// Injects Maven dependencies required by the bundled <c>bidscube-sdk</c> AAR (they are not pulled transitively from a local AAR).
+    /// Injects Maven dependencies required by the bundled <c>bidscube-sdk</c> AAR (they are not pulled transitively from a local AAR),
+    /// plus <b>AppLovin MAX Android SDK</b> (<c>com.applovin:applovin-sdk</c> 13.0+) for the bundled Bidscube MAX adapter AAR.
     /// Mirrors the native Bidscube Android SDK Gradle dependency block + core library desugaring.
     /// Also raises <c>compileSdk</c> / <c>minSdk</c> when needed so <c>CheckAarMetadata</c> passes against Material / AndroidX.
     /// </summary>
     public sealed class BidscubeAndroidGradlePostprocessor : IPostGenerateGradleAndroidProject
     {
         public const string Marker = "// __BIDSCUBE_SDK_GRADLE_DEPS__";
+
+        /// <summary>Minimum AppLovin MAX Android SDK line (13.0+); resolved to latest 13.x from Maven Central.</summary>
+        public const string AppLovinSdkGradleCoordinate = "com.applovin:applovin-sdk:13.+";
 
         /// <summary>Bundled AndroidX / Material / IMA AAR metadata often requires API 34+; Unity 6 may use 36.</summary>
         private const int MinCompileSdkForBidscubeDeps = 34;
@@ -41,8 +45,9 @@ namespace BidscubeSDK.Editor.Android
                 var text = File.ReadAllText(unityLib);
                 if (!text.Contains(Marker))
                 {
-                    const string depsBlock = @"
-    " + Marker + @"
+                    var depsBlock = $@"
+    {Marker}
+    implementation '{AppLovinSdkGradleCoordinate}'
     implementation 'androidx.media3:media3-common:1.4.1'
     implementation 'androidx.media3:media3-ui:1.4.1'
     implementation 'com.google.android.ump:user-messaging-platform:2.2.0'

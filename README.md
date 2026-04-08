@@ -1,6 +1,6 @@
 # Bidscube SDK for Unity (`com.bidscube.sdk`)
 
-UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drives banners, video, native, interstitials) and **AppLovin MAX mediation** (early native `BidscubeSDK` init only; MAX drives load/show via the Bidscube adapter).
+UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drives banners, video, native, interstitials) and **AppLovin MAX mediation** (MAX drives load/show via the Bidscube adapter; **Android:** early C# **`BidscubeSDK.Initialize`** recommended; **iOS:** optional — adapter can init native BidCube — see [`APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)).
 
 ## Contents
 
@@ -28,12 +28,14 @@ Add to the Unity project **`Packages/manifest.json`**:
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.1"
+    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.3"
   }
 }
 ```
 
 Or **Package Manager → Add package from git URL** with the same URL (replace **org / repo / tag** with your fork and release).
+
+**Unity UI dependencies:** `com.unity.ugui` and `com.unity.textmeshpro` are listed in [`package.json`](package.json) and are pulled in automatically when you add this package by Git URL. If they are missing (e.g. odd manifest state), the Editor runs **`BidscubeUpmDependencyInstaller`** once per session and issues `PackageManager.Client.Add` for the same versions — same idea as the [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) README (“no manual setup”).
 
 **Local development** (this repo next to your project):
 
@@ -51,8 +53,8 @@ Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube SDK*
 |------|----------|
 | **BidsCube SDK** (default) | C# APIs: `GetBannerAdView`, `GetVideoAdView`, `GetNativeAdView`, `ShowImageAd`, `ShowVideoAd`, `ShowNativeAd`, consent helpers, etc. |
 | **AppLovin MAX** | `BidscubeIntegrationMode.AppLovinMaxMediation` — early `BidscubeSDK.Initialize`; creatives **only** through MAX + Bidscube adapter (C# creative APIs throw) |
-| **Android** | Bundled **`bidscube-sdk-1.0.0.aar`** + Editor **`BidscubeAndroidGradlePostprocessor`** (Maven / compileSdk / minSdk fixes) |
-| **iOS** | WebView-related plugins under `Runtime/Plugins/iOS/`; Bidscube native + MAX adapter per your integration guide |
+| **Android** | Bundled **`bidscube-sdk-1.0.0.aar`**, **`applovin-bidscube-max-adapter-1.0.3.aar`**, plus Editor **`BidscubeAndroidGradlePostprocessor`** (AppLovin SDK 13.0+, Maven deps, compileSdk / minSdk fixes) |
+| **iOS** | WebView plugins under `Runtime/Plugins/iOS/`; MAX: CocoaPods **`BidscubeSDKAppLovin`** `1.0.3` + **`AppLovinSDK`** `13.x` ([iOS repo](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)); **`BidscubeIosPodfilePostprocessor`** appends missing pods to the exported **Podfile** |
 | **Legacy configs** | Wire values `levelPlay` / `level_play` → **AppLovin MAX mediation** (same idea as Flutter) |
 
 ---
@@ -64,7 +66,7 @@ Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube SDK*
 | **Unity** | **2020.3+** (see [`package.json`](package.json) `unity`) |
 | **UPM dependencies** | `com.unity.ugui`, `com.unity.textmeshpro` (declared in `package.json`) |
 | **Android** | **Minimum API Level ≥ 26** recommended with the injected dependency set; **compileSdk** raised by post-processor as needed — [`Documentation~/ANDROID_BUNDLED_SDK.md`](Documentation~/ANDROID_BUNDLED_SDK.md) |
-| **MAX mediation** | AppLovin MAX Unity plugin (or native MAX) + **Bidscube MAX adapter** artifacts — [`Documentation~/APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md) |
+| **MAX mediation** | **AppLovin MAX** (Unity plugin or native). **Android:** adapter AAR is bundled. **iOS:** **`BidscubeSDKAppLovin`** + **`AppLovinSDK`** **13.x** (see [`Documentation~/APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)) |
 
 ---
 
@@ -81,7 +83,7 @@ Wire strings (JSON / `PlayerPrefs`): `direct`, `directSdk`, `appLovinMax`, and l
 
 ## AppLovin MAX (mediation)
 
-Mediation is implemented in **native** Bidscube adapters for MAX, not via Unity `UnitySendMessage`. Call **`BidscubeSDK.Initialize`** early with **`AppLovinMaxMediation`** so the adapter shares the **same** native SDK instance.
+Mediation is implemented in **native** Bidscube adapters for MAX, not via Unity `UnitySendMessage`. **Android:** call **`BidscubeSDK.Initialize`** early with **`AppLovinMaxMediation`** so the Java SDK shares **`AdRequestAuthority`** and options with the bundled adapter. **iOS:** the **`BidscubeSDKAppLovin`** adapter can initialize BidCube internally ([native guide](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)); use C# **`Initialize`** when you want the same Unity-driven **`SDKConfig`** before MAX, or set **`request_authority` / `ssp_host`** in MAX server parameters.
 
 ### Native flow (formats)
 
@@ -113,16 +115,17 @@ BidscubeSDK.BidscubeSDK.Initialize(config);
 Do this in the **AppLovin MAX** UI alongside Unity setup:
 
 1. **App registration** — Platform, **package name** (Android) / **bundle ID** (iOS), store links if needed. Copy the **SDK key** into the MAX Unity plugin.
-2. **Bidscube as a mediated network** — Under **Mediation / Networks**, add **Bidscube** as a **custom SDK network** (per your adapter doc). Enter **keys, account IDs, placement IDs** exactly as the adapter specifies.
+2. **Bidscube as a mediated network** — Under **Mediation / Networks**, add **Bidscube** as a **custom SDK network**. Enable it on each ad unit. **Android:** adapter class **`com.applovin.mediation.adapters.BidscubeMediationAdapter`** (bundled AAR). **iOS:** **`ALBidscubeMediationAdapter`** (exact name). **App ID** in MAX must be the **BidCube placement ID** (MAX still calls this field “App ID”). **Placement ID** is optional unless your setup needs a second value. Optional server parameters: **`request_authority`** or **`ssp_host`** for SSP host / `host:port`. **Android:** call **`BidscubeSDK.Initialize` before `MaxSdk.InitializeSdk`** so native config matches Unity when you use C# **`AdRequestAuthority`**. **iOS:** adapter-only init is supported per [AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS).
 
 | Item | Where | Note |
 |------|--------|------|
 | **SDK Key** | AppLovin MAX | MAX SDK initialization |
 | **Ad unit IDs** | MAX dashboard | Load/show APIs |
-| **Custom network** | MAX mediation | Bidscube adapter class / package |
-| **Android** | Network setup | e.g. `BidscubeMediationAdapter` (match your artifact) |
-| **iOS** | Network setup | e.g. `ALBidscubeMediationAdapter` |
-| **Instance / custom string** | Network instance | Bidscube **placement ID** |
+| **Custom network** | MAX mediation | Adapter class (platform-specific) |
+| **Android** | Network setup | `com.applovin.mediation.adapters.BidscubeMediationAdapter` |
+| **iOS** | Network setup | `ALBidscubeMediationAdapter` |
+| **App ID** (custom network) | MAX UI | **BidCube placement ID** |
+| **Server params** | Network / instance | `request_authority`, `ssp_host` (optional) |
 
 3. **Ad units** — Create MAX ad units per format; **enable Bidscube** and map **network placement IDs**.
 4. **Waterfall / bidding** — Order lines or enable bidding per your strategy.
@@ -188,7 +191,7 @@ Implement **`IAdCallback`** (or your project’s callback type) for load / fail 
 | Path | Role |
 |------|------|
 | `Runtime/BidscubeSDK/` | Core C# SDK, `BidscubeSDK`, `SDKConfig`, Android interop |
-| `Runtime/Plugins/Android/` | **`bidscube-sdk-1.0.0.aar`**, WebView templates |
+| `Runtime/Plugins/Android/` | **`bidscube-sdk-1.0.0.aar`**, **`applovin-bidscube-max-adapter-1.0.3.aar`**, WebView templates |
 | `Runtime/Plugins/iOS/` | WebView native plugins |
 | `Editor/Android/` | **`BidscubeAndroidGradlePostprocessor`** |
 | `Documentation~/` | Markdown docs (this package) |

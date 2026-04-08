@@ -7,7 +7,7 @@ namespace BidscubeSDK.Samples
     /// <summary>
     /// Basic integration example for Bidscube SDK
     /// </summary>
-    public class AdExample : MonoBehaviour, IAdCallback, IConsentCallback
+    public class AdExample : MonoBehaviour, IAdCallback, IConsentCallback, IAdRenderOverride
     {
         [Header("UI Elements")]
         [SerializeField] private Button _initializeButton;
@@ -194,12 +194,12 @@ namespace BidscubeSDK.Samples
             UpdateStatus($"Install button clicked: {placementId}, Text: {buttonText}");
         }
 
-        // Added missing OnAdRenderOverride (IAdCallback)
-        public bool OnAdRenderOverride(string adm, int position)
+        /// <inheritdoc />
+        public bool OnAdRenderOverride(string placementId, string adm, AdType adType, int position)
         {
             int admLen = adm != null ? adm.Length : 0;
-            UpdateStatus($"OnAdRenderOverride called: position={position}, admLength={admLen}");
-            return false; // Let SDK render by default
+            UpdateStatus($"OnAdRenderOverride: placementId={placementId}, adType={adType}, position={position}, admLength={admLen}");
+            return false;
         }
 
         #endregion

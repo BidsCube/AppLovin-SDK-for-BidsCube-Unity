@@ -1,3 +1,23 @@
+## [1.0.3] - 2026-04-08
+
+### Added
+
+- **UPM dependency installer** — `Editor/BidscubeUpmDependencyInstaller.cs` ensures **`com.unity.ugui`** and **`com.unity.textmeshpro`** are present via Package Manager once per Editor session (parity with [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) “no manual TMP/UGUI setup” behavior; `package.json` still declares them for Git UPM resolution).
+- **Bundled Android MAX adapter** — `Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.3.aar` (`com.applovin.mediation.adapters.BidscubeMediationAdapter`) so you do **not** add the Bidscube adapter from a separate distribution for Android.
+- **Gradle:** `com.applovin:applovin-sdk:13.+` injected with other Bidscube dependencies (**minimum AppLovin MAX Android SDK 13.0** line).
+- **Editor (iOS):** `BidscubeIosPodfilePostprocessor` appends **`AppLovinSDK`** (`>= 13.0.0`, `< 14.0`) and **`BidscubeSDKAppLovin`** (`1.0.3`) to an exported **Podfile** when those pods are not already declared — parity with [AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS). Skips **`BidscubeSDKAppLovin`** if a standalone **`BidscubeSDK`** pod is present.
+
+### Changed
+
+- **Android MAX adapter** (`BidscubeMediationAdapter`): if Java `BidscubeSDK` is **already initialized** from Unity (recommended), the adapter reports **INITIALIZED_SUCCESS** without requiring **App ID** from MAX server parameters; fixes MAX treating Bidscube as failed when Unity init runs first. Stronger **consumer ProGuard** keep rules for the adapter constructor. Rebuilt bundled **`applovin-bidscube-max-adapter-1.0.3.aar`**.
+- **`Constants.SdkVersion`** → `1.0.3` (UPM and user-agent string; native `bidscube-sdk` AAR remains **1.0.0**).
+
+### Notes
+
+- **iOS MAX:** CocoaPods **`BidscubeSDKAppLovin`** (not bundled as source; resolved via CocoaPods). Docs and dashboard settings aligned with the iOS repo (**`ALBidscubeMediationAdapter`**, **App ID** = placement ID, **`request_authority` / `ssp_host`**). Android remains self-contained aside from Maven Central / `google()` resolution.
+
+---
+
 ## [1.0.1] - 2026-03-23
 
 ### Added

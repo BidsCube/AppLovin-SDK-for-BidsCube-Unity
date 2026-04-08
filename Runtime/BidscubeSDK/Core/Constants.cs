@@ -32,9 +32,9 @@ namespace BidscubeSDK
         public const string UserAgentPrefix = "BidscubeSDK";
 
         /// <summary>
-        /// Unity runtime SDK version (user-agent, diagnostics). Keep in sync with bundled Android AAR and native iOS <c>Constants.sdkVersion</c>.
+        /// Unity UPM package version (user-agent, diagnostics). Must match <c>package.json</c> <c>version</c>. Native Android <c>bidscube-sdk</c> AAR may use a different semver.
         /// </summary>
-        public const string SdkVersion = "1.0.1";
+        public const string SdkVersion = "1.0.3";
 
         /// <summary>
         /// Error codes

@@ -9,7 +9,7 @@ namespace BidscubeSDK.Controllers
     /// SDK Test Scene - Basic SDK functionality testing
     /// Based on iOS SDKTestView
     /// </summary>
-    public class SDKTestScene : MonoBehaviour, IAdCallback
+    public class SDKTestScene : MonoBehaviour, IAdCallback, IAdRenderOverride
     {
         [Header("SDK Configuration")]
         [SerializeField] private string _placementId = "";
@@ -866,12 +866,12 @@ namespace BidscubeSDK.Controllers
             LogMessage($"Install button clicked: {placementId} - {buttonText}");
         }
 
-        // Added missing OnAdRenderOverride (IAdCallback)
-        public bool OnAdRenderOverride(string adm, int position)
+        /// <inheritdoc />
+        public bool OnAdRenderOverride(string placementId, string adm, AdType adType, int position)
         {
             int admLen = adm != null ? adm.Length : 0;
-            LogMessage($"OnAdRenderOverride called: position={position}, admLength={admLen}");
-            return false; // Let SDK render by default
+            LogMessage($"OnAdRenderOverride: placementId={placementId}, adType={adType}, position={position}, admLength={admLen}");
+            return false;
         }
     }
 }

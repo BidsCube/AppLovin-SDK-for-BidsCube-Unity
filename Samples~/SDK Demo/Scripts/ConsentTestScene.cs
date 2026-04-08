@@ -9,7 +9,7 @@ namespace BidscubeSDK.Controllers
     /// Consent Test Scene - Consent form and consent management testing
     /// Based on iOS ConsentTestView
     /// </summary>
-    public class ConsentTestScene : MonoBehaviour, IAdCallback, IConsentCallback
+    public class ConsentTestScene : MonoBehaviour, IAdCallback, IConsentCallback, IAdRenderOverride
     {
         [Header("SDK Configuration")]
         [SerializeField] private string _placementId = "20212";
@@ -326,7 +326,8 @@ namespace BidscubeSDK.Controllers
             }
         }
 
-        // IAdCallback implementation
+        #region IAdCallback and IAdRenderOverride
+
         public void OnAdLoading(string placementId)
         {
             LogMessage($"Ad loading: {placementId}");
@@ -382,16 +383,18 @@ namespace BidscubeSDK.Controllers
             LogMessage($"Install button clicked: {placementId} - {buttonText}");
         }
 
-        // Added missing OnAdRenderOverride (IAdCallback)
-        public bool OnAdRenderOverride(string adm, int position)
+        /// <inheritdoc />
+        public bool OnAdRenderOverride(string placementId, string adm, AdType adType, int position)
         {
             int admLen = adm != null ? adm.Length : 0;
-            LogMessage($"OnAdRenderOverride called: position={position}, admLength={admLen}");
-            // Return false to let SDK perform default rendering
+            LogMessage($"OnAdRenderOverride: placementId={placementId}, adType={adType}, position={position}, admLength={admLen}");
             return false;
         }
 
-        // IConsentCallback implementation
+        #endregion
+
+        #region IConsentCallback Implementation
+
         public void OnConsentInfoUpdated()
         {
             LogMessage(" Consent info updated successfully");
@@ -436,5 +439,7 @@ namespace BidscubeSDK.Controllers
             LogMessage($"Consent status changed: {hasConsent}");
             UpdateConsentStatus();
         }
+
+        #endregion
     }
 }

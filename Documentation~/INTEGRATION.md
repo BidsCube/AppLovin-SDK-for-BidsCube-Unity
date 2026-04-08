@@ -27,8 +27,9 @@ The Bidscube Unity SDK can be installed in two ways:
 1. In Unity Editor, open the Package Manager (`Window` → `Package Manager`)
 2. Click the `+` button in the top-left corner
 3. Select `Add package from git URL...`
-4. Enter the repository URL: `https://github.com/BidsCube/AppLovin-SDK-Unity.git`
-5. Optionally, specify a version tag: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.1`
+4. Enter the repository URL: `https://github.com/BidsCube/AppLovin-SDK-Unity.git`  
+   The public **Bidscube Unity SDK** sample line is [github.com/BidsCube/bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) (same `com.bidscube.sdk` name; **AppLovin-SDK-Unity** adds bundled Android SDK + MAX adapter AARs, Gradle AppLovin 13+, and optional Podfile hook — see `README.md`).
+5. Optionally, specify a version tag: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.3`
 6. Click `Add`
 7. The SDK will be added as a package dependency
 
@@ -37,7 +38,7 @@ The Bidscube Unity SDK can be installed in two ways:
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.1"
+    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.3"
   }
 }
 ```
@@ -100,9 +101,9 @@ if (BidscubeSDK.BidscubeSDK.IsInitialized())
 }
 ```
 
-### AppLovin MAX mediation (init only)
+### AppLovin MAX mediation (init)
 
-Use `IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)` and call `Initialize` **before** the AppLovin MAX SDK. Do **not** use C# APIs that attach creatives (`GetBannerAdView`, `ShowVideoAd`, etc.); they throw in this mode. Full flow: `Documentation~/APPLOVIN_MAX.md`.
+Use `IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)`. **Android:** call `Initialize` **before** the AppLovin MAX SDK so native `AdRequestAuthority` and options match C#. **iOS:** C# `Initialize` is **optional** if you use the **`BidscubeSDKAppLovin`** adapter-only path; see `Documentation~/APPLOVIN_MAX.md` and [AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS). Do **not** use C# APIs that attach creatives (`GetBannerAdView`, `ShowVideoAd`, etc.) in MAX mode; they throw. Full flow: `Documentation~/APPLOVIN_MAX.md`.
 
 For JSON / `PlayerPrefs`, `IntegrationModeFromWire("levelPlay")` still maps to MAX mediation (backward compatible).
 
@@ -111,7 +112,7 @@ For JSON / `PlayerPrefs`, `IntegrationModeFromWire("levelPlay")` still maps to M
 - The package ships **`bidscube-sdk-1.0.0.aar`** under `Runtime/Plugins/Android/`. You do **not** add `com.bidscube:bidscube-sdk` from Maven separately.
 - On Gradle export, **`BidscubeAndroidGradlePostprocessor`** injects the required `implementation` lines (Media3, IMA, UMP, Glide, Material, desugar libs). Install Unity **Android Build Support** so the Editor script compiles.
 - Set player **Minimum API Level** to **24+** (matches the Android SDK).
-- **AppLovin MAX**: add the MAX Unity plugin and **Bidscube MAX adapter** per `Documentation~/APPLOVIN_MAX.md` (not bundled in this package).
+- **AppLovin MAX**: add the MAX Unity plugin. **Android:** Bidscube MAX adapter AAR is bundled; Gradle injects **AppLovin SDK 13.0+**. **iOS:** CocoaPods **`BidscubeSDKAppLovin`** `1.0.3` and **`AppLovinSDK`** **13.x** (or rely on **`BidscubeIosPodfilePostprocessor`** on Podfile export) — `Documentation~/APPLOVIN_MAX.md`.
 
 ---
 
