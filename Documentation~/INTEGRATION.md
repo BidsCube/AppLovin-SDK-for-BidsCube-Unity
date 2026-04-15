@@ -8,13 +8,17 @@ This guide will help you integrate the Bidscube Unity SDK into your Unity projec
 
 1. [Installation](#installation)
 2. [Initialization](#initialization)
-3. [Configuration](#configuration)
-4. [Showing Ads](#showing-ads)
-5. [Ad Callbacks](#ad-callbacks)
-6. [Ad Positioning](#ad-positioning)
-7. [Consent Management](#consent-management)
-8. [Examples](#examples)
-9. [SDK Test Scene](#sdk-test-scene)
+3. [Configure SDK in code (detailed)](#configure-sdk-in-code-detailed)
+4. [Verifying the integration (logs)](#verifying-the-integration-logs)
+5. [Custom video player (`IVideoSurfacePlayback`)](#custom-video-player-ivideosurfaceplayback)
+6. [AppLovin MAX mediation (init)](#applovin-max-mediation-init)
+7. [Configuration](#configuration)
+8. [Showing Ads](#showing-ads)
+9. [Ad Callbacks](#ad-callbacks)
+10. [Ad Positioning](#ad-positioning)
+11. [Consent Management](#consent-management)
+12. [Examples](#examples)
+13. [SDK Test Scene](#sdk-test-scene)
 
 ---
 
@@ -101,13 +105,140 @@ if (BidscubeSDK.BidscubeSDK.IsInitialized())
 }
 ```
 
-### AppLovin MAX mediation (init)
+`IsInitialized()` is **true** after a successful `Initialize(config)` / `Initialize()` — it reflects **C# configuration only**. On **Android device builds**, also read the **`Init (Android Java):`** / **`Init (publisher row):`** lines (see [Verifying the integration (logs)](#verifying-the-integration-logs)) to confirm the optional native `com.bidscube.sdk.BidscubeSDK` sync.
+
+---
+
+## Configure SDK in code (detailed)
+
+Use **one** startup path (e.g. `Awake` / first scene / bootstrap `MonoBehaviour`) so every option lives on `SDKConfig.Builder` before `BidscubeSDK.Initialize(config)`.
+
+| Step | What to set | Notes |
+|------|-------------|--------|
+| 1 | **`IntegrationMode(...)`** | **`DirectSdk`** (default) for `ShowVideoAd`, banners, native from C#. **`AppLovinMaxMediation`** for MAX-only — C# creative APIs **throw**; init still recommended on Android **before** `MaxSdk.InitializeSdk`. |
+| 2 | **`EnableLogging(true)`** for QA | All lines below are suppressed when `false`. |
+| 3 | **`AdRequestAuthority(...)`** or **`BaseURL(...)`** | Same normalization — host or `https://host/sdk` prefix; see `AD_REQUEST_ENDPOINT.md`. |
+| 4 | **`DefaultAdTimeout`**, **`DefaultAdPosition`** | Request / layout defaults. |
+| 5 | **`EnableTestMode`**, **`EnableDebugMode`** | Forwarded to native Android builder when supported; extra `DEBUG:` logs when debug on. |
+| 6 | **`VideoPlaybackFactory(...)`** | Optional; only for **linear** VAST / direct URL when **not** using IMA for that path. Prefer here over static `VideoAdView.VideoPlaybackFactory` so config travels with the rest of the SDK. |
+| 7 | **`AdSizeSettings(...)`** | Optional asset for default creative sizes. |
+
+**Android:** if `UnityPlayer.currentActivity` is null on the first frame, call `Initialize` **after** the first `yield return null` (or from `Start` when the activity is ready). Symptoms of “too early”: **`Init (Android Java): skipped — Unity currentActivity is null`** in logcat.
+
+**Example — production-style single builder (Direct SDK + custom video):**
+
+```csharp
+using BidscubeSDK;
+using UnityEngine;
+
+public sealed class BidscubeBootstrap : MonoBehaviour
+{
+    [SerializeField] private string adAuthority = "ssp-bcc-ads.com";
+
+    private void Start()
+    {
+        var config = new SDKConfig.Builder()
+            .IntegrationMode(BidscubeIntegrationMode.DirectSdk)
+            .EnableLogging(true)
+            .EnableDebugMode(false)
+            .EnableTestMode(false)
+            .DefaultAdTimeout(30_000)
+            .DefaultAdPosition(AdPosition.Unknown)
+            .AdRequestAuthority(adAuthority)
+            // .VideoPlaybackFactory((hostGo, rawImage) => hostGo.AddComponent<MyAvProVideoPlayback>())
+            .Build();
+
+        BidscubeSDK.BidscubeSDK.Initialize(config);
+    }
+}
+```
+
+**Example — MAX mediation (no C# creatives, Android order):**
+
+```csharp
+var config = new SDKConfig.Builder()
+    .IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)
+    .EnableLogging(true)
+    .AdRequestAuthority("ssp-bcc-ads.com")
+    .Build();
+BidscubeSDK.BidscubeSDK.Initialize(config);
+// Then: MaxSdk.InitializeSdk(...);
+```
+
+---
+
+## Verifying the integration (logs)
+
+Enable **`EnableLogging(true)`** (default on `SDKConfig.Builder`). Unity prefixes every SDK line with **`[BidscubeSDK]`** (see `Logger.cs`). Use **Editor Console** or **logcat** (`adb logcat -s Unity`) on device.
+
+### After `BidscubeSDK.Initialize(config)`
+
+| Log line (substring) | Meaning |
+|----------------------|---------|
+| **`Init (C#):`** | C# config saved: **`integrationMode=`**, **`unityPackage=`** (UPM), **`bundledNativeAndroid=`** (Maven pin for Gradle inject). |
+| **`Init (Android Java): syncing…`** | Android player: Unity is attempting Java `BidscubeSDK.initialize` / `setActivity`. |
+| **`Init (Android Java): SUCCESS`** | Native **`com.bidscube.sdk.BidscubeSDK.isInitialized()==true`** — MAX adapter can share this instance. |
+| **`WARNING: Init (Android Java): … ClassNotFoundException`** | Java **`com.bidscube.sdk.BidscubeSDK`** not in APK — **Unity C# creatives can still work**; add full Gradle export with postprocessor / Maven for MAX parity. |
+| **`Init (publisher row):`** | **One-line summary**: UPM version, **`gradleCore=com.bidscube:bidscube-sdk:…`**, mode, **`csharp_BidscubeSDK_IsInitialized=true`**, and **`AndroidJava=…`** tail (`OK`, `JAR_MISSING`, `SKIPPED`, etc.). **Primary grep for publishers:** **`[BidscubeSDK] Init`**. |
+| Native tags **`BidscubeSDK`**, **`BidscubeSDKImpl`** (no `[BidscubeSDK]` prefix) | Messages from the **Java** SDK; they complement but do not replace Unity logs. |
+
+### When loading / playing video (`ShowVideoAd`, Direct SDK)
+
+| Log line | Meaning |
+|----------|---------|
+| **`ShowVideoAd called`** / **`Video ad request URL:`** | Request built; check URL / placement. |
+| **`[VideoAdView] Fetch/VAST path: using Unity surface only`** | VAST/JSON path without attaching IMA component for that fetch. |
+| **`[VideoAdView] Linear surface playback: custom …`** | Your **`IVideoSurfacePlayback`** factory is active. |
+| **`[VideoAdView] Linear surface playback: UnityEngine.Video.VideoPlayer`** | Default Unity **`VideoPlayer`** — add **`BIDSCUBE_DISABLE_UNITY_VIDEO`** + factory to strip **`UnityEngine.VideoModule`** from builds when you do not need it. |
+| **`[VideoAdView] Successfully parsed VAST, video URL:`** | VAST OK; next step is prepare/play. |
+| **`[VideoAdView] Preparing video player with URL:`** | Surface backend is buffering. |
+| **`[VideoAdView] Video prepared successfully`** then **`Starting video playback...`** | Linear path healthy. |
+| **`[VideoAdView] …`** **`InfoError`** | Failure (network, parse, timeout, missing factory when Unity Video disabled). |
+
+**Callbacks** (`IAdCallback`): implement **`OnAdLoading`**, **`OnAdLoaded`**, **`OnAdDisplayed`**, **`OnAdFailed`**, **`OnAdClosed`** in your app code — they are the authoritative **business** outcome alongside logs.
+
+---
+
+## Custom video player (`IVideoSurfacePlayback`)
+
+Use a **custom player** when you want **AVPro**, a **native texture**, or to **avoid** linking **`UnityEngine.VideoModule`** (smaller APK). Applies to the **Unity `VideoAdView`** linear path (VAST XML / direct MP4 URL) when **Google IMA** is **not** driving that ad.
+
+### Contract
+
+Implement **`IVideoSurfacePlayback`** (`Runtime/BidscubeSDK/Views/IVideoSurfacePlayback.cs`):
+
+- **`BindToRawImage(RawImage)`** — bind decoded video to the SDK’s fullscreen **`RawImage`** (e.g. assign **`texture`** or **`RenderTexture`**).
+- **`SourceUrl` { get; set; }** — URL set by **`VideoAdView`** before **`Prepare()`**.
+- **`Prepare()`** / **`Play()`** / **`Pause()`** / **`Stop()`** — lifecycle; **`Prepare()`** must eventually fire **`Prepared`** when ready (or never, if you surface errors via **`OnAdFailed`** upstream).
+- Events: **`Prepared`**, **`Started`**, **`Completed`** — **`Completed`** when the creative ends or is dismissed.
+
+### Wiring (pick one)
+
+1. **Recommended:** **`SDKConfig.Builder().VideoPlaybackFactory((go, raw) => …)`** before **`Initialize`** — factory is stored on **`BidscubeSDK.ActiveConfiguration`** and used by **`VideoAdView`**.
+2. **Fallback:** static **`VideoAdView.VideoPlaybackFactory`** — useful in tests or if you must assign before `Initialize` (resolution order: **active `SDKConfig`** → **static** → built-in Unity player).
+
+Factory signature: **`Func<GameObject, RawImage, IVideoSurfacePlayback>`** — the **`GameObject`** is the host used for **`VideoAdView`**; add your **`MonoBehaviour`** implementation with **`AddComponent<T>()`** and return it as the interface.
+
+### Strip Unity `VideoPlayer` from the build
+
+1. **Player Settings → Scripting Define Symbols:** add **`BIDSCUBE_DISABLE_UNITY_VIDEO`**.
+2. You **must** supply **`VideoPlaybackFactory`** (builder or static); otherwise **`[VideoAdView] Surface playback not available`** / load failure.
+
+### Minimal stub (tests only)
+
+The sample test app includes **`TestStubColorVideoPlayback`** (solid color, no real decode) under the test project — use it only to verify wiring; replace with your production decoder.
+
+**AppLovin MAX:** mediated video/rewarded on Android usually runs the **native** Bidscube stack (IMA inside the adapter), **not** this Unity **`VideoAdView`** path — **`IVideoSurfacePlayback`** applies to **Direct SDK** Unity creatives only.
+
+---
+
+## AppLovin MAX mediation (init)
 
 Use `IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)`. **Android:** call `Initialize` **before** the AppLovin MAX SDK so native `AdRequestAuthority` and options match C#. **iOS:** C# `Initialize` is **optional** if you use the **`BidscubeSDKAppLovin`** adapter-only path; see `Documentation~/APPLOVIN_MAX.md` and [AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS). Do **not** use C# APIs that attach creatives (`GetBannerAdView`, `ShowVideoAd`, etc.) in MAX mode; they throw. Full flow: `Documentation~/APPLOVIN_MAX.md`.
 
 For JSON / `PlayerPrefs`, `IntegrationModeFromWire("levelPlay")` still maps to MAX mediation (backward compatible).
 
-**Recommended wiring (one place):** build a single `SDKConfig` with `IntegrationMode`, `AdRequestAuthority` / test flags, and (if needed) `VideoPlaybackFactory`, then call `BidscubeSDK.Initialize(config)` once at startup. On **Android + MAX**, call it **before** `MaxSdk.InitializeSdk`. Avoid a **second** `implementation 'com.bidscube:bidscube-sdk:…'` in Custom Gradle — the post-processor already injects one Maven coordinate; duplicates break DEX / init. **Logcat / Unity:** filter for **`[BidscubeSDK] Init (C#):`** then **`[BidscubeSDK] Init (Android Java): SUCCESS`** on device.
+Build **`SDKConfig`** once (see [Configure SDK in code (detailed)](#configure-sdk-in-code-detailed)); on **Android + MAX** call **`BidscubeSDK.Initialize(config)`** before **`MaxSdk.InitializeSdk`**. Avoid a **second** `implementation 'com.bidscube:bidscube-sdk:…'` in Custom Gradle — the post-processor already injects one Maven coordinate. Verify init with **[Verifying the integration (logs)](#verifying-the-integration-logs)** (`[BidscubeSDK] Init`).
 
 ### Android: bundled native SDK (self-contained)
 

@@ -2,6 +2,17 @@
 
 UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drives banners, video, native, interstitials) and **AppLovin MAX mediation** (MAX drives load/show via the Bidscube adapter; **Android:** early C# **`BidscubeSDK.Initialize`** recommended; **iOS:** optional — adapter can init native BidCube — see [`APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)).
 
+### What’s new in **1.0.4**
+
+| Topic | Summary |
+|--------|---------|
+| **UPM version** | Valid **semver** **`1.0.4`** (Unity rejects **`1.0.3.1`**). Git tag **`v1.0.4`** must match `package.json` — see [`RELEASE.md`](RELEASE.md), run [`tools/verify-release-ready.sh`](tools/verify-release-ready.sh). |
+| **Android core SDK** | No bundled **`bidscube-sdk-*.aar`** in the package. **`BidscubeAndroidGradlePostprocessor`** injects **`com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>`** (Maven Central, currently **1.2.2**) next to the bundled MAX adapter AAR. **Do not** add a second `implementation` line in Custom Gradle. |
+| **Logs / QA** | After **`Initialize`**, search logcat for **`[BidscubeSDK] Init (publisher row):`** — one-line C# + Android Java status. **`[VideoAdView]`** logs whether linear playback uses **Unity VideoPlayer** or a **custom factory** (`BIDSCUBE_DISABLE_UNITY_VIDEO` for APK size). |
+| **Video (Direct SDK)** | More stable VAST/JSON path: Unity surface only for fetch, immediate surface bind, **`DestroyImmediate`** cleanup of stacked fullscreen roots on Android. |
+
+Full list: [`CHANGELOG.md`](CHANGELOG.md).
+
 ## Contents
 
 - [Install (UPM)](#install-upm)

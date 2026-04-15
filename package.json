@@ -2,8 +2,10 @@
   "name": "com.bidscube.sdk",
   "version": "1.0.4",
   "displayName": "Bidscube SDK",
-  "description": "Bidscube Unity SDK: direct in-scene ads and AppLovin MAX mediation. Bundled MAX adapter AAR; Gradle injects com.bidscube:bidscube-sdk from Maven, AppLovin SDK 13.0+, and Bidscube Android deps.",
+  "description": "Bidscube advertising for Unity — two integration paths: (1) Direct SDK — C# APIs for banner, fullscreen video/VAST, native, and interstitials against your SSP. (2) AppLovin MAX — Bidscube as a custom mediated network; Android ships the MAX adapter AAR; Unity Editor injects com.bidscube:bidscube-sdk from Maven Central (pinned in Constants.NativeAndroidBidscubeSdkVersion), AppLovin SDK 13.x, Media3, IMA, UMP, Glide, Material, and core library desugaring. iOS uses bundled WebView plugins and optional CocoaPods BidscubeSDKAppLovin. Version 1.0.4 removes the bundled core Android AAR in favour of Maven-only resolution (valid UPM semver; use v1.0.4 Git tag).",
   "unity": "2020.3",
+  "changelogUrl": "https://github.com/BidsCube/AppLovin-SDK-Unity/blob/main/CHANGELOG.md",
+  "documentationUrl": "https://github.com/BidsCube/AppLovin-SDK-Unity/blob/main/README.md",
   "keywords": [
     "advertising",
     "ads",

@@ -101,6 +101,8 @@ namespace BidscubeSDK
             _player.prepareCompleted -= OnPrepareCompleted;
             _player.started -= OnStarted;
             _player.loopPointReached -= OnLoopPointReached;
+            _player.Stop();
+            _player.url = string.Empty;
         }
 
         private void OnPrepareCompleted(VideoPlayer _)

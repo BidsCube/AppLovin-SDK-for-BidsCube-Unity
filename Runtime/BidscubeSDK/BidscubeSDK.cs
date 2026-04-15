@@ -73,6 +73,21 @@ namespace BidscubeSDK
             Logger.Info(
                 "Init: this build target is not Android/iOS player — native BidscubeSDK.initialize is not invoked (expected in Editor, Standalone, etc.).");
 #endif
+            LogInitPublisherRow(config);
+        }
+
+        /// <summary>Single grep-friendly line for integrators (logcat / Unity console).</summary>
+        private static void LogInitPublisherRow(SDKConfig config)
+        {
+            var mode = config.IntegrationMode.ToWireString();
+            var row =
+                $"Init (publisher row): unityUPM={Constants.SdkVersion} gradleCore=com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion} " +
+                $"integrationMode={mode} csharp_BidscubeSDK_IsInitialized=true";
+#if UNITY_ANDROID && !UNITY_EDITOR
+            Logger.Info(row + " | " + BidscubeAndroidSdkInterop.FormatPublisherChecklistLine());
+#else
+            Logger.Info(row + " | AndroidJava=n/a_this_build | logcat filter: [BidscubeSDK] Init");
+#endif
         }
 
         /// <summary>
@@ -417,6 +432,10 @@ namespace BidscubeSDK
             }
             _activeControllers.Clear();
 
+            var sdk = GameObject.Find("SDKContent");
+            if (sdk != null)
+                DestroyExistingShowVideoAdRoots(sdk.transform);
+
             Logger.Info("All ads cleared");
         }
 
@@ -488,6 +507,10 @@ namespace BidscubeSDK
 
             // Find or create SDKContent parent
             GameObject parentObject = GetOrCreateSDKContent();
+
+            // ShowVideoAd uses the fixed child name "AdViewController" (unlike CreateAdViewController's "AdViewController_{placementId}").
+            // Destroy previous instances so only one VideoPlayer / MediaHTTP stack runs; overlapping loads cause NuCachedSource2 errors on Android.
+            DestroyExistingShowVideoAdRoots(parentObject.transform);
 
             // Create AdViewController like iOS
             var adViewControllerObj = new GameObject("AdViewController");
@@ -825,6 +848,31 @@ namespace BidscubeSDK
         internal static void UnregisterAdViewController(AdViewController controller)
         {
             _activeControllers.Remove(controller);
+        }
+
+        /// <summary>
+        /// Removes prior <see cref="ShowVideoAd"/> roots (named <c>AdViewController</c>) under SDKContent so a new video load does not stack
+        /// multiple <see cref="VideoAdView"/> / Android media sources (avoids <c>NuCachedSource2</c> / prepare failures when the user taps again before the first ad finishes).
+        /// </summary>
+        private static void DestroyExistingShowVideoAdRoots(Transform parent)
+        {
+            if (parent == null)
+                return;
+            for (int i = parent.childCount - 1; i >= 0; i--)
+            {
+                var child = parent.GetChild(i);
+                if (child.name != "AdViewController")
+                    continue;
+                if (child.GetComponent<AdViewController>() == null)
+                    continue;
+                // Deferred Destroy leaves the previous VideoAdView coroutine + Android MediaHTTP/NuCachedSource
+                // alive for the rest of the frame; a second ShowVideoAd in the same frame stacks two players.
+#if UNITY_ANDROID && !UNITY_EDITOR
+                UnityEngine.Object.DestroyImmediate(child.gameObject);
+#else
+                UnityEngine.Object.Destroy(child.gameObject);
+#endif
+            }
         }
 
         private static IEnumerator DelayedAdLoaded(string placementId, IAdCallback callback)

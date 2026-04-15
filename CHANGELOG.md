@@ -1,9 +1,21 @@
-## [1.0.4] - 2026-04-14
+## [1.0.4] - 2026-04-15
+
+### Added
+
+- **Init diagnostics (publishers / QA):** after each **`BidscubeSDK.Initialize`**, Unity logs **`Init (publisher row):`** — one line with UPM version, expected **`com.bidscube:bidscube-sdk`** Maven pin, **`integrationMode`**, C# init flag, and Android Java sync outcome (**`AndroidJava=OK`**, **`JAR_MISSING`**, skipped activity, etc.). Android interop exposes **`FormatPublisherChecklistLine()`** state machine for that suffix. Filter logcat with **`[BidscubeSDK] Init`**.
+- **`[VideoAdView]`** logs which **linear** playback backend is active: built-in **`UnityEngine.Video.VideoPlayer`** vs **`IVideoSurfacePlayback`** from **`VideoPlaybackFactory`** / **`SDKConfig.Builder.VideoPlaybackFactory`**; reminds about **`BIDSCUBE_DISABLE_UNITY_VIDEO`** for smaller builds when a custom factory is registered.
 
 ### Changed
 
 - **Android:** removed bundled **`bidscube-sdk-*.aar`**; **`BidscubeAndroidGradlePostprocessor`** injects **`implementation 'com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>'`** (Maven Central). Only **`applovin-bidscube-max-adapter-*.aar`** ships in `Runtime/Plugins/Android/`. Migration: existing `unityLibrary/build.gradle` exports that already have our marker but no Maven core line get the coordinate appended automatically.
 - **`Constants.SdkVersion`** / **`package.json`** → **1.0.4** (Unity Package Manager rejects four-part versions like `1.0.3.1`; use **1.0.4** instead). iOS CocoaPods **`BidscubeSDKAppLovin`** pin remains **1.0.3**.
+- **`BidscubeAndroidSdkInterop`:** **`ClassNotFoundException`** for **`com.bidscube.sdk.BidscubeSDK`** is logged as **WARNING** (Unity C# creatives can still run); other init failures remain errors. Warning when Java **`SDKConfig.Builder`** lacks **`adRequestAuthority`** / **`BaseURL`** setters now points integrators at UPM upgrade and removing duplicate **`project(':bidscube-sdk-…')`** / legacy AAR lines.
+- **`Documentation~/INTEGRATION.md`:** logcat guidance — Unity **`[BidscubeSDK]`** lines vs native tags **`BidscubeSDK`** / **`BidscubeSDKImpl`**; **`Init (publisher row)`** closing line.
+
+### Fixed
+
+- **Direct SDK video (VAST / JSON):** fetch path uses **`SetupUI(false)`** so IMA is not attached while **`UnityEngineVideoSurfacePlayback`** prepares the stream; **`TryEnsureSurfacePlayback(forLoadVideoAdCoroutine: true)`** after **`SetupUI`** so surface playback exists before assigning media URL. **`OnDestroy`:** stop surface playback after unsubscribing events.
+- **Android player:** prior ad roots under **`AdViewController`** are torn down with **`DestroyImmediate`** when replacing fullscreen video to reduce overlapping **`VideoPlayer`** / **`MediaHTTP`** instances in the same frame.
 
 ---
 

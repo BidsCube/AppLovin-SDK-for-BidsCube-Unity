@@ -67,21 +67,36 @@ namespace BidscubeSDK
                 _surfacePlayback.Completed -= OnSurfaceCompleted;
                 _surfaceEventsWired = false;
             }
+
+            // Release Android media / Unity VideoPlayer promptly (script order vs UnityEngineVideoSurfacePlayback.OnDestroy is undefined).
+            _surfacePlayback?.Stop();
         }
 
-        private void SetupUI()
+        /// <param name="useImaWhenAvailable">
+        /// When <c>false</c> (fetch/VAST coroutine path), do not attach <see cref="IMAVideoPlayer"/> even if the IMA SDK is present.
+        /// That path always plays the resolved URL via <see cref="IVideoSurfacePlayback"/>; attaching IMA alongside Unity's player
+        /// can stress Android media (e.g. <c>NuCachedSource2</c> errors) without benefit.
+        /// </param>
+        private void SetupUI(bool useImaWhenAvailable = true)
         {
-            // Check if IMA SDK is available
-            _useIMA = IMAVideoPlayer.IsIMAAvailable();
-
-            if (_useIMA)
+            if (useImaWhenAvailable)
             {
-                Logger.Info("[VideoAdView] IMA SDK detected, will use IMA player for video ads");
-                SetupIMA();
+                _useIMA = IMAVideoPlayer.IsIMAAvailable();
+
+                if (_useIMA)
+                {
+                    Logger.Info("[VideoAdView] IMA SDK detected, will use IMA player for video ads");
+                    SetupIMA();
+                }
+                else
+                {
+                    Logger.Info("[VideoAdView] IMA SDK not available, using custom VAST parser");
+                }
             }
             else
             {
-                Logger.Info("[VideoAdView] IMA SDK not available, using custom VAST parser");
+                _useIMA = false;
+                Logger.Info("[VideoAdView] Fetch/VAST path: using Unity surface only (IMA component not attached)");
             }
 
             // Setup full screen canvas
@@ -222,9 +237,14 @@ namespace BidscubeSDK
             _imaPlayer = gameObject.AddComponent<IMAVideoPlayer>();
         }
 
-        private bool TryEnsureSurfacePlayback()
+        /// <param name="forLoadVideoAdCoroutine">
+        /// When <c>true</c>, always bind RawImage/factory playback even if the IMA SDK is present.
+        /// <see cref="LoadVideoAdFromURL"/> starts <see cref="LoadVideoAdCoroutine"/> before the first <see cref="SetupUI"/>,
+        /// so <c>_useIMA</c> becomes <c>true</c> inside the coroutine while this path still assigns <see cref="IVideoSurfacePlayback.SourceUrl"/> (JSON/VAST), not <c>IMAVideoPlayer.RequestAd</c>.
+        /// </param>
+        private bool TryEnsureSurfacePlayback(bool forLoadVideoAdCoroutine = false)
         {
-            if (_useIMA)
+            if (_useIMA && !forLoadVideoAdCoroutine)
                 return true;
             if (_videoTexture == null)
                 return false;
@@ -234,15 +254,25 @@ namespace BidscubeSDK
             var factory = ResolveVideoPlaybackFactory();
 #if !BIDSCUBE_DISABLE_UNITY_VIDEO
             if (factory != null)
+            {
                 _surfacePlayback = factory(gameObject, _videoTexture);
+                Logger.Info("[VideoAdView] Linear surface playback: custom IVideoSurfacePlayback (SDKConfig/VideoAdView VideoPlaybackFactory).");
+            }
             else
             {
                 var u = gameObject.AddComponent<UnityEngineVideoSurfacePlayback>();
                 u.BindToRawImage(_videoTexture);
                 _surfacePlayback = u;
+                Logger.Info(
+                    "[VideoAdView] Linear surface playback: UnityEngine.Video.VideoPlayer (add scripting define BIDSCUBE_DISABLE_UNITY_VIDEO + VideoPlaybackFactory to shrink build).");
             }
 #else
             _surfacePlayback = factory != null ? factory(gameObject, _videoTexture) : null;
+            if (_surfacePlayback != null)
+            {
+                Logger.Info(
+                    "[VideoAdView] Linear surface playback: custom IVideoSurfacePlayback (BIDSCUBE_DISABLE_UNITY_VIDEO — Unity VideoPlayer not compiled in).");
+            }
 #endif
             if (_surfacePlayback == null)
                 return false;
@@ -314,8 +344,8 @@ namespace BidscubeSDK
                 Logger.Info($"[VideoAdView] Received response ({responseText.Length} chars)");
                 Logger.Info($"[VideoAdView] Full response content:\n{responseText}");
 
-                SetupUI();
-                if (!_useIMA && !TryEnsureSurfacePlayback())
+                SetupUI(useImaWhenAvailable: false);
+                if (!TryEnsureSurfacePlayback(forLoadVideoAdCoroutine: true))
                 {
                     _callback?.OnAdFailed(_placementId, Constants.ErrorCodes.UnknownError,
                         "No video surface playback: set VideoAdView.VideoPlaybackFactory or use IMA / remove BIDSCUBE_DISABLE_UNITY_VIDEO.");
