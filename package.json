@@ -1,6 +1,6 @@
 {
   "name": "com.bidscube.sdk",
-  "version": "1.0.3.1",
+  "version": "1.0.4",
   "displayName": "Bidscube SDK",
   "description": "Bidscube Unity SDK: direct in-scene ads and AppLovin MAX mediation. Bundled MAX adapter AAR; Gradle injects com.bidscube:bidscube-sdk from Maven, AppLovin SDK 13.0+, and Bidscube Android deps.",
   "unity": "2020.3",

@@ -29,7 +29,7 @@ The Bidscube Unity SDK can be installed in two ways:
 3. Select `Add package from git URL...`
 4. Enter the repository URL: `https://github.com/BidsCube/AppLovin-SDK-Unity.git`  
    The public **Bidscube Unity SDK** sample line is [github.com/BidsCube/bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) (same `com.bidscube.sdk` name; **AppLovin-SDK-Unity** adds bundled Android SDK + MAX adapter AARs, Gradle AppLovin 13+, and optional Podfile hook — see `README.md`).
-5. Optionally, specify a version tag: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.3.1`
+5. Optionally, specify a version tag: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.4`
 6. Click `Add`
 7. The SDK will be added as a package dependency
 
@@ -38,7 +38,7 @@ The Bidscube Unity SDK can be installed in two ways:
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.3.1"
+    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.4"
   }
 }
 ```
@@ -111,7 +111,7 @@ For JSON / `PlayerPrefs`, `IntegrationModeFromWire("levelPlay")` still maps to M
 
 ### Android: bundled native SDK (self-contained)
 
-- Adding **`com.bidscube.sdk`** from Git (e.g. `…/AppLovin-SDK-Unity.git#v1.0.3.1`) is enough for Android: the package ships **`applovin-bidscube-max-adapter-*.aar`** and injects **`com.bidscube:bidscube-sdk:<version>`** from Maven Central (see `Constants.NativeAndroidBidscubeSdkVersion`, currently **1.2.2**) via **`BidscubeAndroidGradlePostprocessor`**. **Do not** add another `implementation 'com.bidscube:bidscube-sdk:…'` in **Custom Base Gradle** / **mainTemplate** — duplicates classes. Remove any legacy **`project(':bidscube-sdk-…')`** lines that vendor a second core SDK.
+- Adding **`com.bidscube.sdk`** from Git (e.g. `…/AppLovin-SDK-Unity.git#v1.0.4`) is enough for Android: the package ships **`applovin-bidscube-max-adapter-*.aar`** and injects **`com.bidscube:bidscube-sdk:<version>`** from Maven Central (see `Constants.NativeAndroidBidscubeSdkVersion`, currently **1.2.2**) via **`BidscubeAndroidGradlePostprocessor`**. **Do not** add another `implementation 'com.bidscube:bidscube-sdk:…'` in **Custom Base Gradle** / **mainTemplate** — duplicates classes. Remove any legacy **`project(':bidscube-sdk-…')`** lines that vendor a second core SDK.
 - On Gradle export, **`BidscubeAndroidGradlePostprocessor`** injects AppLovin 13.x, Media3, IMA, UMP, Glide, Material, desugar libs, **and** the core Bidscube coordinate into **`unityLibrary`**, enables **core library desugaring** there, and mirrors desugaring onto **`launcher`** when needed. Install Unity **Android Build Support** so the Editor script compiles. First Gradle resolve needs Maven Central access for **`com.bidscube:bidscube-sdk`**. Desugaring follows AAR / AndroidX metadata requirements.
 - **Optional build size (Unity `VideoPlayer`):** for **AppLovin MAX–only** games you never call `ShowVideoAd` / `GetVideoAdView`, Unity may still include the **Video** module if the default `VideoAdView` path references it. To drop **`UnityEngine.VideoModule`**, add scripting define **`BIDSCUBE_DISABLE_UNITY_VIDEO`**. For **direct SDK** VAST without IMA, register a factory on **`SDKConfig.Builder().VideoPlaybackFactory(...)`** before `Initialize` (recommended — one place with SSP / mode / logging), or set **`VideoAdView.VideoPlaybackFactory`** as a fallback. Factory returns **`IVideoSurfacePlayback`** (e.g. AVPro). With **IMA only**, no custom factory is needed.
 - Set player **Minimum API Level** to **24+** (matches the Android SDK).

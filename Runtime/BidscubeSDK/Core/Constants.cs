@@ -34,7 +34,7 @@ namespace BidscubeSDK
         /// <summary>
         /// Unity UPM package version (user-agent, diagnostics). Must match <c>package.json</c> <c>version</c>.
         /// </summary>
-        public const string SdkVersion = "1.0.3.1";
+        public const string SdkVersion = "1.0.4";
 
         /// <summary>
         /// Native Android <c>com.bidscube:bidscube-sdk</c> version resolved from Maven Central on export (Editor injects <c>implementation</c> into Gradle). Parity with published artifacts.

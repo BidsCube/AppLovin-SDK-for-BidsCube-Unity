@@ -9,9 +9,9 @@ echo "== Bidscube Unity UPM release check =="
 echo "package.json version: $VER"
 echo ""
 
-# UPM allows extra numeric segments (e.g. 1.0.3.1); optional prerelease suffix.
-if [[ ! "$VER" =~ ^[0-9]+(\.[0-9]+)+(-[0-9A-Za-z.-]+)?$ ]]; then
-  echo "ERROR: version must look like semver (e.g. 1.0.0 or 1.0.3.1)" >&2
+# Unity UPM: MAJOR.MINOR.PATCH (three numeric parts); optional prerelease (-suffix). Four-part versions like 1.0.3.1 are rejected.
+if [[ ! "$VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+  echo "ERROR: version must be MAJOR.MINOR.PATCH with optional prerelease (e.g. 1.0.4 or 1.0.0-rc.1). Not 1.0.3.1 — Unity rejects it." >&2
   exit 1
 fi
 
