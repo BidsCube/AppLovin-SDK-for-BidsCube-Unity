@@ -2,21 +2,22 @@
 
 ## Naming conventions (congruence)
 
-| Item | Format | Example (1.0.3) |
-|------|--------|-----------------|
-| **UPM `package.json` → `version`** | `MAJOR.MINOR.PATCH` without a `v` prefix | `1.0.3` |
-| **Git tag** | `v` + the same semver | `v1.0.3` |
-| **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.3.zip` |
-| **GitHub Release title** (workflow) | `com.bidscube.sdk {version}` | `com.bidscube.sdk 1.0.3` |
+| Item | Format | Example (1.0.3.1) |
+|------|--------|------------------|
+| **UPM `package.json` → `version`** | Numeric semver segments (e.g. `MAJOR.MINOR.PATCH` or `MAJOR.MINOR.PATCH.PATCH`) without a `v` prefix | `1.0.3.1` |
+| **Git tag** | `v` + the same version string | `v1.0.3.1` |
+| **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.3.1.zip` |
+| **GitHub Release title** (workflow) | `com.bidscube.sdk {version}` | `com.bidscube.sdk 1.0.3.1` |
 | **GitHub repository** (recommended) | `AppLovin-SDK-Unity` | `github.com/BidsCube/AppLovin-SDK-Unity` |
-| **`Constants.SdkVersion`** | Unity package / user-agent string | Often matches UPM `version`; native **`bidscube-sdk-*.aar`** may stay on an older semver (e.g. `1.0.0`) |
+| **`Constants.SdkVersion`** | Unity package / user-agent string | Must match UPM `version`; **`Constants.NativeAndroidBidscubeSdkVersion`** pins the Maven **`com.bidscube:bidscube-sdk`** line Gradle injects (e.g. **1.2.2**) |
+| **`BidscubeIosPodfilePostprocessor.BidscubeAppLovinPodVersion`** | CocoaPods **`BidscubeSDKAppLovin`** line appended to exported Podfile | May differ from UPM when only Android/Unity packaging changes (e.g. UPM **1.0.3.1**, pod **1.0.3**) |
 
 If **another commit** already points to tag **`v1.0.0`** on the remote (e.g. old Level Play line), **do not** force-push a new commit to that tag without coordination: delete the old tag on GitHub (**Releases / Tags** or `git push origin :refs/tags/v1.0.0`) and only then create **`v1.0.0`** on the current commit, or pick a new version (`1.0.3`, `1.1.0`).
 
 ## Version sources
 
 1. **`package.json`** — UPM package version; must equal the tag **without** `v`.
-2. **`Runtime/BidscubeSDK/Core/Constants.cs` → `SdkVersion`** — Unity / user-agent version (match **`package.json`**; native AAR filenames may differ).
+2. **`Runtime/BidscubeSDK/Core/Constants.cs` → `SdkVersion`** — Unity / user-agent version (match **`package.json`**). **`NativeAndroidBidscubeSdkVersion`** must match the **`com.bidscube:bidscube-sdk`** artifact you inject in Gradle.
 
 ## Pre-release check
 
@@ -29,7 +30,7 @@ If **another commit** already points to tag **`v1.0.0`** on the remote (e.g. old
 - [ ] `CHANGELOG.md` includes an entry for this version.
 - [ ] `README.md` / `Documentation~/` — `#vX.Y.Z` examples match `package.json`.
 - [ ] `package.json` → `repository.url` points to the **actual** GitHub repository.
-- [ ] Bundled **`bidscube-sdk-*.aar`** / **`applovin-bidscube-max-adapter-*.aar`** and version docs match the native Android release (if applicable).
+- [ ] Bundled **`applovin-bidscube-max-adapter-*.aar`**, **`NativeAndroidBidscubeSdkVersion`** / Gradle inject, and docs match the native Android release (if applicable).
 
 ## Create a release on GitHub
 
@@ -38,16 +39,16 @@ If **another commit** already points to tag **`v1.0.0`** on the remote (e.g. old
 3. Create an annotated tag:
 
 ```bash
-git tag -a "v1.0.3" -m "com.bidscube.sdk 1.0.3"
-git push origin "v1.0.3"
+git tag -a "v1.0.3.1" -m "com.bidscube.sdk 1.0.3.1"
+git push origin "v1.0.3.1"
 ```
 
-4. The **Release (GitHub)** workflow (`.github/workflows/release.yml`) validates `package.json`, builds a ZIP without `.git`, and creates a GitHub Release with **`Bidscube-SDK-Unity-1.0.3.zip`**.
+4. The **Release (GitHub)** workflow (`.github/workflows/release.yml`) validates `package.json`, builds a ZIP without `.git`, and creates a GitHub Release with **`Bidscube-SDK-Unity-{version}.zip`** (e.g. **`Bidscube-SDK-Unity-1.0.3.1.zip`**).
 
 **UPM consumers:**
 
 ```json
-"com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.3"
+"com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.3.1"
 ```
 
 ## Renaming the repository from LevelPlay
@@ -75,7 +76,7 @@ Workflow files are under **`.github/workflows/`** at the package repository root
 ### Release (UPM ZIP + GitHub Release)
 
 - **`release.yml`**:
-  1. **Via tag:** after `git push origin v1.0.3` (tag `v*`). The value in `package.json` must match the tag without `v`.
+  1. **Via tag:** after `git push origin v1.0.3.1` (tag `v*`). The value in `package.json` must match the tag without `v`.
   2. **Manual:** **Actions → “Release (GitHub)” → Run workflow** → select a branch (e.g. `main`). Version is read from `package.json`; a GitHub Release with the ZIP is created. If a release for that tag already exists, the step fails.
 
 Quick local check before tagging: `./tools/verify-release-ready.sh`.

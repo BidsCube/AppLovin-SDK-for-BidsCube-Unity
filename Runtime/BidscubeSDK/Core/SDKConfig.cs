@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace BidscubeSDK
 {
@@ -30,9 +31,15 @@ namespace BidscubeSDK
         public AdSizeSettings AdSizeSettings { get; private set; }
         public BidscubeIntegrationMode IntegrationMode { get; private set; }
 
+        /// <summary>
+        /// Optional factory for linear VAST / direct-URL playback when IMA is off. Prefer setting this on <see cref="Builder"/> so it lives next to other SDK options; <see cref="VideoAdView.VideoPlaybackFactory"/> is a fallback for tests or pre-<c>Initialize</c> wiring.
+        /// </summary>
+        public Func<GameObject, RawImage, IVideoSurfacePlayback> VideoPlaybackFactory { get; private set; }
+
         private SDKConfig(bool enableLogging, bool enableDebugMode, bool enableTestMode, int defaultAdTimeoutMs,
                          AdPosition defaultAdPosition, string adRequestAuthority, AdSizeSettings adSizeSettings,
-                         BidscubeIntegrationMode integrationMode)
+                         BidscubeIntegrationMode integrationMode,
+                         Func<GameObject, RawImage, IVideoSurfacePlayback> videoPlaybackFactory)
         {
             EnableLogging = enableLogging;
             EnableDebugMode = enableDebugMode;
@@ -42,6 +49,7 @@ namespace BidscubeSDK
             AdRequestAuthority = adRequestAuthority;
             AdSizeSettings = adSizeSettings;
             IntegrationMode = integrationMode;
+            VideoPlaybackFactory = videoPlaybackFactory;
         }
 
         /// <summary>
@@ -58,6 +66,7 @@ namespace BidscubeSDK
             private bool _authoritySet;
             private AdSizeSettings _adSizeSettings = null;
             private BidscubeIntegrationMode _integrationMode = BidscubeIntegrationMode.DirectSdk;
+            private Func<GameObject, RawImage, IVideoSurfacePlayback> _videoPlaybackFactory;
 
             public Builder() { }
 
@@ -156,6 +165,15 @@ namespace BidscubeSDK
             }
 
             /// <summary>
+            /// Custom linear video backend for VAST / direct URL when Google IMA is not used (e.g. AVPro). With scripting define <c>BIDSCUBE_DISABLE_UNITY_VIDEO</c>, this factory (or <see cref="VideoAdView.VideoPlaybackFactory"/>) is required for that code path.
+            /// </summary>
+            public Builder VideoPlaybackFactory(Func<GameObject, RawImage, IVideoSurfacePlayback> factory)
+            {
+                _videoPlaybackFactory = factory;
+                return this;
+            }
+
+            /// <summary>
             /// Build SDK configuration
             /// </summary>
             public SDKConfig Build()
@@ -172,7 +190,8 @@ namespace BidscubeSDK
                     _defaultAdPosition,
                     authority,
                     _adSizeSettings,
-                    _integrationMode
+                    _integrationMode,
+                    _videoPlaybackFactory
                 );
             }
         }

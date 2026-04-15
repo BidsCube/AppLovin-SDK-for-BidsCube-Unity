@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Video;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Networking;
@@ -14,7 +13,18 @@ namespace BidscubeSDK
     /// </summary>
     public class VideoAdView : MonoBehaviour
     {
-        [SerializeField] private VideoPlayer _videoPlayer;
+        /// <summary>
+        /// Fallback factory when <see cref="SDKConfig.VideoPlaybackFactory"/> is not set (e.g. unit tests or wiring before <c>BidscubeSDK.Initialize</c>). Resolution order: <see cref="BidscubeSDK.ActiveConfiguration"/> → this static property → built-in Unity player (unless <c>BIDSCUBE_DISABLE_UNITY_VIDEO</c>).
+        /// </summary>
+        public static System.Func<GameObject, RawImage, IVideoSurfacePlayback> VideoPlaybackFactory { get; set; }
+
+        private static System.Func<GameObject, RawImage, IVideoSurfacePlayback> ResolveVideoPlaybackFactory()
+        {
+            return BidscubeSDK.ActiveConfiguration?.VideoPlaybackFactory ?? VideoPlaybackFactory;
+        }
+
+        private IVideoSurfacePlayback _surfacePlayback;
+        private bool _surfaceEventsWired;
         [SerializeField] private Button _skipButton;
         [SerializeField] private Button _closeButton;
         [SerializeField] private Button _clickButton; // Full screen clickable area
@@ -49,6 +59,16 @@ namespace BidscubeSDK
             // SetupUI() will be called lazily in LoadVideoAdCoroutine after render-override checks.
         }
 
+        private void OnDestroy()
+        {
+            if (_surfacePlayback != null && _surfaceEventsWired)
+            {
+                _surfacePlayback.Started -= OnSurfaceStarted;
+                _surfacePlayback.Completed -= OnSurfaceCompleted;
+                _surfaceEventsWired = false;
+            }
+        }
+
         private void SetupUI()
         {
             // Check if IMA SDK is available
@@ -80,22 +100,10 @@ namespace BidscubeSDK
                 rectTransform.offsetMax = Vector2.zero;
             }
 
-            // Create video player
-            if (_videoPlayer == null)
+            if (!_useIMA)
             {
-                _videoPlayer = gameObject.AddComponent<VideoPlayer>();
-                _videoPlayer.playOnAwake = false;
-                _videoPlayer.isLooping = false;
-                _videoPlayer.renderMode = VideoRenderMode.RenderTexture;
-
-                // Create render texture
-                var renderTexture = new RenderTexture(Screen.width, Screen.height, 0);
-                _videoPlayer.targetTexture = renderTexture;
-                _videoTexture.texture = renderTexture;
-
-                _videoPlayer.prepareCompleted += OnVideoPrepared;
-                _videoPlayer.started += OnVideoStarted;
-                _videoPlayer.loopPointReached += OnVideoCompleted;
+                if (!TryEnsureSurfacePlayback())
+                    Logger.InfoError("[VideoAdView] Surface playback not available (IMA off). Set VideoAdView.VideoPlaybackFactory or remove BIDSCUBE_DISABLE_UNITY_VIDEO.");
             }
 
             // Create skip button
@@ -214,6 +222,41 @@ namespace BidscubeSDK
             _imaPlayer = gameObject.AddComponent<IMAVideoPlayer>();
         }
 
+        private bool TryEnsureSurfacePlayback()
+        {
+            if (_useIMA)
+                return true;
+            if (_videoTexture == null)
+                return false;
+            if (_surfacePlayback != null)
+                return true;
+
+            var factory = ResolveVideoPlaybackFactory();
+#if !BIDSCUBE_DISABLE_UNITY_VIDEO
+            if (factory != null)
+                _surfacePlayback = factory(gameObject, _videoTexture);
+            else
+            {
+                var u = gameObject.AddComponent<UnityEngineVideoSurfacePlayback>();
+                u.BindToRawImage(_videoTexture);
+                _surfacePlayback = u;
+            }
+#else
+            _surfacePlayback = factory != null ? factory(gameObject, _videoTexture) : null;
+#endif
+            if (_surfacePlayback == null)
+                return false;
+
+            if (!_surfaceEventsWired)
+            {
+                _surfaceEventsWired = true;
+                _surfacePlayback.Started += OnSurfaceStarted;
+                _surfacePlayback.Completed += OnSurfaceCompleted;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Set placement info
         /// </summary>
@@ -271,6 +314,14 @@ namespace BidscubeSDK
                 Logger.Info($"[VideoAdView] Received response ({responseText.Length} chars)");
                 Logger.Info($"[VideoAdView] Full response content:\n{responseText}");
 
+                SetupUI();
+                if (!_useIMA && !TryEnsureSurfacePlayback())
+                {
+                    _callback?.OnAdFailed(_placementId, Constants.ErrorCodes.UnknownError,
+                        "No video surface playback: set VideoAdView.VideoPlaybackFactory or use IMA / remove BIDSCUBE_DISABLE_UNITY_VIDEO.");
+                    yield break;
+                }
+
                 // Check if response is VAST XML
                 if (responseText.TrimStart().StartsWith("<VAST") || responseText.Contains("<VAST"))
                 {
@@ -305,7 +356,7 @@ namespace BidscubeSDK
                     }
 
                     // Load the actual video
-                    _videoPlayer.url = _vastData.videoUrl;
+                    _surfacePlayback.SourceUrl = _vastData.videoUrl;
                 }
                 else
                 {
@@ -462,7 +513,7 @@ namespace BidscubeSDK
                                 if (_vastData != null && !string.IsNullOrEmpty(_vastData.videoUrl))
                                 {
                                     Logger.Info($"[VideoAdView] Successfully parsed VAST, video URL: {_vastData.videoUrl}");
-                                    _videoPlayer.url = _vastData.videoUrl;
+                                    _surfacePlayback.SourceUrl = _vastData.videoUrl;
                                     VASTParser.FireTrackingUrls(_vastData.impressionUrls);
                                     _hasFiredImpression = true;
 
@@ -481,52 +532,46 @@ namespace BidscubeSDK
                             else
                             {
                                 Logger.Info("[VideoAdView] adm field is not VAST XML, treating as direct video URL");
-                                _videoPlayer.url = admContent; // Try adm as direct URL
+                                _surfacePlayback.SourceUrl = admContent; // Try adm as direct URL
                             }
                         }
                         else
                         {
                             Logger.Info("[VideoAdView] JSON response has no adm field, treating original URL as direct video URL");
-                            _videoPlayer.url = url; // Direct video URL
+                            _surfacePlayback.SourceUrl = url; // Direct video URL
                         }
                     }
                     else
                     {
                         // Direct video URL
                         Logger.Info("[VideoAdView] Treating response as direct video URL");
-                        _videoPlayer.url = url;
+                        _surfacePlayback.SourceUrl = url;
                     }
                 }
 
                 // Validate video URL before preparing
-                if (string.IsNullOrEmpty(_videoPlayer.url))
+                if (string.IsNullOrEmpty(_surfacePlayback.SourceUrl))
                 {
                     Logger.InfoError("[VideoAdView] No video URL available to play");
                     _callback?.OnAdFailed(_placementId, Constants.ErrorCodes.InvalidResponse, "No video URL found in response");
                     yield break;
                 }
 
-                // Ensure UI/video player are initialized (lazy) before preparing/playing
-                if (_videoPlayer == null)
-                {
-                    SetupUI();
-                }
-
-                Logger.Info($"[VideoAdView] Preparing video player with URL: {_videoPlayer.url}");
+                Logger.Info($"[VideoAdView] Preparing video player with URL: {_surfacePlayback.SourceUrl}");
 
                 // Prepare video
-                _videoPlayer.Prepare();
+                _surfacePlayback.Prepare();
 
                 float timeout = 30f; // 30 second timeout
                 float elapsed = 0f;
 
-                while (!_videoPlayer.isPrepared && elapsed < timeout)
+                while (!_surfacePlayback.IsPrepared && elapsed < timeout)
                 {
                     elapsed += Time.deltaTime;
                     yield return null;
                 }
 
-                if (!_videoPlayer.isPrepared)
+                if (!_surfacePlayback.IsPrepared)
                 {
                     Logger.InfoError("[VideoAdView] Video preparation timeout");
                     _callback?.OnAdFailed(_placementId, Constants.ErrorCodes.Timeout, "Video preparation timeout");
@@ -540,7 +585,7 @@ namespace BidscubeSDK
 
                 // Automatically play the video after preparation
                 Logger.Info("[VideoAdView] Starting video playback...");
-                _videoPlayer.Play();
+                _surfacePlayback.Play();
             }
         }
 
@@ -552,21 +597,7 @@ namespace BidscubeSDK
             public int? position;
         }
 
-        private void OnVideoPrepared(VideoPlayer source)
-        {
-            _isLoaded = true;
-            _callback?.OnAdLoaded(_placementId);
-            _callback?.OnAdDisplayed(_placementId);
-
-            // Automatically play the video when prepared
-            if (!_videoPlayer.isPlaying)
-            {
-                Logger.Info("[VideoAdView] Video prepared, starting playback...");
-                _videoPlayer.Play();
-            }
-        }
-
-        private void OnVideoStarted(VideoPlayer source)
+        private void OnSurfaceStarted()
         {
             // Fire VAST start tracking URLs
             if (!_hasFiredStart && _vastData != null)
@@ -581,7 +612,7 @@ namespace BidscubeSDK
             StartCoroutine(TrackVASTQuartiles());
         }
 
-        private void OnVideoCompleted(VideoPlayer source)
+        private void OnSurfaceCompleted()
         {
             // Fire VAST complete tracking URLs
             if (!_hasFiredComplete && _vastData != null)
@@ -595,11 +626,11 @@ namespace BidscubeSDK
 
         private IEnumerator UpdateProgress()
         {
-            while (_videoPlayer.isPlaying)
+            while (_surfacePlayback != null && _surfacePlayback.IsPlaying)
             {
-                if (_videoPlayer.frameCount > 0)
+                if (_surfacePlayback.FrameCount > 0 && _progressSlider != null)
                 {
-                    _progressSlider.value = (float)_videoPlayer.frame / _videoPlayer.frameCount;
+                    _progressSlider.value = (float)_surfacePlayback.Frame / _surfacePlayback.FrameCount;
                 }
                 yield return null;
             }
@@ -724,14 +755,14 @@ namespace BidscubeSDK
 
         private IEnumerator TrackVASTQuartiles()
         {
-            if (_vastData == null || _videoPlayer.frameCount == 0)
+            if (_vastData == null || _surfacePlayback == null || _surfacePlayback.FrameCount == 0)
                 yield break;
 
-            while (_videoPlayer.isPlaying)
+            while (_surfacePlayback.IsPlaying)
             {
-                if (_videoPlayer.frameCount > 0)
+                if (_surfacePlayback.FrameCount > 0)
                 {
-                    var progress = (float)_videoPlayer.frame / _videoPlayer.frameCount;
+                    var progress = (float)_surfacePlayback.Frame / _surfacePlayback.FrameCount;
 
                     // First quartile (25%)
                     if (progress >= 0.25f && !_hasFiredFirstQuartile)
@@ -808,9 +839,9 @@ namespace BidscubeSDK
         /// </summary>
         public void Play()
         {
-            if (_isLoaded && _videoPlayer != null)
+            if (_isLoaded && _surfacePlayback != null)
             {
-                _videoPlayer.Play();
+                _surfacePlayback.Play();
             }
         }
 
@@ -819,10 +850,7 @@ namespace BidscubeSDK
         /// </summary>
         public void Pause()
         {
-            if (_videoPlayer != null)
-            {
-                _videoPlayer.Pause();
-            }
+            _surfacePlayback?.Pause();
         }
 
         /// <summary>
@@ -830,10 +858,7 @@ namespace BidscubeSDK
         /// </summary>
         public void Stop()
         {
-            if (_videoPlayer != null)
-            {
-                _videoPlayer.Stop();
-            }
+            _surfacePlayback?.Stop();
         }
 
         /// <summary>

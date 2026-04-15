@@ -2,14 +2,16 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using BidscubeSDK;
 using UnityEditor.Android;
 using UnityEngine;
 
 namespace BidscubeSDK.Editor.Android
 {
     /// <summary>
-    /// Injects Maven dependencies required by the bundled <c>bidscube-sdk</c> AAR (they are not pulled transitively from a local AAR),
-    /// plus <b>AppLovin MAX Android SDK</b> (<c>com.applovin:applovin-sdk</c> 13.0+) for the bundled Bidscube MAX adapter AAR.
+    /// Injects Maven dependencies for the **core** Bidscube Android SDK (<c>com.bidscube:bidscube-sdk</c>, version <see cref="Constants.NativeAndroidBidscubeSdkVersion"/>)
+    /// plus transitives for the bundled <b>AppLovin MAX</b> adapter AAR (local AARs do not pull their own Maven graph).
+    /// The UPM package ships only <c>applovin-bidscube-max-adapter-*.aar</c>; core classes resolve from Maven Central — do <b>not</b> add a second <c>implementation 'com.bidscube:bidscube-sdk:…'</c> in Custom Gradle.
     /// Mirrors the native Bidscube Android SDK Gradle dependency block + core library desugaring.
     /// Also raises <c>compileSdk</c> / <c>minSdk</c> when needed so <c>CheckAarMetadata</c> passes against Material / AndroidX.
     /// </summary>
@@ -47,6 +49,7 @@ namespace BidscubeSDK.Editor.Android
                 {
                     var depsBlock = $@"
     {Marker}
+    implementation 'com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}'
     implementation '{AppLovinSdkGradleCoordinate}'
     implementation 'androidx.media3:media3-common:1.4.1'
     implementation 'androidx.media3:media3-ui:1.4.1'
@@ -77,6 +80,7 @@ namespace BidscubeSDK.Editor.Android
                 EnsureMinCompileSdkInFile(unityLib, MinCompileSdkForBidscubeDeps);
                 EnsureMinMinSdkInFile(unityLib, MinMinSdkForBidscube);
                 TryUpgradeDesugarLibs(unityLib);
+                EnsureMavenBidscubeCoreSdk(unityLib);
             }
 
             var launcher = FindLauncherBuildGradle(path);
@@ -84,6 +88,7 @@ namespace BidscubeSDK.Editor.Android
             {
                 EnsureMinCompileSdkInFile(launcher, MinCompileSdkForBidscubeDeps);
                 EnsureMinMinSdkInFile(launcher, MinMinSdkForBidscube);
+                EnsureLauncherCoreLibraryDesugaring(launcher);
             }
 
             var gradleRoot = FindGradleProjectRoot(path, unityLib, launcher);
@@ -274,6 +279,97 @@ android.suppressUnsupportedCompileSdk=34,35,36
 
             var insert = i + needle.Length;
             return gradle.Insert(insert, "\n        coreLibraryDesugaringEnabled true");
+        }
+
+        /// <summary>
+        /// AGP 8 <c>CheckAarMetadata</c> requires the <b>launcher</b> (app) module to enable desugaring when
+        /// <c>unityLibrary</c> or other local modules declare that need — Unity often only has it on <c>unityLibrary</c>.
+        /// </summary>
+        private static void EnsureLauncherCoreLibraryDesugaring(string launcherGradlePath)
+        {
+            try
+            {
+                if (!File.Exists(launcherGradlePath))
+                    return;
+
+                var text = File.ReadAllText(launcherGradlePath);
+                var original = text;
+
+                if (!text.Contains("coreLibraryDesugaringEnabled"))
+                {
+                    var withFlag = EnsureCoreLibraryDesugaring(text);
+                    if (ReferenceEquals(withFlag, text) || !withFlag.Contains("coreLibraryDesugaringEnabled"))
+                    {
+                        const string androidNeedle = "android {";
+                        var ai = text.IndexOf(androidNeedle, StringComparison.Ordinal);
+                        if (ai >= 0)
+                        {
+                            var insert = ai + androidNeedle.Length;
+                            text = text.Insert(
+                                insert,
+                                "\n    compileOptions {\n        coreLibraryDesugaringEnabled true\n    }");
+                        }
+                    }
+                    else
+                    {
+                        text = withFlag;
+                    }
+                }
+
+                const string desugarCoord = "coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'";
+                if (!text.Contains("desugar_jdk_libs"))
+                {
+                    var depIdx = text.IndexOf("dependencies {", StringComparison.Ordinal);
+                    if (depIdx >= 0)
+                    {
+                        var ins = depIdx + "dependencies {".Length;
+                        text = text.Insert(ins, $"\n    {desugarCoord}\n");
+                    }
+                }
+
+                if (text != original)
+                {
+                    File.WriteAllText(launcherGradlePath, text);
+                    Debug.Log("[BidscubeSDK] Enabled core library desugaring on launcher module: " + launcherGradlePath);
+                }
+
+                TryUpgradeDesugarLibs(launcherGradlePath);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[BidscubeSDK] EnsureLauncherCoreLibraryDesugaring: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Older Unity exports had our <see cref="Marker"/> block without a Maven line for the core SDK (core used to ship as a local AAR).
+        /// Inserts <c>implementation 'com.bidscube:bidscube-sdk:…'</c> immediately after the marker when missing.
+        /// </summary>
+        private static void EnsureMavenBidscubeCoreSdk(string unityLibGradlePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(unityLibGradlePath) || !File.Exists(unityLibGradlePath))
+                    return;
+
+                var text = File.ReadAllText(unityLibGradlePath);
+                var coordinate = "com.bidscube:bidscube-sdk:" + Constants.NativeAndroidBidscubeSdkVersion;
+                if (text.Contains(coordinate))
+                    return;
+
+                var markerIdx = text.IndexOf(Marker, StringComparison.Ordinal);
+                if (markerIdx < 0)
+                    return;
+
+                var line = "\n    implementation 'com.bidscube:bidscube-sdk:" + Constants.NativeAndroidBidscubeSdkVersion + "'";
+                text = text.Insert(markerIdx + Marker.Length, line);
+                File.WriteAllText(unityLibGradlePath, text);
+                Debug.Log("[BidscubeSDK] Injected Maven core SDK after " + Marker + ": " + coordinate);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[BidscubeSDK] EnsureMavenBidscubeCoreSdk: {e.Message}");
+            }
         }
 
         private static string FindUnityLibraryBuildGradle(string path)

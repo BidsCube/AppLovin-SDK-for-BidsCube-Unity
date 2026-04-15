@@ -59,9 +59,19 @@ namespace BidscubeSDK
 
             _configuration = config;
             Logger.Configure(config);
-            Logger.Info($"BidsCube SDK initialized (integrationMode={config.IntegrationMode.ToWireString()})");
+            Logger.Info(
+                $"Init (C#): configuration saved. integrationMode={config.IntegrationMode.ToWireString()}, " +
+                $"unityPackage={Constants.SdkVersion}, bundledNativeAndroid={Constants.NativeAndroidBidscubeSdkVersion}. " +
+                "IsInitialized() reflects C# config only; on Android device builds, check the next Init (Android Java) line for native com.bidscube.sdk.BidscubeSDK.");
 #if UNITY_ANDROID && !UNITY_EDITOR
+            Logger.Info("Init (Android Java): syncing native SDK from C# SDKConfig …");
             BidscubeAndroidSdkInterop.SyncInitializeFromUnityConfig();
+#elif UNITY_IOS && !UNITY_EDITOR
+            Logger.Info(
+                "Init (iOS): C# configuration saved. Native Bidscube runtime is driven by CocoaPods / MAX adapter; see Documentation~/APPLOVIN_MAX.md.");
+#else
+            Logger.Info(
+                "Init: this build target is not Android/iOS player — native BidscubeSDK.initialize is not invoked (expected in Editor, Standalone, etc.).");
 #endif
         }
 

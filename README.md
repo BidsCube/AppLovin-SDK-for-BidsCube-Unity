@@ -28,7 +28,7 @@ Add to the Unity project **`Packages/manifest.json`**:
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.3"
+    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.3.1"
   }
 }
 ```
@@ -53,7 +53,7 @@ Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube SDK*
 |------|----------|
 | **BidsCube SDK** (default) | C# APIs: `GetBannerAdView`, `GetVideoAdView`, `GetNativeAdView`, `ShowImageAd`, `ShowVideoAd`, `ShowNativeAd`, consent helpers, etc. |
 | **AppLovin MAX** | `BidscubeIntegrationMode.AppLovinMaxMediation` — early `BidscubeSDK.Initialize`; creatives **only** through MAX + Bidscube adapter (C# creative APIs throw) |
-| **Android** | Bundled **`bidscube-sdk-1.0.0.aar`**, **`applovin-bidscube-max-adapter-1.0.3.aar`**, plus Editor **`BidscubeAndroidGradlePostprocessor`** (AppLovin SDK 13.0+, Maven deps, compileSdk / minSdk fixes) |
+| **Android** | Bundled **`applovin-bidscube-max-adapter-1.0.3.aar`**; core **`com.bidscube:bidscube-sdk`** resolved from Maven on export; Editor **`BidscubeAndroidGradlePostprocessor`** (AppLovin SDK 13.0+, Maven deps, compileSdk / minSdk / desugar). **Do not** duplicate `implementation 'com.bidscube:bidscube-sdk:…'` in Custom Gradle. |
 | **iOS** | WebView plugins under `Runtime/Plugins/iOS/`; MAX: CocoaPods **`BidscubeSDKAppLovin`** `1.0.3` + **`AppLovinSDK`** `13.x` ([iOS repo](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)); **`BidscubeIosPodfilePostprocessor`** appends missing pods to the exported **Podfile** |
 | **Legacy configs** | Wire values `levelPlay` / `level_play` → **AppLovin MAX mediation** (same idea as Flutter) |
 
@@ -191,7 +191,7 @@ Implement **`IAdCallback`** (or your project’s callback type) for load / fail 
 | Path | Role |
 |------|------|
 | `Runtime/BidscubeSDK/` | Core C# SDK, `BidscubeSDK`, `SDKConfig`, Android interop |
-| `Runtime/Plugins/Android/` | **`bidscube-sdk-1.0.0.aar`**, **`applovin-bidscube-max-adapter-1.0.3.aar`**, WebView templates |
+| `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.3.aar`** (+ WebView templates); core SDK via injected Maven coordinate |
 | `Runtime/Plugins/iOS/` | WebView native plugins |
 | `Editor/Android/` | **`BidscubeAndroidGradlePostprocessor`** |
 | `Documentation~/` | Markdown docs (this package) |
@@ -222,6 +222,7 @@ In **Package Manager**, select **Bidscube SDK** → **Samples** → import **SDK
 | Issue | What to check |
 |-------|----------------|
 | **Android Gradle / AAR metadata errors** | **minSdk ≥ 26**, clean Gradle export; see [`Documentation~/ANDROID_BUNDLED_SDK.md`](Documentation~/ANDROID_BUNDLED_SDK.md) |
+| **Duplicate class / DEX `com.bidscube.sdk`** | Remove any extra `implementation 'com.bidscube:bidscube-sdk:…'` or local AAR — the post-processor already injects one Maven line. |
 | **Ads not loading** | `BaseURL`, placement IDs, device logs, network |
 | **MAX mode** | `IntegrationMode` is **AppLovinMaxMediation**, adapter + MAX SDK versions, dashboard network setup |
 | **Wrong mode behavior** | Direct APIs used in MAX mode → `InvalidOperationException`; use MAX only |

@@ -17,14 +17,12 @@ namespace BidscubeSDK
         {
             try
             {
-                var cfg = BidscubeSDK.ActiveConfiguration;
-
                 using (var unityPlayer = new AndroidJavaClass(UnityPlayerClass))
                 {
                     var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
                     if (activity == null)
                     {
-                        Logger.Warning("[BidscubeAndroidSdkInterop] currentActivity is null; skipping Java SDK init.");
+                        Logger.Warning("Init (Android Java): skipped — Unity currentActivity is null (too early?). Retry Initialize after Activity is ready.");
                         return;
                     }
 
@@ -34,12 +32,19 @@ namespace BidscubeSDK
                         if (sdk.CallStatic<bool>("isInitialized"))
                         {
                             sdk.CallStatic("setActivity", activity);
+                            Logger.Info("Init (Android Java): native SDK was already initialized; setActivity(current) applied. MAX adapter can use this instance.");
                             return;
                         }
                     }
 
+                    var cfg = BidscubeSDK.ActiveConfiguration;
                     if (cfg == null)
+                    {
+                        Logger.Warning("Init (Android Java): skipped — no ActiveConfiguration (internal).");
                         return;
+                    }
+
+                    Logger.Info("Init (Android Java): invoking com.bidscube.sdk.BidscubeSDK.initialize(Application, SDKConfig) …");
 
                     using (var builder = new AndroidJavaObject(BuilderClass, app))
                     {
@@ -61,12 +66,24 @@ namespace BidscubeSDK
                     using (var sdk = new AndroidJavaClass(SdkClass))
                     {
                         sdk.CallStatic("setActivity", activity);
+                        if (sdk.CallStatic<bool>("isInitialized"))
+                        {
+                            Logger.Info(
+                                "Init (Android Java): SUCCESS — native com.bidscube.sdk.BidscubeSDK.isInitialized()==true. " +
+                                "Other log lines (BidscubeSDK / BidscubeSDKImpl) may appear from the native SDK; this line confirms Unity-driven init completed.");
+                        }
+                        else
+                        {
+                            Logger.InfoError(
+                                "Init (Android Java): native initialize() returned but isInitialized()==false — often duplicate com.bidscube:bidscube-sdk on the classpath (e.g. manual implementation line + postprocessor). Keep a single core SDK source (Maven " +
+                                Constants.NativeAndroidBidscubeSdkVersion + " per Gradle inject).");
+                        }
                     }
                 }
             }
             catch (Exception e)
             {
-                Logger.Warning($"[BidscubeAndroidSdkInterop] Java init failed: {e.Message}");
+                Logger.InfoError($"Init (Android Java): FAILED — {e.GetType().Name}: {e.Message}");
             }
         }
 

@@ -32,9 +32,14 @@ namespace BidscubeSDK
         public const string UserAgentPrefix = "BidscubeSDK";
 
         /// <summary>
-        /// Unity UPM package version (user-agent, diagnostics). Must match <c>package.json</c> <c>version</c>. Native Android <c>bidscube-sdk</c> AAR may use a different semver.
+        /// Unity UPM package version (user-agent, diagnostics). Must match <c>package.json</c> <c>version</c>.
         /// </summary>
-        public const string SdkVersion = "1.0.3";
+        public const string SdkVersion = "1.0.3.1";
+
+        /// <summary>
+        /// Native Android <c>com.bidscube:bidscube-sdk</c> version resolved from Maven Central on export (Editor injects <c>implementation</c> into Gradle). Parity with published artifacts.
+        /// </summary>
+        public const string NativeAndroidBidscubeSdkVersion = "1.2.2";
 
         /// <summary>
         /// Error codes

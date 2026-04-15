@@ -1,3 +1,12 @@
+## [1.0.3.1] - 2026-04-14
+
+### Changed
+
+- **Android:** removed bundled **`bidscube-sdk-*.aar`**; **`BidscubeAndroidGradlePostprocessor`** injects **`implementation 'com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>'`** (Maven Central). Only **`applovin-bidscube-max-adapter-*.aar`** ships in `Runtime/Plugins/Android/`. Migration: existing `unityLibrary/build.gradle` exports that already have our marker but no Maven core line get the coordinate appended automatically.
+- **`Constants.SdkVersion`** / **`package.json`** → **1.0.3.1** (Unity-only patch; iOS CocoaPods **`BidscubeSDKAppLovin`** pin remains **1.0.3**).
+
+---
+
 ## [1.0.3] - 2026-04-08
 
 ### Added
@@ -10,7 +19,8 @@
 ### Changed
 
 - **Android MAX adapter** (`BidscubeMediationAdapter`): if Java `BidscubeSDK` is **already initialized** from Unity (recommended), the adapter reports **INITIALIZED_SUCCESS** without requiring **App ID** from MAX server parameters; fixes MAX treating Bidscube as failed when Unity init runs first. Stronger **consumer ProGuard** keep rules for the adapter constructor. Rebuilt bundled **`applovin-bidscube-max-adapter-1.0.3.aar`**.
-- **`Constants.SdkVersion`** → `1.0.3` (UPM and user-agent string; native `bidscube-sdk` AAR remains **1.0.0**).
+- **`Constants.SdkVersion`** → `1.0.3` (UPM and user-agent string).
+- Historical note: **1.0.3** initially shipped a bundled `bidscube-sdk-1.2.2.aar`; core SDK is now Maven-only (see **1.0.3.1**).
 
 ### Notes
 
@@ -51,7 +61,7 @@
 
 ### Added
 
-- Bundled **`bidscube-sdk-1.0.0.aar`** under `Runtime/Plugins/Android` and Editor **`BidscubeAndroidGradlePostprocessor`** to inject required Maven dependencies (full Bidscube Android stack without a separate Maven install). See `Documentation~/ANDROID_BUNDLED_SDK.md`.
+- Bundled **`bidscube-sdk`** Android AAR under `Runtime/Plugins/Android` and Editor **`BidscubeAndroidGradlePostprocessor`** to inject required Maven dependencies (full Bidscube Android stack without a separate Maven install for the core SDK). See `Documentation~/ANDROID_BUNDLED_SDK.md`.
 - **`package.json` → `repository`** (canonical GitHub URL for releases).
 - **`tools/verify-release-ready.sh`**, **`.github/workflows/ci.yml`**, **`.gitattributes`** — checks and repo hygiene for GitHub publication.
 - **`BidscubeIntegrationMode`**: `DirectSdk` vs `AppLovinMaxMediation`.

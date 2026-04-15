@@ -9,8 +9,9 @@ echo "== Bidscube Unity UPM release check =="
 echo "package.json version: $VER"
 echo ""
 
-if [[ ! "$VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-  echo "ERROR: version must look like semver (e.g. 1.0.0)" >&2
+# UPM allows extra numeric segments (e.g. 1.0.3.1); optional prerelease suffix.
+if [[ ! "$VER" =~ ^[0-9]+(\.[0-9]+)+(-[0-9A-Za-z.-]+)?$ ]]; then
+  echo "ERROR: version must look like semver (e.g. 1.0.0 or 1.0.3.1)" >&2
   exit 1
 fi
 
@@ -38,14 +39,36 @@ if [[ -z "$POD_VER" ]]; then
   echo "ERROR: could not parse BidscubeAppLovinPodVersion from BidscubeIosPodfilePostprocessor.cs" >&2
   exit 1
 fi
-if [[ "$POD_VER" != "$VER" ]]; then
-  echo "ERROR: BidscubeAppLovinPodVersion is \"$POD_VER\" but package.json version is \"$VER\" (keep iOS pod pin in sync with UPM)" >&2
+echo "Constants.SdkVersion: $SDK_CS_VER (matches package.json)"
+echo "BidscubeAppLovinPodVersion: $POD_VER (CocoaPods BidscubeSDKAppLovin; may differ from UPM for Unity-only patches)"
+echo ""
+
+shopt -s nullglob
+BIDSCUBE_ADAPTER_AARS=(Runtime/Plugins/Android/applovin-bidscube-max-adapter-*.aar)
+if ((${#BIDSCUBE_ADAPTER_AARS[@]} == 0)); then
+  echo "ERROR: expected bundled MAX adapter AAR at Runtime/Plugins/Android/applovin-bidscube-max-adapter-*.aar" >&2
   exit 1
 fi
+echo "Bundled MAX adapter AAR: ${BIDSCUBE_ADAPTER_AARS[*]}"
 
-echo "Constants.SdkVersion: $SDK_CS_VER (matches package.json)"
-echo "BidscubeAppLovinPodVersion: $POD_VER (matches package.json)"
-echo ""
+if ! grep -q "NativeAndroidBidscubeSdkVersion" Runtime/BidscubeSDK/Core/Constants.cs; then
+  echo "ERROR: Constants.NativeAndroidBidscubeSdkVersion not found" >&2
+  exit 1
+fi
+NATIVE_SDK_VER="$(sed -n 's/.*public const string NativeAndroidBidscubeSdkVersion = "\([^"]*\)".*/\1/p' Runtime/BidscubeSDK/Core/Constants.cs | head -n1)"
+if [[ -z "$NATIVE_SDK_VER" ]]; then
+  echo "ERROR: could not parse NativeAndroidBidscubeSdkVersion from Constants.cs" >&2
+  exit 1
+fi
+if ! grep -q "com.bidscube:bidscube-sdk:" Editor/Android/BidscubeAndroidGradlePostprocessor.cs; then
+  echo "ERROR: BidscubeAndroidGradlePostprocessor must inject com.bidscube:bidscube-sdk (Maven core)" >&2
+  exit 1
+fi
+if ! grep -q "Constants.NativeAndroidBidscubeSdkVersion" Editor/Android/BidscubeAndroidGradlePostprocessor.cs; then
+  echo "ERROR: Gradle postprocessor should reference Constants.NativeAndroidBidscubeSdkVersion for the Maven coordinate" >&2
+  exit 1
+fi
+echo "Constants.NativeAndroidBidscubeSdkVersion: $NATIVE_SDK_VER (Gradle injects com.bidscube:bidscube-sdk from Maven)"
 
 echo "Suggested git tag (must match package.json): v$VER"
 echo "  git tag -a \"v$VER\" -m \"com.bidscube.sdk $VER\""

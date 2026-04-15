@@ -269,15 +269,8 @@ public class WebViewObject : MonoBehaviour
                     StartCoroutine(CallOnRequestFileChooserPermissionsResult(grantedCount == permissions.Count));
                 }
             };
+            // Unity 6+: PermissionDeniedAndDontAskAgain is obsolete; denials are folded into PermissionDenied.
             callbacks.PermissionDenied += (permission) =>
-            {
-                deniedCount++;
-                if (grantedCount + deniedCount == permissions.Count)
-                {
-                    StartCoroutine(CallOnRequestFileChooserPermissionsResult(grantedCount == permissions.Count));
-                }
-            };
-            callbacks.PermissionDeniedAndDontAskAgain += (permission) =>
             {
                 deniedCount++;
                 if (grantedCount + deniedCount == permissions.Count)

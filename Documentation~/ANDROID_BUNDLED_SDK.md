@@ -1,58 +1,39 @@
-# Bundled Bidscube Android SDK (AAR) + MAX adapter
+# Bundled Bidscube MAX adapter + Maven core SDK (Android)
 
-The Unity package ships:
+## What ships in the UPM package
 
-- **`Runtime/Plugins/Android/bidscube-sdk-1.0.0.aar`** — you do **not** add `com.bidscube:bidscube-sdk` from Maven manually for:
-  - `BidscubeAndroidSdkInterop` — mirrors C# `SDKConfig` into Java `com.bidscube.sdk.BidscubeSDK` on device (shared instance for **AppLovin MAX** mediation)
-- **`Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.3.aar`** — Bidscube **custom network** adapter for AppLovin MAX (`com.applovin.mediation.adapters.BidscubeMediationAdapter`). No separate adapter distribution needed on Android.
+- **`Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.3.aar`** — Bidscube **custom network** adapter for AppLovin MAX (`com.applovin.mediation.adapters.BidscubeMediationAdapter`). This is the **only** Bidscube Android library shipped as a binary inside the package.
+- **Core `com.bidscube:bidscube-sdk`** — **not** bundled as an AAR. On Gradle export, **`BidscubeAndroidGradlePostprocessor`** injects  
+  `implementation 'com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>'`  
+  (see `Runtime/BidscubeSDK/Core/Constants.cs`, currently **1.2.2**) into **`unityLibrary/build.gradle`**, next to AppLovin 13.x, Media3, IMA, UMP, Glide, Material, and desugar libs. Gradle resolves the core SDK from **Maven Central** (requires network on first resolve / CI cache).
 
-## Version alignment
+This layout keeps the **MAX adapter** self-contained in the repo while the **runtime** still uses one official core SDK artifact — the adapter AAR does not embed duplicate `com.bidscube.sdk.*` classes.
 
-Keep the **bidscube-sdk** AAR version in sync with:
+## Version sync
 
-- **Flutter** plugin: `implementation "com.bidscube:bidscube-sdk:1.0.0@aar"` in `AppLovin-SDK-Flutter/android/build.gradle`
-- **AppLovin MAX** adapter expectations (same major/minor as your adapter release notes)
+Keep **`Constants.NativeAndroidBidscubeSdkVersion`** and the injected Gradle coordinate aligned with the **`com.bidscube:bidscube-sdk`** line you intend to support (same semver as Flutter / native Android apps).
 
-When the native SDK bumps, replace the AAR filename and update docs. **`Constants.SdkVersion`** follows the **Unity UPM** release (e.g. `1.0.3`); it may differ from the **Java SDK** AAR version string.
+## Updating the adapter AAR
 
-## Transitive dependencies
-
-Local AARs do not carry Maven dependencies. On Android Gradle export, **`BidscubeAndroidGradlePostprocessor`** injects:
-
-- **`com.applovin:applovin-sdk:13.+`** — AppLovin MAX Android SDK (**minimum 13.0** line; resolves to latest **13.x** on Maven Central)
-- The same `implementation` lines as the native Bidscube Android SDK module (`media3`, IMA, UMP, Material, Glide, desugar libs)
-
-Requirements:
-
-- Unity **Android Build Support** installed (Editor script uses `UnityEditor.Android`).
-- Gradle project must resolve `google()` / `mavenCentral()` (Unity default).
-
-## Rebuilding the AARs (maintainers)
-
-**Core SDK** (from the Bidscube Android SDK repository):
+From the Bidscube Android SDK repo (example):
 
 ```bash
-./gradlew :sdk:assembleRelease
-cp sdk/build/outputs/aar/sdk-release.aar <path-to-unity-package>/Runtime/Plugins/Android/bidscube-sdk-1.0.0.aar
-```
-
-**MAX adapter** (same repository, `applovin-adapter` module):
-
-```bash
-./gradlew :applovin-adapter:assembleRelease
 cp applovin-adapter/build/outputs/aar/applovin-adapter-release.aar <path-to-unity-package>/Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.3.aar
 ```
 
-Bump adapter filename / `getAdapterVersion()` in Java when you change the packaged adapter version.
+Adjust filename / version constants / docs when the adapter semver changes.
 
-## Gradle: `CheckAarMetadata` / compileSdk
+## Gradle post-processor
 
-AndroidX **Material 1.12** and related dependencies declare a minimum **compileSdk** in AAR metadata (typically **34+**). If Unity generates `unityLibrary` / `launcher` with a lower `compileSdk`, the build fails on `CheckAarMetadataWorkAction`.
+**`BidscubeAndroidGradlePostprocessor`** runs after Gradle is generated and:
 
-The **`BidscubeAndroidGradlePostprocessor`** runs after Gradle is generated and:
-
-- Raises numeric `compileSdk` / `compileSdkVersion` and `minSdk` in `unityLibrary` and `launcher` (minimum **compileSdk 34**, **minSdk 26** to satisfy AAR-metadata dependencies);
-- Appends to the root **`gradle.properties`** `android.suppressUnsupportedCompileSdk=34,35,36` when Unity builds with **compileSdk 35–36** while some AAR metadata only declares up to **34**;
+- Injects the dependency block (marker `// __BIDSCUBE_SDK_GRADLE_DEPS__`) including **`com.bidscube:bidscube-sdk`** when missing (covers fresh exports and older exports that only had local AARs).
+- Ensures **`compileSdk` / `compileSdkVersion`** ≥ **34** and **`minSdk` / `minSdkVersion`** ≥ **26** in **`unityLibrary`** and **`launcher`**.
+- Enables **core library desugaring** on **`unityLibrary`** and mirrors it on **`launcher`** for AGP 8 `CheckAarMetadata`.
 - Uses **`desugar_jdk_libs:2.1.4`**.
 
-In **Player Settings**, prefer **Minimum API Level** ≥ **26** (keep **24** only if you do not use the same Maven dependency set).
+## Publisher checklist
+
+- **Do not** add a second `implementation 'com.bidscube:bidscube-sdk:…'` in Custom Base Gradle / `mainTemplate` — duplicate classes / `isInitialized` confusion.
+- **Do not** drop **`applovin-bidscube-max-adapter-*.aar`** from the package if you use Bidscube on MAX Android.
+- Offline / air-gapped builds must pre-populate Gradle caches for `com.bidscube:bidscube-sdk` and transitives, or vendor the core AAR manually in a private Maven — the stock UPM flow expects Maven Central reachability for the core line.
