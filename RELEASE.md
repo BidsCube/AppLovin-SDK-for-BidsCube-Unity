@@ -10,9 +10,9 @@
 | **GitHub Release title** (workflow) | `com.bidscube.sdk {version}` | `com.bidscube.sdk 1.0.4` |
 | **GitHub repository** (recommended) | `AppLovin-SDK-Unity` | `github.com/BidsCube/AppLovin-SDK-Unity` |
 | **`Constants.SdkVersion`** | Unity package / user-agent string | Must match UPM `version`; **`Constants.NativeAndroidBidscubeSdkVersion`** pins the Maven **`com.bidscube:bidscube-sdk`** line Gradle injects (e.g. **1.2.2**) |
-| **`BidscubeIosPodfilePostprocessor.BidscubeAppLovinPodVersion`** | CocoaPods **`BidscubeSDKAppLovin`** line appended to exported Podfile | May differ from UPM when only Android/Unity packaging changes (e.g. UPM **1.0.4**, pod **1.0.3**) |
+| **`BidscubeIosPodfilePostprocessor.BidscubeAppLovinPodVersion`** | CocoaPods **`BidscubeSDKAppLovin`** line appended to exported Podfile | Often matches UPM (e.g. **1.0.4**); may differ when only one platform’s native bundle changes |
 
-If **another commit** already points to tag **`v1.0.0`** on the remote (e.g. old Level Play line), **do not** force-push a new commit to that tag without coordination: delete the old tag on GitHub (**Releases / Tags** or `git push origin :refs/tags/v1.0.0`) and only then create **`v1.0.0`** on the current commit, or pick a new version (`1.0.3`, `1.1.0`).
+
 
 ## Version sources
 

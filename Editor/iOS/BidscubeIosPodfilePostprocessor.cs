@@ -17,7 +17,7 @@ namespace BidscubeSDK.Editor.iOS
         /// <summary>Unified block appended on new exports (keep in sync with UPM <c>package.json</c> / docs).</summary>
         public const string Marker = "# __BIDSCUBE_UNITY_IOS_MAX_PODS__";
 
-        public const string BidscubeAppLovinPodVersion = "1.0.3";
+        public const string BidscubeAppLovinPodVersion = "1.0.4";
 
         [PostProcessBuild(49)]
         public static void OnPostProcessBuild(BuildTarget target, string pathToBuiltProject)

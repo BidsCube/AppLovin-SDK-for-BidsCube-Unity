@@ -61,7 +61,7 @@ On each ad unit, enable **Bidscube** under **Custom Networks & Deals** and set f
 ## Unity project setup
 
 1. Add this package and the **AppLovin MAX Unity plugin** (or integrate MAX natively per AppLovin docs).
-2. **Android:** the package bundles **`applovin-bidscube-max-adapter-1.0.3.aar`** only; **`BidscubeAndroidGradlePostprocessor`** injects **`com.bidscube:bidscube-sdk`** (version from **`Constants.NativeAndroidBidscubeSdkVersion`**, Maven Central) and **`com.applovin:applovin-sdk:13.+`** plus other Maven deps — no separate adapter distribution. Do **not** add a **second** `implementation 'com.bidscube:bidscube-sdk:…'` in Custom Gradle. See **`ANDROID_BUNDLED_SDK.md`** (Gradle export raises **minSdk** to **26** for AAR metadata; AppLovin allows **23+**). The adapter AAR ships **consumer ProGuard rules** so R8 keeps `BidscubeMediationAdapter` when minification is on.
+2. **Android:** the package bundles **`applovin-bidscube-max-adapter-1.0.4.aar`** only; **`BidscubeAndroidGradlePostprocessor`** injects **`com.bidscube:bidscube-sdk`** (version from **`Constants.NativeAndroidBidscubeSdkVersion`**, Maven Central) and **`com.applovin:applovin-sdk:13.+`** plus other Maven deps — no separate adapter distribution. Do **not** add a **second** `implementation 'com.bidscube:bidscube-sdk:…'` in Custom Gradle. See **`ANDROID_BUNDLED_SDK.md`** (Gradle export raises **minSdk** to **26** for AAR metadata; AppLovin allows **23+**). The adapter AAR ships **consumer ProGuard rules** so R8 keeps `BidscubeMediationAdapter` when minification is on.
 3. **iOS:** use CocoaPods **`BidscubeSDKAppLovin`** (BidCube runtime + **`ALBidscubeMediationAdapter`**) and **`AppLovinSDK`** **13.x**. On Unity iOS exports that generate a **Podfile**, **`BidscubeIosPodfilePostprocessor`** appends missing lines (see below). **Do not** add a separate **`BidscubeSDK`** pod for the same target if you already use **`BidscubeSDKAppLovin`**. **Google IMA** remains required by the native stack where applicable. Official reference: [AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS).
 4. **Optional C# startup** (recommended on **Android**; **optional** on **iOS** if the adapter initializes native BidCube and you set **`request_authority` / `ssp_host`** in MAX when needed):
 
@@ -86,7 +86,7 @@ use_frameworks!
 
 target 'YourApp' do
   pod 'AppLovinSDK', '>= 13.0.0', '< 14.0'
-  pod 'BidscubeSDKAppLovin', '1.0.3'
+  pod 'BidscubeSDKAppLovin', '1.0.4'
 end
 ```
 
@@ -104,7 +104,7 @@ Do **not** call C# APIs that attach Bidscube creatives to the Unity scene (`GetB
 
 ## Troubleshooting (Android)
 
-- **Adapter not found / ClassNotFoundException** — Dashboard class name must be exactly `com.applovin.mediation.adapters.BidscubeMediationAdapter`. Confirm **`applovin-bidscube-max-adapter-1.0.3.aar`** is enabled for Android in the Unity Inspector (no “Any Platform” disable). With **R8 / minify**, the AAR’s consumer rules should keep the adapter; if you use a custom ProGuard file, add the same `-keep` lines as in the AAR’s `proguard.txt`.
+- **Adapter not found / ClassNotFoundException** — Dashboard class name must be exactly `com.applovin.mediation.adapters.BidscubeMediationAdapter`. Confirm **`applovin-bidscube-max-adapter-1.0.4.aar`** is enabled for Android in the Unity Inspector (no “Any Platform” disable). With **R8 / minify**, the AAR’s consumer rules should keep the adapter; if you use a custom ProGuard file, add the same `-keep` lines as in the AAR’s `proguard.txt`.
 - **Bidscube stuck “not initialized” in MAX** — Call **`BidscubeSDK.Initialize`** (MAX mode + your SSP authority) **before** MAX SDK init. If you only use adapter-side init, set a non-empty **App ID** (placement ID) on the custom network in MAX and/or **`request_authority` / `ssp_host`** server parameters.
 - **Duplicate `com.applovin:applovin-sdk`** — This package injects **`13.+`**; the AppLovin MAX Unity plugin also adds the SDK. Gradle should resolve a single version; if you see duplicate-class errors, align versions in **Custom Main Gradle Template** or temporarily comment one `implementation` line and rebuild.
 

@@ -1,15 +1,17 @@
 # Bidscube SDK for Unity (`com.bidscube.sdk`)
 
+**Package (UPM):** `1.0.4` · **Git tag:** `v1.0.4` · **Android core (`com.bidscube:bidscube-sdk`, Maven):** `1.2.2` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
+
 UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drives banners, video, native, interstitials) and **AppLovin MAX mediation** (MAX drives load/show via the Bidscube adapter; **Android:** early C# **`BidscubeSDK.Initialize`** recommended; **iOS:** optional — adapter can init native BidCube — see [`APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)).
 
 ### What’s new in **1.0.4**
 
 | Topic | Summary |
 |--------|---------|
-| **UPM version** | Valid **semver** **`1.0.4`** (Unity rejects **`1.0.3.1`**). Git tag **`v1.0.4`** must match `package.json` — see [`RELEASE.md`](RELEASE.md), run [`tools/verify-release-ready.sh`](tools/verify-release-ready.sh). |
-| **Android core SDK** | No bundled **`bidscube-sdk-*.aar`** in the package. **`BidscubeAndroidGradlePostprocessor`** injects **`com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>`** (Maven Central, currently **1.2.2**) next to the bundled MAX adapter AAR. **Do not** add a second `implementation` line in Custom Gradle. |
-| **Logs / QA** | After **`Initialize`**, search logcat for **`[BidscubeSDK] Init (publisher row):`** — one-line C# + Android Java status. **`[VideoAdView]`** logs whether linear playback uses **Unity VideoPlayer** or a **custom factory** (`BIDSCUBE_DISABLE_UNITY_VIDEO` for APK size). |
-| **Video (Direct SDK)** | More stable VAST/JSON path: Unity surface only for fetch, immediate surface bind, **`DestroyImmediate`** cleanup of stacked fullscreen roots on Android. |
+| **UPM `1.0.4`** | Semver **`1.0.4`** in [`package.json`](package.json); release tag **`v1.0.4`** — see [`RELEASE.md`](RELEASE.md). |
+| **Android core SDK** | Core resolves from **Maven Central** as **`com.bidscube:bidscube-sdk:1.2.2`** (injected by **`BidscubeAndroidGradlePostprocessor`**) alongside the bundled MAX adapter AAR. Use a single Gradle `implementation` line from the post-processor; avoid duplicating the coordinate in Custom Gradle. |
+| **Logs / QA** | After **`Initialize`**, use **`[BidscubeSDK] Init (publisher row):`** in logcat for a one-line C# + Android Java status. **`[VideoAdView]`** logs linear playback: **Unity VideoPlayer** vs **custom `IVideoSurfacePlayback`** (optional **`BIDSCUBE_DISABLE_UNITY_VIDEO`** for smaller builds). |
+| **Video (Direct SDK)** | VAST/JSON path: Unity surface for fetch, surface bind for playback, **`DestroyImmediate`** cleanup of prior fullscreen roots on Android when stacking `ShowVideoAd`. |
 
 Full list: [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -46,7 +48,7 @@ Add to the Unity project **`Packages/manifest.json`**:
 
 Or **Package Manager → Add package from git URL** with the same URL (replace **org / repo / tag** with your fork and release).
 
-**Unity UI dependencies:** `com.unity.ugui` and `com.unity.textmeshpro` are listed in [`package.json`](package.json) and are pulled in automatically when you add this package by Git URL. If they are missing (e.g. odd manifest state), the Editor runs **`BidscubeUpmDependencyInstaller`** once per session and issues `PackageManager.Client.Add` for the same versions — same idea as the [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) README (“no manual setup”).
+**Unity UI dependencies:** `com.unity.ugui` and `com.unity.textmeshpro` are listed in [`package.json`](package.json) and resolve with the package from Git URL. The Editor may run **`BidscubeUpmDependencyInstaller`** once per session to align those dependencies — same idea as the [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) README (“no manual setup”).
 
 **Local development** (this repo next to your project):
 
@@ -64,8 +66,8 @@ Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube SDK*
 |------|----------|
 | **BidsCube SDK** (default) | C# APIs: `GetBannerAdView`, `GetVideoAdView`, `GetNativeAdView`, `ShowImageAd`, `ShowVideoAd`, `ShowNativeAd`, consent helpers, etc. |
 | **AppLovin MAX** | `BidscubeIntegrationMode.AppLovinMaxMediation` — early `BidscubeSDK.Initialize`; creatives **only** through MAX + Bidscube adapter (C# creative APIs throw) |
-| **Android** | Bundled **`applovin-bidscube-max-adapter-1.0.3.aar`**; core **`com.bidscube:bidscube-sdk`** resolved from Maven on export; Editor **`BidscubeAndroidGradlePostprocessor`** (AppLovin SDK 13.0+, Maven deps, compileSdk / minSdk / desugar). **Do not** duplicate `implementation 'com.bidscube:bidscube-sdk:…'` in Custom Gradle. |
-| **iOS** | WebView plugins under `Runtime/Plugins/iOS/`; MAX: CocoaPods **`BidscubeSDKAppLovin`** `1.0.3` + **`AppLovinSDK`** `13.x` ([iOS repo](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)); **`BidscubeIosPodfilePostprocessor`** appends missing pods to the exported **Podfile** |
+| **Android** | Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`**; core **`com.bidscube:bidscube-sdk:1.2.2`** from Maven on export; Editor **`BidscubeAndroidGradlePostprocessor`** (AppLovin SDK `13.+`, Maven deps, compileSdk / minSdk / desugar). One Maven coordinate for the core SDK — avoid a second `implementation` line in Custom Gradle. |
+| **iOS** | WebView plugins under `Runtime/Plugins/iOS/`; MAX: CocoaPods **`BidscubeSDKAppLovin` `1.0.4`** + **`AppLovinSDK` `13.x`** ([iOS repo](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)); **`BidscubeIosPodfilePostprocessor`** can append pods to the exported **Podfile** |
 | **Legacy configs** | Wire values `levelPlay` / `level_play` → **AppLovin MAX mediation** (same idea as Flutter) |
 
 ---
@@ -77,7 +79,7 @@ Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube SDK*
 | **Unity** | **2020.3+** (see [`package.json`](package.json) `unity`) |
 | **UPM dependencies** | `com.unity.ugui`, `com.unity.textmeshpro` (declared in `package.json`) |
 | **Android** | **Minimum API Level ≥ 26** recommended with the injected dependency set; **compileSdk** raised by post-processor as needed — [`Documentation~/ANDROID_BUNDLED_SDK.md`](Documentation~/ANDROID_BUNDLED_SDK.md) |
-| **MAX mediation** | **AppLovin MAX** (Unity plugin or native). **Android:** adapter AAR is bundled. **iOS:** **`BidscubeSDKAppLovin`** + **`AppLovinSDK`** **13.x** (see [`Documentation~/APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)) |
+| **MAX mediation** | **AppLovin MAX** (Unity plugin or native). **Android:** adapter AAR **1.0.4** bundled. **iOS:** **`BidscubeSDKAppLovin` `1.0.4`** + **`AppLovinSDK` `13.x`** (see [`Documentation~/APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)) |
 
 ---
 
@@ -202,7 +204,7 @@ Implement **`IAdCallback`** (or your project’s callback type) for load / fail 
 | Path | Role |
 |------|------|
 | `Runtime/BidscubeSDK/` | Core C# SDK, `BidscubeSDK`, `SDKConfig`, Android interop |
-| `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.3.aar`** (+ WebView templates); core SDK via injected Maven coordinate |
+| `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.4.aar`** (+ WebView templates); core **`com.bidscube:bidscube-sdk:1.2.2`** via injected Gradle coordinate |
 | `Runtime/Plugins/iOS/` | WebView native plugins |
 | `Editor/Android/` | **`BidscubeAndroidGradlePostprocessor`** |
 | `Documentation~/` | Markdown docs (this package) |
@@ -236,13 +238,13 @@ In **Package Manager**, select **Bidscube SDK** → **Samples** → import **SDK
 | **Duplicate class / DEX `com.bidscube.sdk`** | Remove any extra `implementation 'com.bidscube:bidscube-sdk:…'` or local AAR — the post-processor already injects one Maven line. |
 | **Ads not loading** | `BaseURL`, placement IDs, device logs, network |
 | **MAX mode** | `IntegrationMode` is **AppLovinMaxMediation**, adapter + MAX SDK versions, dashboard network setup |
-| **Wrong mode behavior** | Direct APIs used in MAX mode → `InvalidOperationException`; use MAX only |
+| **MAX vs Direct SDK** | In MAX mode, load and show ads through MAX only; use **`BidscubeIntegrationMode.DirectSdk`** for C# `ShowVideoAd` / banner APIs. |
 
 ---
 
 ## Releasing (maintainers)
 
-Tags **`v*`** must match [`package.json`](package.json) `version`. See [`RELEASE.md`](RELEASE.md) and run [`tools/verify-release-ready.sh`](tools/verify-release-ready.sh) before tagging.
+Tags **`v*`** match [`package.json`](package.json) `version`. Process and checklist: [`RELEASE.md`](RELEASE.md). Version alignment helper: [`tools/verify-release-ready.sh`](tools/verify-release-ready.sh).
 
 **GitHub:** workflows live under [`.github/workflows/`](.github/workflows/) — push tag **`v*`** or run **[Release (GitHub)](.github/workflows/release.yml)** manually from the **Actions** tab (requires `.github` on the default branch). CI: [`ci.yml`](.github/workflows/ci.yml).
 

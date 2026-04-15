@@ -2,7 +2,7 @@
 
 ## What ships in the UPM package
 
-- **`Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.3.aar`** — Bidscube **custom network** adapter for AppLovin MAX (`com.applovin.mediation.adapters.BidscubeMediationAdapter`). This is the **only** Bidscube Android library shipped as a binary inside the package.
+- **`Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.4.aar`** — Bidscube **custom network** adapter for AppLovin MAX (`com.applovin.mediation.adapters.BidscubeMediationAdapter`). This is the **only** Bidscube Android library shipped as a binary inside the package.
 - **Core `com.bidscube:bidscube-sdk`** — **not** bundled as an AAR. On Gradle export, **`BidscubeAndroidGradlePostprocessor`** injects  
   `implementation 'com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>'`  
   (see `Runtime/BidscubeSDK/Core/Constants.cs`, currently **1.2.2**) into **`unityLibrary/build.gradle`**, next to AppLovin 13.x, Media3, IMA, UMP, Glide, Material, and desugar libs. Gradle resolves the core SDK from **Maven Central** (requires network on first resolve / CI cache).
@@ -18,7 +18,7 @@ Keep **`Constants.NativeAndroidBidscubeSdkVersion`** and the injected Gradle coo
 From the Bidscube Android SDK repo (example):
 
 ```bash
-cp applovin-adapter/build/outputs/aar/applovin-adapter-release.aar <path-to-unity-package>/Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.3.aar
+cp applovin-adapter/build/outputs/aar/applovin-adapter-release.aar <path-to-unity-package>/Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.4.aar
 ```
 
 Adjust filename / version constants / docs when the adapter semver changes.

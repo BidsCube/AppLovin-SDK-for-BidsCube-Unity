@@ -8,7 +8,7 @@
 ### Changed
 
 - **Android:** removed bundled **`bidscube-sdk-*.aar`**; **`BidscubeAndroidGradlePostprocessor`** injects **`implementation 'com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>'`** (Maven Central). Only **`applovin-bidscube-max-adapter-*.aar`** ships in `Runtime/Plugins/Android/`. Migration: existing `unityLibrary/build.gradle` exports that already have our marker but no Maven core line get the coordinate appended automatically.
-- **`Constants.SdkVersion`** / **`package.json`** → **1.0.4** (Unity Package Manager rejects four-part versions like `1.0.3.1`; use **1.0.4** instead). iOS CocoaPods **`BidscubeSDKAppLovin`** pin remains **1.0.3**.
+- **`Constants.SdkVersion`** / **`package.json`** → **1.0.4** (Unity Package Manager rejects four-part versions like `1.0.3.1`; use **1.0.4** instead). Bundled Android MAX adapter AAR **`applovin-bidscube-max-adapter-1.0.4.aar`**; iOS CocoaPods **`BidscubeSDKAppLovin`** pin **`1.0.4`** via **`BidscubeIosPodfilePostprocessor`** (aligned with UPM).
 - **`BidscubeAndroidSdkInterop`:** **`ClassNotFoundException`** for **`com.bidscube.sdk.BidscubeSDK`** is logged as **WARNING** (Unity C# creatives can still run); other init failures remain errors. Warning when Java **`SDKConfig.Builder`** lacks **`adRequestAuthority`** / **`BaseURL`** setters now points integrators at UPM upgrade and removing duplicate **`project(':bidscube-sdk-…')`** / legacy AAR lines.
 - **`Documentation~/INTEGRATION.md`:** logcat guidance — Unity **`[BidscubeSDK]`** lines vs native tags **`BidscubeSDK`** / **`BidscubeSDKImpl`**; **`Init (publisher row)`** closing line.
 

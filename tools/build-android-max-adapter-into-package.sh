@@ -4,7 +4,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ANDROID_ROOT="${1:-$ROOT/../../../../bidscube-sdk-android}"
-DEST="$ROOT/Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.3.aar"
+DEST="$ROOT/Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.4.aar"
 
 if [[ ! -f "$ANDROID_ROOT/gradlew" ]]; then
   echo "ERROR: Android repo not found at: $ANDROID_ROOT" >&2
