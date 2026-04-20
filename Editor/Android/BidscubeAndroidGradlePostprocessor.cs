@@ -13,12 +13,18 @@ namespace BidscubeSDK.Editor.Android
     /// as an <b>AAR</b> artifact (<c>@aar</c>) so Gradle does not stop at a root <c>packaging=pom</c> shell on Maven Central.
     /// Plus transitives for the bundled <b>AppLovin MAX</b> adapter AAR (local AARs do not pull their own Maven graph).
     /// The UPM package ships only <c>applovin-bidscube-max-adapter-*.aar</c>; core classes resolve from Maven Central — do <b>not</b> add a second <c>implementation 'com.bidscube:bidscube-sdk:…'</c> in Custom Gradle.
-    /// Mirrors the native Bidscube Android SDK Gradle dependency block + core library desugaring.
+    /// Mirrors the native Bidscube Android SDK Gradle dependency block + optional core library desugaring (<see cref="ForceCoreLibraryDesugaring"/>).
     /// Also raises <c>compileSdk</c> / <c>minSdk</c> when needed so <c>CheckAarMetadata</c> passes against Material / AndroidX.
     /// </summary>
     public sealed class BidscubeAndroidGradlePostprocessor : IPostGenerateGradleAndroidProject
     {
         public const string Marker = "// __BIDSCUBE_SDK_GRADLE_DEPS__";
+
+        /// <summary>
+        /// When <c>true</c> (default), injects <c>coreLibraryDesugaring</c> / <c>desugar_jdk_libs</c> and enables <c>coreLibraryDesugaringEnabled</c> on <c>unityLibrary</c> and <c>launcher</c> where applicable.
+        /// Set to <c>false</c> only after validating Android export, <c>assembleDebug</c>/<c>Release</c>, <c>CheckAarMetadata</c>, and lower-API devices — desugaring may be required by Java 8+ APIs from dependencies.
+        /// </summary>
+        public static bool ForceCoreLibraryDesugaring = true;
 
         /// <summary>Minimum AppLovin MAX Android SDK line (13.0+); resolved to latest 13.x from Maven Central.</summary>
         public const string AppLovinSdkGradleCoordinate = "com.applovin:applovin-sdk:13.+";
@@ -48,6 +54,10 @@ namespace BidscubeSDK.Editor.Android
                 var text = File.ReadAllText(unityLib);
                 if (!text.Contains(Marker))
                 {
+                    var desugarLine = ForceCoreLibraryDesugaring
+                        ? "    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'\n"
+                        : string.Empty;
+
                     var depsBlock = $@"
     {Marker}
     implementation 'com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar'
@@ -60,8 +70,7 @@ namespace BidscubeSDK.Editor.Android
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'com.github.bumptech.glide:glide:4.15.1'
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
-";
+{desugarLine}";
 
                     var idx = text.IndexOf("dependencies {", StringComparison.Ordinal);
                     if (idx < 0)
@@ -72,7 +81,8 @@ namespace BidscubeSDK.Editor.Android
                     {
                         var insertAt = idx + "dependencies {".Length;
                         text = text.Insert(insertAt, depsBlock);
-                        text = EnsureCoreLibraryDesugaring(text);
+                        if (ForceCoreLibraryDesugaring)
+                            text = EnsureCoreLibraryDesugaring(text);
                         File.WriteAllText(unityLib, text);
                         Debug.Log("[BidscubeSDK] Injected Bidscube Android SDK Maven dependencies into " + unityLib);
                     }
@@ -80,7 +90,8 @@ namespace BidscubeSDK.Editor.Android
 
                 EnsureMinCompileSdkInFile(unityLib, MinCompileSdkForBidscubeDeps);
                 EnsureMinMinSdkInFile(unityLib, MinMinSdkForBidscube);
-                TryUpgradeDesugarLibs(unityLib);
+                if (ForceCoreLibraryDesugaring)
+                    TryUpgradeDesugarLibs(unityLib);
 
                 NormalizeBidscubeCoreSdkCoordinateInFile(unityLib);
                 EnsureMavenBidscubeCoreSdk(unityLib);
@@ -92,7 +103,8 @@ namespace BidscubeSDK.Editor.Android
             {
                 EnsureMinCompileSdkInFile(launcher, MinCompileSdkForBidscubeDeps);
                 EnsureMinMinSdkInFile(launcher, MinMinSdkForBidscube);
-                EnsureLauncherCoreLibraryDesugaring(launcher);
+                if (ForceCoreLibraryDesugaring)
+                    EnsureLauncherCoreLibraryDesugaring(launcher);
             }
 
             var gradleRoot = FindGradleProjectRoot(path, unityLib, launcher);
@@ -166,6 +178,9 @@ android.suppressUnsupportedCompileSdk=34,35,36
 
         private static void TryUpgradeDesugarLibs(string gradlePath)
         {
+            if (!ForceCoreLibraryDesugaring)
+                return;
+
             try
             {
                 if (!File.Exists(gradlePath))
@@ -291,6 +306,9 @@ android.suppressUnsupportedCompileSdk=34,35,36
         /// </summary>
         private static void EnsureLauncherCoreLibraryDesugaring(string launcherGradlePath)
         {
+            if (!ForceCoreLibraryDesugaring)
+                return;
+
             try
             {
                 if (!File.Exists(launcherGradlePath))

@@ -66,7 +66,7 @@ Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube SDK*
 |------|----------|
 | **BidsCube SDK** (default) | C# APIs: `GetBannerAdView`, `GetVideoAdView`, `GetNativeAdView`, `ShowImageAd`, `ShowVideoAd`, `ShowNativeAd`, consent helpers, etc. |
 | **AppLovin MAX** | `BidscubeIntegrationMode.AppLovinMaxMediation` — early `BidscubeSDK.Initialize`; creatives **only** through MAX + Bidscube adapter (C# creative APIs throw) |
-| **Android** | Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`**; core **`com.bidscube:bidscube-sdk:1.2.2@aar`** from Maven on export; Editor **`BidscubeAndroidGradlePostprocessor`** (AppLovin SDK `13.+`, Maven deps, compileSdk / minSdk / desugar). One Maven coordinate for the core SDK — avoid a second `implementation` line in Custom Gradle. |
+| **Android** | Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`**; core **`com.bidscube:bidscube-sdk:1.2.2@aar`** from Maven on export; Editor **`BidscubeAndroidGradlePostprocessor`** (AppLovin SDK `13.+`, Maven deps, compileSdk / minSdk, optional desugaring via **`ForceCoreLibraryDesugaring`**). One Maven coordinate for the core SDK — avoid a second `implementation` line in Custom Gradle. |
 | **iOS** | WebView plugins under `Runtime/Plugins/iOS/`; MAX: CocoaPods **`BidscubeSDKAppLovin` `1.0.4`** + **`AppLovinSDK` `13.x`** ([iOS repo](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)); **`BidscubeIosPodfilePostprocessor`** can append pods to the exported **Podfile** |
 | **Legacy configs** | Wire values `levelPlay` / `level_play` → **AppLovin MAX mediation** (same idea as Flutter) |
 

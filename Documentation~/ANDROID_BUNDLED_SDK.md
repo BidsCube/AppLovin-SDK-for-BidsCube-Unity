@@ -29,7 +29,7 @@ Adjust filename / version constants / docs when the adapter semver changes.
 
 - Injects the dependency block (marker `// __BIDSCUBE_SDK_GRADLE_DEPS__`) including **`com.bidscube:bidscube-sdk:…@aar`** when missing (covers fresh exports and older exports that only had local AARs). Legacy exports with a plain coordinate (no **`@aar`**) are rewritten on the next export.
 - Ensures **`compileSdk` / `compileSdkVersion`** ≥ **34** and **`minSdk` / `minSdkVersion`** ≥ **26** in **`unityLibrary`** and **`launcher`**.
-- Enables **core library desugaring** on **`unityLibrary`**, mirrors it on **`launcher`** for AGP 8 **`CheckAarMetadata`**, and uses **`desugar_jdk_libs:2.1.4`**.
+- When **`BidscubeAndroidGradlePostprocessor.ForceCoreLibraryDesugaring`** is **`true`** (default): enables **core library desugaring** on **`unityLibrary`**, mirrors it on **`launcher`** for AGP 8 **`CheckAarMetadata`**, and uses **`desugar_jdk_libs:2.1.4`**. Set **`ForceCoreLibraryDesugaring = false`** only after full Android export / **`assemble*`** / **`CheckAarMetadata`** / lower-API device validation — see Android docs on Java 8+ APIs and library modules.
 
 ## Publisher checklist
 
