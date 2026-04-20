@@ -7,7 +7,7 @@
 
 ### Changed
 
-- **Android (breaking vs prior post-processor):** **`BidscubeAndroidGradlePostprocessor.NoDesugarMode`** defaults to **`true`** — the plugin **does not** inject **`coreLibraryDesugaring`**, **`desugar_jdk_libs`**, **`coreLibraryDesugaringEnabled`**, or launcher desugaring mirrors, and **does not** auto-upgrade **`desugar_jdk_libs`** versions. Add desugaring in **host** Gradle when your dependency graph requires it. Set **`NoDesugarMode = false`** to restore **optional** plugin-managed desugaring on **fresh** injects only when exported Gradle does **not** already declare desugaring (host files are not overridden). Each export logs an Editor **warning** while **`NoDesugarMode`** is **`true`**.
+- **Android (breaking vs prior post-processor):** the plugin **never** injects or edits **`coreLibraryDesugaring`**, **`desugar_jdk_libs`**, **`coreLibraryDesugaringEnabled`**, or launcher desugaring (no automatic desugaring; host Gradle owns it). **`BidscubeAndroidGradlePostprocessor.NoDesugarMode`** defaults to **`true`** and only controls an Editor **warning** on each Android export reminding integrators to add desugaring in host Gradle when needed; set **`NoDesugarMode = false`** to suppress that warning after your templates are configured.
 
 ---
 

@@ -13,7 +13,7 @@ namespace BidscubeSDK.Editor.Android
     /// as an <b>AAR</b> artifact (<c>@aar</c>) so Gradle does not stop at a root <c>packaging=pom</c> shell on Maven Central.
     /// Plus transitives for the bundled <b>AppLovin MAX</b> adapter AAR (local AARs do not pull their own Maven graph).
     /// The UPM package ships only <c>applovin-bidscube-max-adapter-*.aar</c>; core classes resolve from Maven Central — do <b>not</b> add a second <c>implementation 'com.bidscube:bidscube-sdk:…'</c> in Custom Gradle.
-    /// Core library desugaring is **not** injected by default — see <see cref="NoDesugarMode"/>; opt in via host Gradle or set <see cref="NoDesugarMode"/> to <c>false</c> for legacy plugin-managed desugaring (still skipped if the host Gradle already declares desugaring).
+    /// This post-processor does <b>not</b> inject or modify core library desugaring — add <c>coreLibraryDesugaring</c> / <c>coreLibraryDesugaringEnabled</c> in <b>host</b> Gradle when required. See <see cref="NoDesugarMode"/> for export diagnostics.
     /// Also raises <c>compileSdk</c> / <c>minSdk</c> when needed so <c>CheckAarMetadata</c> passes against Material / AndroidX.
     /// </summary>
     public sealed class BidscubeAndroidGradlePostprocessor : IPostGenerateGradleAndroidProject
@@ -21,9 +21,8 @@ namespace BidscubeSDK.Editor.Android
         public const string Marker = "// __BIDSCUBE_SDK_GRADLE_DEPS__";
 
         /// <summary>
-        /// When <c>true</c> (default), this post-processor does <b>not</b> inject <c>coreLibraryDesugaring</c>, <c>desugar_jdk_libs</c>, or <c>coreLibraryDesugaringEnabled</c>.
-        /// Add desugaring in your own Gradle (Custom Base Gradle / launcher / exported templates) if your graph requires it (e.g. <c>CheckAarMetadata</c>, Java 8+ APIs on older devices).
-        /// Set to <c>false</c> to restore <b>plugin-managed</b> desugaring on fresh injects only when the exported Gradle does not already declare desugaring.
+        /// When <c>true</c> (default), logs an Editor <b>warning</b> on each Android Gradle export that the plugin runs in <b>no-desugar</b> mode (it does not inject or change desugaring — host Gradle owns that).
+        /// Set to <c>false</c> to suppress that warning (e.g. CI) after you have added desugaring in Custom Gradle / templates.
         /// </summary>
         public static bool NoDesugarMode = true;
 
@@ -55,12 +54,6 @@ namespace BidscubeSDK.Editor.Android
                 var text = File.ReadAllText(unityLib);
                 if (!text.Contains(Marker))
                 {
-                    var pluginManagesDesugar = ShouldPluginInjectCoreLibraryDesugaring(text);
-
-                    var desugarLine = pluginManagesDesugar
-                        ? "    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'\n"
-                        : string.Empty;
-
                     var depsBlock = $@"
     {Marker}
     implementation 'com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar'
@@ -73,7 +66,7 @@ namespace BidscubeSDK.Editor.Android
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'com.github.bumptech.glide:glide:4.15.1'
-{desugarLine}";
+";
 
                     var idx = text.IndexOf("dependencies {", StringComparison.Ordinal);
                     if (idx < 0)
@@ -84,8 +77,6 @@ namespace BidscubeSDK.Editor.Android
                     {
                         var insertAt = idx + "dependencies {".Length;
                         text = text.Insert(insertAt, depsBlock);
-                        if (pluginManagesDesugar)
-                            text = EnsureCoreLibraryDesugaring(text);
                         File.WriteAllText(unityLib, text);
                         Debug.Log("[BidscubeSDK] Injected Bidscube Android SDK Maven dependencies into " + unityLib);
                     }
@@ -104,8 +95,6 @@ namespace BidscubeSDK.Editor.Android
             {
                 EnsureMinCompileSdkInFile(launcher, MinCompileSdkForBidscubeDeps);
                 EnsureMinMinSdkInFile(launcher, MinMinSdkForBidscube);
-                if (!NoDesugarMode)
-                    EnsureLauncherCoreLibraryDesugaring(launcher);
             }
 
             var gradleRoot = FindGradleProjectRoot(path, unityLib, launcher);
@@ -115,37 +104,11 @@ namespace BidscubeSDK.Editor.Android
             if (NoDesugarMode)
             {
                 Debug.LogWarning(
-                    "[BidscubeSDK] Android Gradle export: NoDesugarMode=true (default). This plugin does not inject coreLibraryDesugaring, " +
-                    "desugar_jdk_libs, or coreLibraryDesugaringEnabled. If your dependency graph needs Java 8+ desugaring (e.g. CheckAarMetadata), " +
-                    "add it in your host Gradle (Custom Base Gradle / mainTemplate / launcher). Set BidscubeAndroidGradlePostprocessor.NoDesugarMode=false " +
-                    "only if you want legacy plugin-managed desugaring on fresh exports when Gradle does not already declare it. " +
+                    "[BidscubeSDK] Android Gradle export: NoDesugarMode=true (default). This plugin does not inject or modify coreLibraryDesugaring, " +
+                    "desugar_jdk_libs, or coreLibraryDesugaringEnabled — add them in host Gradle (Custom Base Gradle / mainTemplate / launcher) if your dependency graph " +
+                    "requires Java 8+ desugaring (e.g. CheckAarMetadata). Set NoDesugarMode=false to suppress this warning after host Gradle is configured. " +
                     "Validate with a clean Gradle cache, ./gradlew --refresh-dependencies, assembleDebug/assembleRelease, and a lower-API device or emulator smoke test.");
             }
-        }
-
-        /// <summary>
-        /// Plugin-managed desugaring only when the integrator opted out of <see cref="NoDesugarMode"/> and the exported <c>unityLibrary/build.gradle</c>
-        /// does not already declare core library desugaring (host-owned Gradle must not be overridden).
-        /// </summary>
-        private static bool ShouldPluginInjectCoreLibraryDesugaring(string unityLibraryGradleText)
-        {
-            if (NoDesugarMode)
-                return false;
-            return !GradleAlreadyDeclaresCoreLibraryDesugaring(unityLibraryGradleText);
-        }
-
-        /// <summary>
-        /// True when the Gradle script already sets up core library desugaring (host / template / prior export). Do not inject or flip flags.
-        /// </summary>
-        private static bool GradleAlreadyDeclaresCoreLibraryDesugaring(string gradleText)
-        {
-            if (string.IsNullOrEmpty(gradleText))
-                return false;
-            if (gradleText.Contains("coreLibraryDesugaringEnabled"))
-                return true;
-            if (gradleText.Contains("desugar_jdk_libs"))
-                return true;
-            return Regex.IsMatch(gradleText, @"coreLibraryDesugaring\s+['""]", RegexOptions.Multiline);
         }
 
         /// <summary>
@@ -297,80 +260,6 @@ android.suppressUnsupportedCompileSdk=34,35,36
             catch (Exception e)
             {
                 Debug.LogWarning($"[BidscubeSDK] EnsureMinMinSdk failed for {gradlePath}: {e.Message}");
-            }
-        }
-
-        private static string EnsureCoreLibraryDesugaring(string gradle)
-        {
-            if (gradle.Contains("coreLibraryDesugaringEnabled"))
-                return gradle;
-
-            const string needle = "compileOptions {";
-            var i = gradle.IndexOf(needle, StringComparison.Ordinal);
-            if (i < 0)
-                return gradle;
-
-            var insert = i + needle.Length;
-            return gradle.Insert(insert, "\n        coreLibraryDesugaringEnabled true");
-        }
-
-        /// <summary>
-        /// When <see cref="NoDesugarMode"/> is <c>false</c>, mirrors plugin-managed desugaring onto <b>launcher</b> for AGP 8 <c>CheckAarMetadata</c> — only if the launcher Gradle does not already declare desugaring.
-        /// </summary>
-        private static void EnsureLauncherCoreLibraryDesugaring(string launcherGradlePath)
-        {
-            try
-            {
-                if (!File.Exists(launcherGradlePath))
-                    return;
-
-                var text = File.ReadAllText(launcherGradlePath);
-                if (GradleAlreadyDeclaresCoreLibraryDesugaring(text))
-                    return;
-
-                var original = text;
-
-                if (!text.Contains("coreLibraryDesugaringEnabled"))
-                {
-                    var withFlag = EnsureCoreLibraryDesugaring(text);
-                    if (ReferenceEquals(withFlag, text) || !withFlag.Contains("coreLibraryDesugaringEnabled"))
-                    {
-                        const string androidNeedle = "android {";
-                        var ai = text.IndexOf(androidNeedle, StringComparison.Ordinal);
-                        if (ai >= 0)
-                        {
-                            var insert = ai + androidNeedle.Length;
-                            text = text.Insert(
-                                insert,
-                                "\n    compileOptions {\n        coreLibraryDesugaringEnabled true\n    }");
-                        }
-                    }
-                    else
-                    {
-                        text = withFlag;
-                    }
-                }
-
-                const string desugarCoord = "coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'";
-                if (!text.Contains("desugar_jdk_libs"))
-                {
-                    var depIdx = text.IndexOf("dependencies {", StringComparison.Ordinal);
-                    if (depIdx >= 0)
-                    {
-                        var ins = depIdx + "dependencies {".Length;
-                        text = text.Insert(ins, $"\n    {desugarCoord}\n");
-                    }
-                }
-
-                if (text != original)
-                {
-                    File.WriteAllText(launcherGradlePath, text);
-                    Debug.Log("[BidscubeSDK] Enabled core library desugaring on launcher module: " + launcherGradlePath);
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[BidscubeSDK] EnsureLauncherCoreLibraryDesugaring: {e.Message}");
             }
         }
 
