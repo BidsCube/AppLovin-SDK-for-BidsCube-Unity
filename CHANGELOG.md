@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+---
+
+## [1.0.5] - 2026-04-21
+
 ### Fixed
 
 - **Android:** Gradle post-processor injects **`com.bidscube:bidscube-sdk:<version>@aar`** so the core SDK resolves as an **AAR** (avoids POM-only resolution when the Maven coordinate uses root **`packaging=pom`**). Legacy exports without **`@aar`** are rewritten on the next export; missing **`@aar`** after rewrite logs a **clear Editor error**.
@@ -8,6 +12,7 @@
 ### Changed
 
 - **Android (breaking vs prior post-processor):** the plugin **never** injects or edits **`coreLibraryDesugaring`**, **`desugar_jdk_libs`**, **`coreLibraryDesugaringEnabled`**, or launcher desugaring (no automatic desugaring; host Gradle owns it). **`BidscubeAndroidGradlePostprocessor.NoDesugarMode`** defaults to **`true`** and only controls an Editor **warning** on each Android export reminding integrators to add desugaring in host Gradle when needed; set **`NoDesugarMode = false`** to suppress that warning after your templates are configured.
+- **`Constants.SdkVersion`** / **`package.json`** → **1.0.5**. Bundled Android MAX adapter AAR remains **`applovin-bidscube-max-adapter-1.0.4.aar`**; iOS CocoaPods **`BidscubeSDKAppLovin`** pin remains **1.0.4** until a matching native release bumps them.
 
 ---
 

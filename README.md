@@ -1,17 +1,17 @@
 # Bidscube SDK for Unity (`com.bidscube.sdk`)
 
-**Package (UPM):** `1.0.4` · **Git tag:** `v1.0.4` · **Android core (`com.bidscube:bidscube-sdk`, Maven AAR):** `1.2.2@aar` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
+**Package (UPM):** `1.0.5` · **Git tag:** `v1.0.5` · **Android core (`com.bidscube:bidscube-sdk`, Maven AAR):** `1.2.2@aar` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
 
 UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drives banners, video, native, interstitials) and **AppLovin MAX mediation** (MAX drives load/show via the Bidscube adapter; **Android:** early C# **`BidscubeSDK.Initialize`** recommended; **iOS:** optional — adapter can init native BidCube — see [`APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)).
 
-### What’s new in **1.0.4**
+### What’s new in **1.0.5**
 
 | Topic | Summary |
 |--------|---------|
-| **UPM `1.0.4`** | Semver **`1.0.4`** in [`package.json`](package.json); release tag **`v1.0.4`** — see [`RELEASE.md`](RELEASE.md). |
-| **Android core SDK** | Core resolves from **Maven Central** as **`com.bidscube:bidscube-sdk:1.2.2@aar`** (injected by **`BidscubeAndroidGradlePostprocessor`**) so Gradle pulls the **AAR**, not only a root **POM** shell. Use a single Gradle `implementation` line from the post-processor; avoid duplicating the coordinate in Custom Gradle. |
-| **Logs / QA** | After **`Initialize`**, use **`[BidscubeSDK] Init (publisher row):`** in logcat for a one-line C# + Android Java status. **`[VideoAdView]`** logs linear playback: **Unity VideoPlayer** vs **custom `IVideoSurfacePlayback`** (optional **`BIDSCUBE_DISABLE_UNITY_VIDEO`** for smaller builds). |
-| **Video (Direct SDK)** | VAST/JSON path: Unity surface for fetch, surface bind for playback, **`DestroyImmediate`** cleanup of prior fullscreen roots on Android when stacking `ShowVideoAd`. |
+| **UPM `1.0.5`** | Semver **`1.0.5`** in [`package.json`](package.json); release tag **`v1.0.5`** — see [`RELEASE.md`](RELEASE.md). |
+| **Android Gradle** | Core **`com.bidscube:bidscube-sdk`** injected as **`…@aar`**; legacy plain coordinates normalized; Editor **error** if **`@aar`** missing after export. **No** automatic **`coreLibraryDesugaring`** — host Gradle; export **warning** while **`NoDesugarMode`** (default **`true`**). See [`ANDROID_BUNDLED_SDK.md`](Documentation~/ANDROID_BUNDLED_SDK.md), [`TEST_PLAN.md`](Documentation~/TEST_PLAN.md). |
+| **Runtime diagnostics** | **`ClassNotFoundException`** hints mention **AAR vs POM** resolution. |
+| **1.0.4 baseline** | Init publisher row, **`@aar`** Maven core, VideoAdView logging, Direct SDK video fixes — see **`[1.0.4]`** in [`CHANGELOG.md`](CHANGELOG.md). |
 
 Full list: [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -41,12 +41,12 @@ Add to the Unity project **`Packages/manifest.json`**:
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.4"
+    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.5"
   }
 }
 ```
 
-Or **Package Manager → Add package from git URL** with the same URL (replace **org / repo / tag** with your fork and release).
+Or **Package Manager → Add package from git URL** with the same URL (replace **org / repo / tag** with your fork and release; tag example **`v1.0.5`**).
 
 **Unity UI dependencies:** `com.unity.ugui` and `com.unity.textmeshpro` are listed in [`package.json`](package.json) and resolve with the package from Git URL. The Editor may run **`BidscubeUpmDependencyInstaller`** once per session to align those dependencies — same idea as the [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) README (“no manual setup”).
 

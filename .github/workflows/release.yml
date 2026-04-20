@@ -1,11 +1,11 @@
 # GitHub Release for UPM package com.bidscube.sdk
 #
-# The published version is ALWAYS the version string in package.json (e.g. 1.0.4):
+# The published version is ALWAYS the version string in package.json (e.g. 1.0.5):
 #   • Push tag v*     → RELEASE_VERSION = tag without "v"; must equal package.json["version"].
 #   • workflow_dispatch → RELEASE_VERSION = package.json["version"] on the selected branch
-#                         → creates GitHub Release + tag v{version} (e.g. v1.0.4) via `gh release create`.
+#                         → creates GitHub Release + tag v{version} (e.g. v1.0.5) via `gh release create`.
 #
-# Artifact name: Bidscube-SDK-Unity-{version}.zip (e.g. Bidscube-SDK-Unity-1.0.4.zip).
+# Artifact name: Bidscube-SDK-Unity-{version}.zip (e.g. Bidscube-SDK-Unity-1.0.5.zip).
 
 name: Release (GitHub)
 
@@ -54,7 +54,7 @@ jobs:
           PKG=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
           echo "package.json version: $PKG"
           echo "Tag (without v): $TAG"
-          test "$PKG" = "$TAG" || { echo "::error::package.json version ($PKG) must equal tag without v ($TAG). Example: tag v1.0.4 and \"version\": \"1.0.4\"."; exit 1; }
+          test "$PKG" = "$TAG" || { echo "::error::package.json version ($PKG) must equal tag without v ($TAG). Example: tag v1.0.5 and \"version\": \"1.0.5\"."; exit 1; }
           echo "OK: package.json matches tag v${TAG}"
 
       - name: Validate package.json JSON
