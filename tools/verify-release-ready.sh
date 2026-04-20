@@ -11,7 +11,7 @@ echo ""
 
 # Unity UPM: MAJOR.MINOR.PATCH (three numeric parts); optional prerelease (-suffix). Four-part versions like 1.0.3.1 are rejected.
 if [[ ! "$VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-  echo "ERROR: version must be MAJOR.MINOR.PATCH with optional prerelease (e.g. 1.0.5 or 1.0.0-rc.1). Not 1.0.3.1 — Unity rejects it." >&2
+  echo "ERROR: version must be MAJOR.MINOR.PATCH with optional prerelease (e.g. 1.0.6 or 1.0.0-rc.1). Not 1.0.3.1 — Unity rejects it." >&2
   exit 1
 fi
 

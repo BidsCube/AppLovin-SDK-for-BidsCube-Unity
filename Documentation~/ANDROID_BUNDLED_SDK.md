@@ -5,7 +5,7 @@
 - **`Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.4.aar`** — Bidscube **custom network** adapter for AppLovin MAX (`com.applovin.mediation.adapters.BidscubeMediationAdapter`). This is the **only** Bidscube Android library shipped as a binary inside the package.
 - **Core `com.bidscube:bidscube-sdk`** — **not** bundled inside the UPM package. On Gradle export, **`BidscubeAndroidGradlePostprocessor`** injects  
   `implementation 'com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>@aar'`  
-  (see `Runtime/BidscubeSDK/Core/Constants.cs`, currently **1.2.2**) into **`unityLibrary/build.gradle`**, next to AppLovin 13.x, Media3, IMA, UMP, Glide, and Material. **Core library desugaring is never injected by this plugin** — add **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** in **host** Gradle when your graph needs it (see *Host-provided desugaring* below). Export logs a **warning** while **`NoDesugarMode`** is **`true`** (default). The **`@aar`** suffix forces resolution of the **Android library artifact**; some Maven publications expose a root **`packaging=pom`** coordinate where a plain dependency can resolve **metadata only** (no **`com.bidscube.sdk.BidscubeSDK`** in the APK). Gradle still fetches the artifact from **Maven Central** (network on first resolve / CI cache).
+  (see `Runtime/BidscubeSDK/Core/Constants.cs`, currently **1.2.2**) into **`unityLibrary/build.gradle`**, next to AppLovin 13.x, Media3, IMA, UMP, Glide, and Material. **Launcher** **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** are injected by default (idempotent markers) so **`CheckAarMetadata`** passes when the core AAR requires desugaring on **`:launcher`**. Set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** to skip that injection and own desugaring in host Gradle. The **`@aar`** suffix forces resolution of the **Android library artifact**; some Maven publications expose a root **`packaging=pom`** coordinate where a plain dependency can resolve **metadata only** (no **`com.bidscube.sdk.BidscubeSDK`** in the APK). Gradle still fetches the artifact from **Maven Central** (network on first resolve / CI cache).
 
 This layout keeps the **MAX adapter** self-contained in the repo while the **runtime** still uses one official core SDK artifact — the adapter AAR does not embed duplicate `com.bidscube.sdk.*` classes.
 
@@ -29,11 +29,11 @@ Adjust filename / version constants / docs when the adapter semver changes.
 
 - Injects the dependency block (marker `// __BIDSCUBE_SDK_GRADLE_DEPS__`) including **`com.bidscube:bidscube-sdk:…@aar`** when missing (covers fresh exports and older exports that only had local AARs). Legacy exports with a plain coordinate (no **`@aar`**) are rewritten on the next export.
 - Ensures **`compileSdk` / `compileSdkVersion`** ≥ **34** and **`minSdk` / `minSdkVersion`** ≥ **26** in **`unityLibrary`** and **`launcher`**.
-- **`NoDesugarMode`** (default **`true`**) controls only an Editor **warning** on export; the plugin **never** writes desugaring lines into Gradle (host projects are never overridden on that front). Validate Android with a **clean** Gradle cache, **`./gradlew --refresh-dependencies`**, **`assembleDebug`/`assembleRelease`**, and a **lower-API** smoke test.
+- When **`NoDesugarMode`** is **`false`** (default), appends **launcher** **`coreLibraryDesugaringEnabled true`** and **`coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:<DesugarJdkLibsVersion>'`** (see `BidscubeAndroidGradlePostprocessor.DesugarJdkLibsVersion`, **2.1.4**) using markers `// __BIDSCUBE_CORE_LIBRARY_DESUGARING__` — skipped if already present or if **`NoDesugarMode`** is **`true`**. Validate Android with a **clean** Gradle cache, **`./gradlew --refresh-dependencies`**, **`assembleDebug`/`assembleRelease`**, and a **lower-API** smoke test.
 
-## Host-provided core library desugaring
+## Host-provided core library desugaring (optional)
 
-If AGP **`CheckAarMetadata`** or dependencies using Java 8+ APIs require it, enable **core library desugaring** in **your** Gradle (Unity **Custom Main Gradle Template**, **Custom Launcher Gradle Template**, or **Custom Base Gradle Template**), for example inside **`android { compileOptions { … } }`** on **`unityLibrary`** and **`launcher`**:
+If you use **Custom Launcher Gradle** and already declare desugaring, set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** in an Editor script so the plugin does **not** append duplicate lines. If you still need a reference snippet (e.g. for **`unityLibrary`** in a custom template), use:
 
 ```gradle
 compileOptions {
@@ -47,7 +47,7 @@ and in **`dependencies { }`**:
 coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 ```
 
-Exact file layout depends on your Unity / AGP version; mirror Android Studio / [Android Java 8+ support](https://developer.android.com/studio/write/java8-support) guidance. After host Gradle is in place, you may set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = false`** in an Editor script to suppress the export warning (optional).
+Exact file layout depends on your Unity / AGP version; mirror Android Studio / [Android Java 8+ support](https://developer.android.com/studio/write/java8-support) guidance.
 
 ## Publisher checklist
 

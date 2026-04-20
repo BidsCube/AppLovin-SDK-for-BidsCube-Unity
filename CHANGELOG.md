@@ -2,6 +2,20 @@
 
 ---
 
+## [1.0.6] - 2026-04-21
+
+### Fixed
+
+- **Android:** **`BidscubeAndroidGradlePostprocessor`** now injects **launcher** **`coreLibraryDesugaringEnabled`** and **`coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'`** (idempotent) so **`CheckAarMetadata`** succeeds when **`com.bidscube:bidscube-sdk`** declares that **`:launcher`** must enable core library desugaring. Set **`NoDesugarMode = true`** to skip injection if your host Gradle already declares desugaring.
+
+### Changed
+
+- **`BidscubeAndroidGradlePostprocessor.NoDesugarMode`** defaults to **`false`** (plugin-managed launcher desugaring). **`true`** restores the previous “host owns desugaring” behaviour and logs an export **warning** instead of injecting.
+
+- **`Constants.SdkVersion`** / **`package.json`** → **1.0.6**. Bundled Android MAX adapter AAR and iOS pod pins unchanged from **1.0.5**.
+
+---
+
 ## [1.0.5] - 2026-04-21
 
 ### Fixed
