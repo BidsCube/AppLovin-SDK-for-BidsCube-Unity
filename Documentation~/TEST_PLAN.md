@@ -1,5 +1,13 @@
 # Minimal test plan (Unity)
 
+## Android: Gradle export (`@aar`, desugaring, init)
+
+1. Clean Gradle state: remove prior exported **`Library/Bee/.../Gradle`** (or full **`Library`**) in the Unity project, then **Export** / **Build** Android again.
+2. In generated **`unityLibrary/build.gradle`**: confirm **`implementation 'com.bidscube:bidscube-sdk:<ver>@aar'`** (post-processor + **`ValidateBidscubeCoreSdkUsesAarSuffix`** in Editor).
+3. Confirm this package does **not** append **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** — add them in **host** Custom Gradle if **`CheckAarMetadata`** or Java 8+ APIs require desugaring (**`ANDROID_BUNDLED_SDK.md`**).
+4. From Gradle project root: **`./gradlew :unityLibrary:assembleRelease --refresh-dependencies`** (or **`assembleDebug`**).
+5. Device/emulator (prefer **lower minSdk** you support): smoke **`BidscubeSDK.Initialize`** — expect **`[BidscubeSDK] Init (Android Java): SUCCESS`**, no **`ClassNotFoundException`** for **`com.bidscube.sdk.BidscubeSDK`**.
+
 ## Android: custom SSP host (`AdRequestAuthority`)
 
 1. Build an Android player with `SDKConfig.Builder().AdRequestAuthority("your-staging-host.com").Build()` and `BidscubeSDK.Initialize(config)` (or `BaseURL("https://your-staging-host/sdk")` — same normalization).
