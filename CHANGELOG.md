@@ -1,3 +1,12 @@
+## [Unreleased]
+
+### Fixed
+
+- **Android:** Gradle post-processor injects **`com.bidscube:bidscube-sdk:<version>@aar`** so the core SDK resolves as an **AAR** (avoids POM-only resolution when the Maven coordinate uses root **`packaging=pom`**). Legacy exports without **`@aar`** are rewritten on the next export; missing **`@aar`** after rewrite logs a **clear Editor error**.
+- **Android:** **`BidscubeAndroidSdkInterop`** / publisher checklist messages for **`ClassNotFoundException`** now point integrators at **AAR vs POM** resolution.
+
+---
+
 ## [1.0.4] - 2026-04-15
 
 ### Added

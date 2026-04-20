@@ -9,7 +9,7 @@
 | **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.4.zip` |
 | **GitHub Release title** (workflow) | `com.bidscube.sdk {version}` | `com.bidscube.sdk 1.0.4` |
 | **GitHub repository** (recommended) | `AppLovin-SDK-Unity` | `github.com/BidsCube/AppLovin-SDK-Unity` |
-| **`Constants.SdkVersion`** | Unity package / user-agent string | Must match UPM `version`; **`Constants.NativeAndroidBidscubeSdkVersion`** pins the Maven **`com.bidscube:bidscube-sdk`** line Gradle injects (e.g. **1.2.2**) |
+| **`Constants.SdkVersion`** | Unity package / user-agent string | Must match UPM `version`; **`Constants.NativeAndroidBidscubeSdkVersion`** pins the Maven **`com.bidscube:bidscube-sdk`** line Gradle injects as **`…@aar`** (e.g. **1.2.2**) |
 | **`BidscubeIosPodfilePostprocessor.BidscubeAppLovinPodVersion`** | CocoaPods **`BidscubeSDKAppLovin`** line appended to exported Podfile | Often matches UPM (e.g. **1.0.4**); may differ when only one platform’s native bundle changes |
 
 
@@ -17,7 +17,7 @@
 ## Version sources
 
 1. **`package.json`** — UPM package version; must equal the tag **without** `v`.
-2. **`Runtime/BidscubeSDK/Core/Constants.cs` → `SdkVersion`** — Unity / user-agent version (match **`package.json`**). **`NativeAndroidBidscubeSdkVersion`** must match the **`com.bidscube:bidscube-sdk`** artifact you inject in Gradle.
+2. **`Runtime/BidscubeSDK/Core/Constants.cs` → `SdkVersion`** — Unity / user-agent version (match **`package.json`**). **`NativeAndroidBidscubeSdkVersion`** must match the **`com.bidscube:bidscube-sdk`** artifact you inject in Gradle (**`@aar`** in **`BidscubeAndroidGradlePostprocessor`**).
 
 ## Pre-release check
 
@@ -80,4 +80,12 @@ Workflow files are under **`.github/workflows/`** at the package repository root
   2. **Manual:** **Actions → “Release (GitHub)” → Run workflow** → select a branch (e.g. `main`). Version is read from `package.json`; a GitHub Release with the ZIP is created. If a release for that tag already exists, the step fails.
 
 Quick local check before tagging: `./tools/verify-release-ready.sh`.
+
+## Post-publish Android validation (maintainers)
+
+After bumping **`NativeAndroidBidscubeSdkVersion`** or the Gradle post-processor, validate that the core SDK **classes** reach the app, not only POM metadata:
+
+1. Export an Android project from Unity (or use your CI template that runs Gradle).
+2. From the Gradle project root: `./gradlew :unityLibrary:dependencies --configuration releaseRuntimeClasspath --refresh-dependencies` (or `debugRuntimeClasspath`) and confirm **`com.bidscube:bidscube-sdk`** resolves to an **AAR** (or run `./gradlew :unityLibrary:dependencyInsight --dependency bidscube-sdk --configuration releaseRuntimeClasspath`).
+3. Build **`assembleRelease`** (or **`bundleRelease`**), then confirm the APK/AAB contains **`com/bidscube/sdk/BidscubeSDK.class`** (e.g. `unzip -l build/outputs/apk/.../….apk | grep BidscubeSDK` or **`dexdump`** / **`bundletool`** as appropriate). If the class is missing, fail the pipeline before tagging.
 

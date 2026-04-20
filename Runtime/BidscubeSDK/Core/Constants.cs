@@ -37,7 +37,7 @@ namespace BidscubeSDK
         public const string SdkVersion = "1.0.4";
 
         /// <summary>
-        /// Native Android <c>com.bidscube:bidscube-sdk</c> version resolved from Maven Central on export (Editor injects <c>implementation</c> into Gradle). Parity with published artifacts.
+        /// Native Android <c>com.bidscube:bidscube-sdk</c> version resolved from Maven Central on export (Editor injects <c>implementation</c> with <c>@aar</c> into Gradle so the AAR is on the classpath). Parity with published artifacts.
         /// </summary>
         public const string NativeAndroidBidscubeSdkVersion = "1.2.2";
 

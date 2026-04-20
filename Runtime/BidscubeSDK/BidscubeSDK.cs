@@ -81,7 +81,7 @@ namespace BidscubeSDK
         {
             var mode = config.IntegrationMode.ToWireString();
             var row =
-                $"Init (publisher row): unityUPM={Constants.SdkVersion} gradleCore=com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion} " +
+                $"Init (publisher row): unityUPM={Constants.SdkVersion} gradleCore=com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar " +
                 $"integrationMode={mode} csharp_BidscubeSDK_IsInitialized=true";
 #if UNITY_ANDROID && !UNITY_EDITOR
             Logger.Info(row + " | " + BidscubeAndroidSdkInterop.FormatPublisherChecklistLine());

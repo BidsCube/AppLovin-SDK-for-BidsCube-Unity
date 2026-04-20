@@ -64,11 +64,15 @@ if ! grep -q "com.bidscube:bidscube-sdk:" Editor/Android/BidscubeAndroidGradlePo
   echo "ERROR: BidscubeAndroidGradlePostprocessor must inject com.bidscube:bidscube-sdk (Maven core)" >&2
   exit 1
 fi
+if ! grep -qF 'bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar' Editor/Android/BidscubeAndroidGradlePostprocessor.cs; then
+  echo "ERROR: BidscubeAndroidGradlePostprocessor must inject bidscube-sdk with @aar (AAR artifact, not POM-only resolution)" >&2
+  exit 1
+fi
 if ! grep -q "Constants.NativeAndroidBidscubeSdkVersion" Editor/Android/BidscubeAndroidGradlePostprocessor.cs; then
   echo "ERROR: Gradle postprocessor should reference Constants.NativeAndroidBidscubeSdkVersion for the Maven coordinate" >&2
   exit 1
 fi
-echo "Constants.NativeAndroidBidscubeSdkVersion: $NATIVE_SDK_VER (Gradle injects com.bidscube:bidscube-sdk from Maven)"
+echo "Constants.NativeAndroidBidscubeSdkVersion: $NATIVE_SDK_VER (Gradle injects com.bidscube:bidscube-sdk from Maven as @aar)"
 
 echo "Suggested git tag (must match package.json): v$VER"
 echo "  git tag -a \"v$VER\" -m \"com.bidscube.sdk $VER\""

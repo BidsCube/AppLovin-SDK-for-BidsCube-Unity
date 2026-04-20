@@ -42,3 +42,8 @@ jobs:
 
       - name: Release sanity (Constants + semver)
         run: bash tools/verify-release-ready.sh
+
+      - name: Android core Gradle inject uses @aar
+        run: |
+          test -f Editor/Android/BidscubeAndroidGradlePostprocessor.cs
+          grep -qF 'bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar' Editor/Android/BidscubeAndroidGradlePostprocessor.cs

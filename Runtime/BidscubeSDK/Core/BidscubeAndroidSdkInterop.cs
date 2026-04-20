@@ -44,7 +44,7 @@ namespace BidscubeSDK
                 case AndroidJavaInitPublisherState.NativeFreshInitializeIncomplete:
                     return "AndroidJava=INCOMPLETE (initialize returned but isInitialized()==false). Remove duplicate com.bidscube:bidscube-sdk lines in Gradle (postprocessor + manual). " + filter;
                 case AndroidJavaInitPublisherState.NativeJarMissingUnityCreativesOk:
-                    return $"AndroidJava=JAR_MISSING (ClassNotFoundException). Unity C# ads still work; add native AAR/Maven for MAX parity. {filter}";
+                    return $"AndroidJava=JAR_MISSING (ClassNotFoundException). Check whether com.bidscube:bidscube-sdk resolved as AAR, not only POM metadata (@aar in Gradle). Unity C# ads still work; add native AAR/Maven for MAX parity. {filter}";
                 case AndroidJavaInitPublisherState.ExceptionDuringSync:
                     return $"AndroidJava=FAILED (see Init (Android Java): FAILED line above). {filter}";
                 default:
@@ -121,7 +121,7 @@ namespace BidscubeSDK
                             LastPublisherState = AndroidJavaInitPublisherState.NativeFreshInitializeIncomplete;
                             Logger.InfoError(
                                 "Init (Android Java): native initialize() returned but isInitialized()==false — often duplicate com.bidscube:bidscube-sdk on the classpath (e.g. manual implementation line + postprocessor). Keep a single core SDK source (Maven " +
-                                Constants.NativeAndroidBidscubeSdkVersion + " per Gradle inject).");
+                                Constants.NativeAndroidBidscubeSdkVersion + " @aar per Gradle inject).");
                         }
                     }
                 }
@@ -135,6 +135,7 @@ namespace BidscubeSDK
                     LastPublisherState = AndroidJavaInitPublisherState.NativeJarMissingUnityCreativesOk;
                     Logger.Warning(
                         "Init (Android Java): com.bidscube.sdk.BidscubeSDK not in the APK (ClassNotFoundException). " +
+                        "Check whether com.bidscube:bidscube-sdk resolved as AAR, not only POM metadata (Gradle should use …:bidscube-sdk:<version>@aar). " +
                         "Unity C# creatives (e.g. ShowVideoAd) still work; embed the native Android Bidscube SDK AAR for MAX / Java parity — see Documentation~/INTEGRATION.md.");
                 }
                 else
@@ -160,7 +161,7 @@ namespace BidscubeSDK
                         Logger.Warning(
                             "[BidscubeAndroidSdkInterop] SDKConfig.Builder has no adRequestAuthority/baseURL setter; C# authority not applied on this native SDK version. " +
                             "Upgrade Unity UPM com.bidscube.sdk and ensure Gradle resolves com.bidscube:bidscube-sdk:" + Constants.NativeAndroidBidscubeSdkVersion +
-                            " (remove legacy project(':bidscube-sdk-…') / old AAR). Mismatch can cause native init/callback errors.");
+                            "@aar (remove legacy project(':bidscube-sdk-…') / old AAR). Mismatch can cause native init/callback errors.");
                     }
                 }
             }
