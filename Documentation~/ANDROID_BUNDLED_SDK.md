@@ -7,7 +7,7 @@
 
 Default mode injects  
 `implementation 'com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>@aar'`  
-(see `Runtime/BidscubeSDK/Core/Constants.cs`, currently **1.2.2**). The **`@aar`** suffix forces resolution of the **Android library artifact**; some Maven publications expose a root **`packaging=pom`** coordinate where a plain dependency can resolve **metadata only** (no **`com.bidscube.sdk.BidscubeSDK`** in the APK). Gradle resolves that coordinate from **whatever repositories your project declares** (often Maven Central, but **not required** — private Nexus/Artifactory, mirror, or **`mavenLocal()`** work the same).
+(see `Runtime/BidscubeSDK/Core/Constants.cs`, currently **1.2.3**). The **`@aar`** suffix forces resolution of the **Android library artifact**; some Maven publications expose a root **`packaging=pom`** coordinate where a plain dependency can resolve **metadata only** (no **`com.bidscube.sdk.BidscubeSDK`** in the APK). Gradle resolves that coordinate from **whatever repositories your project declares** (often Maven Central, but **not required** — private Nexus/Artifactory, mirror, or **`mavenLocal()`** work the same).
 
 This layout keeps the **MAX adapter** self-contained in the repo while the **runtime** still uses **one** core SDK on the classpath — the adapter AAR does not embed duplicate `com.bidscube.sdk.*` classes.
 
@@ -28,7 +28,7 @@ using BidscubeSDK.Editor.Android;
 // In InitializeOnLoad or pre-export hook:
 BidscubeAndroidGradlePostprocessor.CoreDependencyMode = BidscubeAndroidCoreDependencyMode.CustomGradleLines;
 BidscubeAndroidGradlePostprocessor.CustomCoreImplementationGradleLines =
-    "implementation files('libs/bidscube-sdk-1.2.2.aar')\n";
+    "implementation files('libs/bidscube-sdk-1.2.3.aar')\n";
 ```
 
 **Backward compatibility:** unset fields leave **`MavenBidscubeSdkAar`**, identical to previous UPM behaviour.

@@ -1,6 +1,6 @@
 # Bidscube SDK for Unity (`com.bidscube.sdk`)
 
-**Package (UPM):** `1.0.6` · **Git tag:** `v1.0.6` · **Android core (`com.bidscube:bidscube-sdk`, default Gradle @aar pin):** `1.2.2@aar` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
+**Package (UPM):** `1.0.6` · **Git tag:** `v1.0.6` · **Android core (`com.bidscube:bidscube-sdk`, default Gradle @aar pin):** `1.2.3@aar` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
 
 UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drives banners, video, native, interstitials) and **AppLovin MAX mediation** (MAX drives load/show via the Bidscube adapter; **Android:** early C# **`BidscubeSDK.Initialize`** recommended; **iOS:** optional — adapter can init native BidCube — see [`APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)).
 
@@ -72,7 +72,7 @@ Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube SDK*
 |------|----------|
 | **BidsCube SDK** (default) | C# APIs: `GetBannerAdView`, `GetVideoAdView`, `GetNativeAdView`, `ShowImageAd`, `ShowVideoAd`, `ShowNativeAd`, consent helpers, etc. |
 | **AppLovin MAX** | `BidscubeIntegrationMode.AppLovinMaxMediation` — early `BidscubeSDK.Initialize`; creatives **only** through MAX + Bidscube adapter (C# creative APIs throw) |
-| **Android** | Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`**; core **`com.bidscube:bidscube-sdk:1.2.2@aar`** injected by default on export (or **`CoreDependencyMode`** / **`CustomCoreImplementationGradleLines`** for local AAR — see **`ANDROID_BUNDLED_SDK.md`**); Editor **`BidscubeAndroidGradlePostprocessor`** (AppLovin SDK `13.+`, Maven deps, compileSdk / minSdk; **launcher** core library desugaring injected by default — **`NoDesugarMode = true`** skips). Exactly **one** core SDK on the classpath — avoid a second `implementation` line in Custom Gradle. |
+| **Android** | Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`**; core **`com.bidscube:bidscube-sdk:1.2.3@aar`** injected by default on export (or **`CoreDependencyMode`** / **`CustomCoreImplementationGradleLines`** for local AAR — see **`ANDROID_BUNDLED_SDK.md`**); Editor **`BidscubeAndroidGradlePostprocessor`** (AppLovin SDK `13.+`, Maven deps, compileSdk / minSdk; **launcher** core library desugaring injected by default — **`NoDesugarMode = true`** skips). Exactly **one** core SDK on the classpath — avoid a second `implementation` line in Custom Gradle. |
 | **iOS** | WebView plugins under `Runtime/Plugins/iOS/`; MAX: CocoaPods **`BidscubeSDKAppLovin` `1.0.4`** + **`AppLovinSDK` `13.x`** ([iOS repo](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)); **`BidscubeIosPodfilePostprocessor`** can append pods to the exported **Podfile** |
 | **Legacy configs** | Wire values `levelPlay` / `level_play` → **AppLovin MAX mediation** (same idea as Flutter) |
 
@@ -210,7 +210,7 @@ Implement **`IAdCallback`** (or your project’s callback type) for load / fail 
 | Path | Role |
 |------|------|
 | `Runtime/BidscubeSDK/` | Core C# SDK, `BidscubeSDK`, `SDKConfig`, Android interop |
-| `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.4.aar`** (+ WebView templates); core SDK via default injected Gradle coordinate **`com.bidscube:bidscube-sdk:1.2.2@aar`** or **`CoreDependencyMode`** |
+| `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.4.aar`** (+ WebView templates); core SDK via default injected Gradle coordinate **`com.bidscube:bidscube-sdk:1.2.3@aar`** or **`CoreDependencyMode`** |
 | `Runtime/Plugins/iOS/` | WebView native plugins |
 | `Editor/Android/` | **`BidscubeAndroidGradlePostprocessor`** |
 | `Documentation~/` | Markdown docs (this package) |

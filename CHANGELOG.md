@@ -18,7 +18,7 @@
 - **`BidscubeAndroidGradlePostprocessor.NoDesugarMode`** defaults to **`false`** (plugin injects launcher desugaring). **`true`** skips injection and logs an export **warning**.
 - **Android:** Publisher init log mentions **`CoreDependencyMode`**; validation renamed to **`ValidateCoreBidscubeSdkDependency`** (**`TEST_PLAN.md`**).
 - **Docs:** **`ANDROID_BUNDLED_SDK.md`** — **`CoreDependencyMode`** scope vs AppLovin/Media3 transitives; **`APPLOVIN_MAX.md`** / **`INTEGRATION.md`** — Direct vs MAX playback (custom **`IVideoSurfacePlayback`** only in Direct; MAX uses default native playback for the pinned **`com.bidscube:bidscube-sdk`**).
-- **`Constants.SdkVersion`** / **`package.json`** → **1.0.6**. Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`**; iOS CocoaPods **`BidscubeSDKAppLovin`** pin **1.0.4**; native core pin **`NativeAndroidBidscubeSdkVersion`** **1.2.2**.
+- **`Constants.SdkVersion`** / **`package.json`** → **1.0.6**. Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`**; iOS CocoaPods **`BidscubeSDKAppLovin`** pin **1.0.4**; native core Maven pin **`NativeAndroidBidscubeSdkVersion`** **1.2.3** (default **`com.bidscube:bidscube-sdk:1.2.3@aar`** with MAX adapter **1.0.4**).
 
 ---
 

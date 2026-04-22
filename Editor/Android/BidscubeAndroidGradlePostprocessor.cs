@@ -51,7 +51,7 @@ namespace BidscubeSDK.Editor.Android
 
         /// <summary>
         /// When <see cref="CoreDependencyMode"/> is <see cref="BidscubeAndroidCoreDependencyMode.CustomGradleLines"/>, Gradle line(s) inserted after <see cref="Marker"/>.
-        /// Example: <c>"    implementation files('libs/bidscube-sdk-1.2.2.aar')\n"</c>. Leading/trailing whitespace trimmed; final newline optional.
+        /// Example: <c>"    implementation files('libs/bidscube-sdk-1.2.3.aar')\n"</c>. Leading/trailing whitespace trimmed; final newline optional.
         /// </summary>
         public static string CustomCoreImplementationGradleLines = null;
 

@@ -9,7 +9,7 @@
 | **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.6.zip` |
 | **GitHub Release title** (workflow) | `com.bidscube.sdk {version}` | `com.bidscube.sdk 1.0.6` |
 | **GitHub repository** (recommended) | `AppLovin-SDK-Unity` | `github.com/BidsCube/AppLovin-SDK-Unity` |
-| **`Constants.SdkVersion`** | Unity package / user-agent string | Must match UPM `version`; **`Constants.NativeAndroidBidscubeSdkVersion`** pins the **default** Gradle line **`com.bidscube:bidscube-sdk`** as **`…@aar`** (e.g. **1.2.2**); optional **`BidscubeAndroidGradlePostprocessor.CoreDependencyMode`** overrides how core is injected |
+| **`Constants.SdkVersion`** | Unity package / user-agent string | Must match UPM `version`; **`Constants.NativeAndroidBidscubeSdkVersion`** pins the **default** Gradle line **`com.bidscube:bidscube-sdk`** as **`…@aar`** (e.g. **1.2.3**); optional **`BidscubeAndroidGradlePostprocessor.CoreDependencyMode`** overrides how core is injected |
 | **`BidscubeIosPodfilePostprocessor.BidscubeAppLovinPodVersion`** | CocoaPods **`BidscubeSDKAppLovin`** line appended to exported Podfile | May match UPM or stay on an earlier native pin (e.g. UPM **1.0.6** with pod **1.0.4**) until CocoaPods ships a newer adapter |
 
 
