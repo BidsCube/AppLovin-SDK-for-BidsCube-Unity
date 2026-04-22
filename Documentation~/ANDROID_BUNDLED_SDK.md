@@ -3,12 +3,13 @@
 ## What ships in the UPM package
 
 - **`Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.4.aar`** — Bidscube **custom network** adapter for AppLovin MAX (`com.applovin.mediation.adapters.BidscubeMediationAdapter`). Unity **PluginImporter** enables this for **Android** so it is part of the exported Gradle project.
-- **`Runtime/Plugins/Android/bidscube-sdk-1.2.3.aar`** — **reference** copy of the core **`com.bidscube:bidscube-sdk`** AAR aligned with **`Constants.NativeAndroidBidscubeSdkVersion`**. Its **`.meta` disables the Android plugin** so Unity does **not** merge it into **`unityLibrary`** by default (avoids duplicate classes when **`CoreDependencyMode`** is **`MavenBidscubeSdkAar`**). Use it for **offline / vendor** flows: copy into **`unityLibrary/libs/`** (or your chosen path), set **`CustomGradleLines`** with **`implementation files('libs/bidscube-sdk-1.2.3.aar')`**, and keep **exactly one** core line — or enable this asset for Android in the Inspector **only** if you fully own the core line and removed the default Maven injection.
-- **Core `com.bidscube:bidscube-sdk`** on the classpath — **default:** injected as Maven **`…@aar`** on export (not from the reference AAR above). On Gradle export, **`BidscubeAndroidGradlePostprocessor`** adds a **`// __BIDSCUBE_SDK_GRADLE_DEPS__`** block into **`unityLibrary/build.gradle`** with AppLovin 13.x, Media3, IMA, UMP, Glide, Material, and **one** line for the core SDK (see **Core SDK resolution modes** below). **Launcher** **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** are injected by default (idempotent markers) so **`CheckAarMetadata`** passes when the core AAR requires desugaring on **`:launcher`**. Set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** to skip that injection and own desugaring in host Gradle.
+- **`Runtime/Plugins/Android/bidscube-sdk-1.2.3.aar`** — core **`com.bidscube:bidscube-sdk`** AAR aligned with **`Constants.NativeAndroidBidscubeSdkVersion`**. Its **`.meta` disables the Android plugin** so Unity does **not** merge it into **`unityLibrary`** as a second plugin (avoids duplicate classes). **Default** **`BidscubeAndroidGradlePostprocessor.CoreDependencyMode`** (**`BundledUnityLibraryLibsAar`**) copies this file into **`unityLibrary/libs/`** on each Android Gradle export and injects **`implementation files('libs/bidscube-sdk-….aar')`** — **no Maven repository is required for the core artifact**. Set **`MavenBidscubeSdkAar`** if you prefer **`implementation 'com.bidscube:bidscube-sdk:…@aar'`** from your Gradle repos instead.
+- **Core on the classpath — default:** **`BundledUnityLibraryLibsAar`** (local **`libs/`** + **`files(...)`**). **Optional:** Maven **`…@aar`** via **`MavenBidscubeSdkAar`**, or **`CustomGradleLines`** / **`SkipInjectionIntegratorOwnsCore`** as below. On Gradle export, **`BidscubeAndroidGradlePostprocessor`** adds a **`// __BIDSCUBE_SDK_GRADLE_DEPS__`** block into **`unityLibrary/build.gradle`** with AppLovin 13.x, Media3, IMA, UMP, Glide, Material, and **one** line for the core SDK (see **Core SDK resolution modes** below). **Launcher** **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** are injected by default (idempotent markers) so **`CheckAarMetadata`** passes when the core AAR requires desugaring on **`:launcher`**. Set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** to skip that injection and own desugaring in host Gradle.
 
-Default mode injects  
-`implementation 'com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>@aar'`  
-(see `Runtime/BidscubeSDK/Core/Constants.cs`, currently **1.2.3**). The **`@aar`** suffix forces resolution of the **Android library artifact**; some Maven publications expose a root **`packaging=pom`** coordinate where a plain dependency can resolve **metadata only** (no **`com.bidscube.sdk.BidscubeSDK`** in the APK). Gradle resolves that coordinate from **whatever repositories your project declares** (often Maven Central, but **not required** — private Nexus/Artifactory, mirror, or **`mavenLocal()`** work the same).
+**Default** mode copies **`bidscube-sdk-<NativeAndroidBidscubeSdkVersion>.aar`** into **`unityLibrary/libs/`** and injects  
+`implementation files('libs/bidscube-sdk-<NativeAndroidBidscubeSdkVersion>.aar')`  
+(see `Runtime/BidscubeSDK/Core/Constants.cs`, currently **1.2.3**). **`MavenBidscubeSdkAar`** instead injects  
+`implementation 'com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>@aar'` — the **`@aar`** suffix avoids POM-only resolution when the Maven publication uses root **`packaging=pom`**. Gradle resolves that coordinate from **whatever repositories your project declares** (Central, mirror, **`mavenLocal()`**, private host).
 
 This layout keeps the **MAX adapter** self-contained in the repo while the **runtime** still uses **one** core SDK on the classpath — the adapter AAR does not embed duplicate `com.bidscube.sdk.*` classes.
 
@@ -18,8 +19,9 @@ Set **before** Android export / build (e.g. in a small **`[InitializeOnLoad]`** 
 
 | `CoreDependencyMode` | Behaviour |
 |----------------------|-----------|
-| **`MavenBidscubeSdkAar`** (default) | Injects `implementation 'com.bidscube:bidscube-sdk:<Constants.NativeAndroidBidscubeSdkVersion>@aar'`. Host Gradle must expose a repo that serves that artifact (Central, internal mirror, etc.). |
-| **`CustomGradleLines`** | Injects **`CustomCoreImplementationGradleLines`** after the marker instead of the Maven line. Use for **`implementation files('libs/bidscube-sdk-….aar')`**, **`flatDir` + `name:`**, **`project(':module')`**, etc. After export, confirm **`unityLibrary/build.gradle`** and the path Unity uses for your AAR (often **`unityLibrary/libs/`**). |
+| **`BundledUnityLibraryLibsAar`** (default) | Copies **`Runtime/Plugins/Android/bidscube-sdk-<NativeAndroidBidscubeSdkVersion>.aar`** into **`unityLibrary/libs/`** and injects **`implementation files('libs/bidscube-sdk-….aar')`** after the marker. **No Maven** needed for the core AAR. |
+| **`MavenBidscubeSdkAar`** | Injects `implementation 'com.bidscube:bidscube-sdk:<Constants.NativeAndroidBidscubeSdkVersion>@aar'`. Host Gradle must expose a repo that serves that artifact (Central, internal mirror, etc.). |
+| **`CustomGradleLines`** | Injects **`CustomCoreImplementationGradleLines`** after the marker instead of the bundled / Maven line. Use for a **custom path**, **`flatDir` + `name:`**, **`project(':module')`**, etc. After export, confirm **`unityLibrary/build.gradle`** and the path Unity uses for your AAR. |
 | **`SkipInjectionIntegratorOwnsCore`** | Does **not** inject core; you must add **exactly one** core SDK line elsewhere (Custom Base Gradle, `mainTemplate`, or another module). The post-processor logs a **warning** if it cannot detect a `implementation` referencing bidscube. |
 
 Example (local AAR next to Unity-exported libs — verify path on your Unity version):
@@ -32,7 +34,7 @@ BidscubeAndroidGradlePostprocessor.CustomCoreImplementationGradleLines =
     "implementation files('libs/bidscube-sdk-1.2.3.aar')\n";
 ```
 
-**Backward compatibility:** unset fields leave **`MavenBidscubeSdkAar`**, identical to previous UPM behaviour.
+**Backward compatibility:** older samples assumed **`MavenBidscubeSdkAar`**. To restore that behaviour (core from Gradle repos only), set **`BidscubeAndroidGradlePostprocessor.CoreDependencyMode = BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar`** before export (e.g. **`[InitializeOnLoad]`** Editor script).
 
 ## Other Android dependencies (scope)
 
@@ -61,13 +63,13 @@ BidscubeVersion=1.2.3 ./gradlew :sdk:assembleRelease
 cp sdk/build/outputs/aar/sdk-release.aar <path-to-unity-package>/Runtime/Plugins/Android/bidscube-sdk-1.2.3.aar
 ```
 
-Keep the filename in sync with the semver you document. Preserve **Android: disabled** on **`bidscube-sdk-*.aar.meta`** unless you intentionally ship the core only via this asset (and avoid a second Maven / **`files`** line).
+Keep the filename in sync with **`Constants.NativeAndroidBidscubeSdkVersion`**. Preserve **Android: disabled** on **`bidscube-sdk-*.aar.meta`** so Unity does not merge the AAR twice when using **`BundledUnityLibraryLibsAar`** (the post-processor still copies the file into **`unityLibrary/libs/`** for Gradle).
 
 ## Gradle post-processor
 
 **`BidscubeAndroidGradlePostprocessor`** runs after Gradle is generated and:
 
-- Injects the dependency block (marker `// __BIDSCUBE_SDK_GRADLE_DEPS__`) including the **core** line per **`CoreDependencyMode`** (default: **`com.bidscube:bidscube-sdk:…@aar`**). Legacy exports with a plain Maven coordinate (no **`@aar`**) are rewritten on the next export when mode is **`MavenBidscubeSdkAar`**.
+- Injects the dependency block (marker `// __BIDSCUBE_SDK_GRADLE_DEPS__`) including the **core** line per **`CoreDependencyMode`** (default: **`files('libs/bidscube-sdk-….aar')`** + copy). Legacy exports with a plain Maven coordinate (no **`@aar`**) are rewritten on the next export when mode is **`MavenBidscubeSdkAar`**.
 - Ensures **`compileSdk` / `compileSdkVersion`** ≥ **34** and **`minSdk` / `minSdkVersion`** ≥ **26** in **`unityLibrary`** and **`launcher`**.
 - When **`NoDesugarMode`** is **`false`** (default), appends **launcher** **`coreLibraryDesugaringEnabled true`** and **`coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:<DesugarJdkLibsVersion>'`** (see `BidscubeAndroidGradlePostprocessor.DesugarJdkLibsVersion`, **2.1.4**) using markers `// __BIDSCUBE_CORE_LIBRARY_DESUGARING__` — skipped if already present or if **`NoDesugarMode`** is **`true`**. Validate Android with a **clean** Gradle cache, **`./gradlew --refresh-dependencies`**, **`assembleDebug`/`assembleRelease`**, and a **lower-API** smoke test.
 

@@ -83,8 +83,8 @@ namespace BidscubeSDK
             var row =
                 $"Init (publisher row): unityUPM={Constants.SdkVersion} " +
                 $"androidCoreSdkVersion={Constants.NativeAndroidBidscubeSdkVersion} " +
-                $"gradleCoreDefault=com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar " +
-                $"(Editor: BidscubeAndroidGradlePostprocessor.CoreDependencyMode — see ANDROID_BUNDLED_SDK.md) " +
+                $"androidCoreDefault=libs/bidscube-sdk-{Constants.NativeAndroidBidscubeSdkVersion}.aar " +
+                $"(BundledUnityLibraryLibsAar; alt Maven=com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar via CoreDependencyMode — see ANDROID_BUNDLED_SDK.md) " +
                 $"integrationMode={mode} csharp_BidscubeSDK_IsInitialized=true";
 #if UNITY_ANDROID && !UNITY_EDITOR
             Logger.Info(row + " | " + BidscubeAndroidSdkInterop.FormatPublisherChecklistLine());

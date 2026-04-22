@@ -37,7 +37,7 @@ namespace BidscubeSDK
         public const string SdkVersion = "1.0.6";
 
         /// <summary>
-        /// Native Android core SDK semver (parity with published <c>com.bidscube:bidscube-sdk</c> when using default Gradle injection). On export, <c>BidscubeAndroidGradlePostprocessor</c> injects this version as <c>@aar</c> unless <c>CoreDependencyMode</c> uses custom lines / integrator-owned core.
+        /// Native Android core SDK semver (must match the bundled <c>bidscube-sdk-*.aar</c> filename and the Maven coordinate when using <c>MavenBidscubeSdkAar</c>). Default export copies <c>bidscube-sdk-&lt;NativeAndroidBidscubeSdkVersion&gt;.aar</c> into <c>unityLibrary/libs/</c> and injects <c>files('libs/…')</c>; override via <c>BidscubeAndroidGradlePostprocessor.CoreDependencyMode</c>.
         /// </summary>
         public const string NativeAndroidBidscubeSdkVersion = "1.2.3";
 

@@ -2,7 +2,12 @@
 
 ### Added
 
-- **Android:** **`Runtime/Plugins/Android/bidscube-sdk-1.2.3.aar`** — reference core AAR for local **`files(...)`** / offline vendor workflows; **PluginImporter** leaves **Android disabled** so default Maven core injection does not duplicate the SDK on the classpath (see **`ANDROID_BUNDLED_SDK.md`**).
+- **Android:** **`BidscubeAndroidCoreDependencyMode.BundledUnityLibraryLibsAar`** — on Gradle export, copies **`bidscube-sdk-<ver>.aar`** from the UPM package into **`unityLibrary/libs/`** and injects **`implementation files('libs/…')`** so the core SDK does not require a Maven repository.
+
+### Changed
+
+- **Android (default):** **`BidscubeAndroidGradlePostprocessor.CoreDependencyMode`** is now **`BundledUnityLibraryLibsAar`** (was **`MavenBidscubeSdkAar`**). To keep resolving the core from Gradle repos only, set **`CoreDependencyMode = MavenBidscubeSdkAar`** before export (**`ANDROID_BUNDLED_SDK.md`**).
+- **Android:** **`Runtime/Plugins/Android/bidscube-sdk-1.2.3.aar`** — **PluginImporter** leaves **Android disabled** so Unity does not merge the same AAR twice; the post-processor owns the copy into **`unityLibrary/libs/`**.
 
 ---
 
