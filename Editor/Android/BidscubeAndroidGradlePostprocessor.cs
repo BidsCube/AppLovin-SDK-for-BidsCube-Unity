@@ -29,7 +29,7 @@ namespace BidscubeSDK.Editor.Android
     /// Injects Gradle dependencies for the **core** Bidscube Android SDK and transitives for the bundled <b>AppLovin MAX</b> adapter AAR.
     /// Core resolution is controlled by <see cref="CoreDependencyMode"/> (default: Maven coordinate with <c>@aar</c>).
     /// Plus transitives for the bundled <b>AppLovin MAX</b> adapter AAR (local AARs do not pull their own Maven graph).
-    /// The UPM package ships only <c>applovin-bidscube-max-adapter-*.aar</c>; do <b>not</b> add a second core <c>implementation</c> in Custom Gradle.
+    /// The UPM package ships <c>applovin-bidscube-max-adapter-*.aar</c> (Android-enabled) and a <b>reference</b> <c>bidscube-sdk-*.aar</c> with Android import disabled — copy/use per docs; do <b>not</b> add a second core <c>implementation</c> in Custom Gradle.
     /// When <see cref="NoDesugarMode"/> is <c>false</c> (default), appends <b>launcher</b> Gradle lines for <c>coreLibraryDesugaringEnabled</c> and <c>com.android.tools:desugar_jdk_libs</c> so <c>CheckAarMetadata</c> passes for <c>com.bidscube:bidscube-sdk</c> (AAR metadata requires desugaring on <c>:launcher</c>). Set <see cref="NoDesugarMode"/> to <c>true</c> to skip that injection and own desugaring in Custom Launcher / Base Gradle.
     /// Also raises <c>compileSdk</c> / <c>minSdk</c> when needed so <c>CheckAarMetadata</c> passes against Material / AndroidX.
     /// </summary>

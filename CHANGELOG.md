@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Added
+
+- **Android:** **`Runtime/Plugins/Android/bidscube-sdk-1.2.3.aar`** — reference core AAR for local **`files(...)`** / offline vendor workflows; **PluginImporter** leaves **Android disabled** so default Maven core injection does not duplicate the SDK on the classpath (see **`ANDROID_BUNDLED_SDK.md`**).
+
 ---
 
 ## [1.0.6] - 2026-04-21

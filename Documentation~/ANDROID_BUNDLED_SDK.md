@@ -2,8 +2,9 @@
 
 ## What ships in the UPM package
 
-- **`Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.4.aar`** — Bidscube **custom network** adapter for AppLovin MAX (`com.applovin.mediation.adapters.BidscubeMediationAdapter`). This is the **only** Bidscube Android library shipped as a binary inside the package.
-- **Core `com.bidscube:bidscube-sdk`** — **not** bundled inside the UPM package by default. On Gradle export, **`BidscubeAndroidGradlePostprocessor`** adds a **`// __BIDSCUBE_SDK_GRADLE_DEPS__`** block into **`unityLibrary/build.gradle`** with AppLovin 13.x, Media3, IMA, UMP, Glide, Material, and **one** line for the core SDK (see **Core SDK resolution modes** below). **Launcher** **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** are injected by default (idempotent markers) so **`CheckAarMetadata`** passes when the core AAR requires desugaring on **`:launcher`**. Set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** to skip that injection and own desugaring in host Gradle.
+- **`Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.4.aar`** — Bidscube **custom network** adapter for AppLovin MAX (`com.applovin.mediation.adapters.BidscubeMediationAdapter`). Unity **PluginImporter** enables this for **Android** so it is part of the exported Gradle project.
+- **`Runtime/Plugins/Android/bidscube-sdk-1.2.3.aar`** — **reference** copy of the core **`com.bidscube:bidscube-sdk`** AAR aligned with **`Constants.NativeAndroidBidscubeSdkVersion`**. Its **`.meta` disables the Android plugin** so Unity does **not** merge it into **`unityLibrary`** by default (avoids duplicate classes when **`CoreDependencyMode`** is **`MavenBidscubeSdkAar`**). Use it for **offline / vendor** flows: copy into **`unityLibrary/libs/`** (or your chosen path), set **`CustomGradleLines`** with **`implementation files('libs/bidscube-sdk-1.2.3.aar')`**, and keep **exactly one** core line — or enable this asset for Android in the Inspector **only** if you fully own the core line and removed the default Maven injection.
+- **Core `com.bidscube:bidscube-sdk`** on the classpath — **default:** injected as Maven **`…@aar`** on export (not from the reference AAR above). On Gradle export, **`BidscubeAndroidGradlePostprocessor`** adds a **`// __BIDSCUBE_SDK_GRADLE_DEPS__`** block into **`unityLibrary/build.gradle`** with AppLovin 13.x, Media3, IMA, UMP, Glide, Material, and **one** line for the core SDK (see **Core SDK resolution modes** below). **Launcher** **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** are injected by default (idempotent markers) so **`CheckAarMetadata`** passes when the core AAR requires desugaring on **`:launcher`**. Set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** to skip that injection and own desugaring in host Gradle.
 
 Default mode injects  
 `implementation 'com.bidscube:bidscube-sdk:<NativeAndroidBidscubeSdkVersion>@aar'`  
@@ -50,6 +51,17 @@ cp applovin-adapter/build/outputs/aar/applovin-adapter-release.aar <path-to-unit
 ```
 
 Adjust filename / version constants / docs when the adapter semver changes.
+
+## Updating the reference core AAR (`bidscube-sdk-*.aar`)
+
+From the Bidscube Android SDK repo (same version as **`Constants.NativeAndroidBidscubeSdkVersion`**), e.g.:
+
+```bash
+BidscubeVersion=1.2.3 ./gradlew :sdk:assembleRelease
+cp sdk/build/outputs/aar/sdk-release.aar <path-to-unity-package>/Runtime/Plugins/Android/bidscube-sdk-1.2.3.aar
+```
+
+Keep the filename in sync with the semver you document. Preserve **Android: disabled** on **`bidscube-sdk-*.aar.meta`** unless you intentionally ship the core only via this asset (and avoid a second Maven / **`files`** line).
 
 ## Gradle post-processor
 

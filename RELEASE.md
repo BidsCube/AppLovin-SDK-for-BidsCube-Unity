@@ -30,7 +30,7 @@
 - [ ] `CHANGELOG.md` includes an entry for this version.
 - [ ] `README.md` / `Documentation~/` — `#vX.Y.Z` examples match `package.json`.
 - [ ] `package.json` → `repository.url` points to the **actual** GitHub repository.
-- [ ] Bundled **`applovin-bidscube-max-adapter-*.aar`**, **`NativeAndroidBidscubeSdkVersion`** / Gradle inject, and docs match the native Android release (if applicable).
+- [ ] Bundled **`applovin-bidscube-max-adapter-*.aar`**, optional reference **`bidscube-sdk-<ver>.aar`** (filename matches **`NativeAndroidBidscubeSdkVersion`**; `.meta` keeps Android import off), **`NativeAndroidBidscubeSdkVersion`** / Gradle inject, and docs match the native Android release (if applicable).
 
 ## Create a release on GitHub
 

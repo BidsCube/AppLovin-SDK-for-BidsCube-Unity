@@ -210,7 +210,7 @@ Implement **`IAdCallback`** (or your project’s callback type) for load / fail 
 | Path | Role |
 |------|------|
 | `Runtime/BidscubeSDK/` | Core C# SDK, `BidscubeSDK`, `SDKConfig`, Android interop |
-| `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.4.aar`** (+ WebView templates); core SDK via default injected Gradle coordinate **`com.bidscube:bidscube-sdk:1.2.3@aar`** or **`CoreDependencyMode`** |
+| `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.4.aar`** (Android on); **`bidscube-sdk-1.2.3.aar`** (Android off — reference for **`files('libs/…')`** / copy); WebView templates; core SDK via default injected **`com.bidscube:bidscube-sdk:1.2.3@aar`** or **`CoreDependencyMode`** |
 | `Runtime/Plugins/iOS/` | WebView native plugins |
 | `Editor/Android/` | **`BidscubeAndroidGradlePostprocessor`** |
 | `Documentation~/` | Markdown docs (this package) |
