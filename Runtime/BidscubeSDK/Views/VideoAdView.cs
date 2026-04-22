@@ -14,7 +14,7 @@ namespace BidscubeSDK
     public class VideoAdView : MonoBehaviour
     {
         /// <summary>
-        /// Fallback factory when <see cref="SDKConfig.VideoPlaybackFactory"/> is not set (e.g. unit tests or wiring before <c>BidscubeSDK.Initialize</c>). Resolution order: <see cref="BidscubeSDK.ActiveConfiguration"/> → this static property → built-in Unity player (unless <c>BIDSCUBE_DISABLE_UNITY_VIDEO</c>).
+        /// Fallback factory when <see cref="SDKConfig.VideoPlaybackFactory"/> is not set (e.g. unit tests or wiring before <c>BidscubeSDK.Initialize</c>). Resolution order: <see cref="BidscubeSDK.ActiveConfiguration"/> → this static property → built-in Unity player (unless <c>BIDSCUBE_DISABLE_UNITY_VIDEO</c>). See <c>Documentation~/VIDEO_PLAYBACK.md</c>.
         /// </summary>
         public static System.Func<GameObject, RawImage, IVideoSurfacePlayback> VideoPlaybackFactory { get; set; }
 

@@ -21,17 +21,19 @@ Single documented path — native **Bidscube SDK** APIs invoked by the **AppLovi
 |--------|------------|------------|
 | **Banner** | `getImageAdView` → `View` | Passed into MAX; **AdDisplayManager** / **BannerViewFactory** host **WebView** with rendered ADM. |
 | **Interstitial** | `showImageAd` | Full-screen image overlay from rendered ADM. |
-| **Video / rewarded** | `showVideoAd` | **IMA** + fullscreen container. |
+| **Video / rewarded** | `showVideoAd` | **IMA** + fullscreen container (requires **full** core AAR + IMA/Media3 on Gradle — **`BidscubeAndroidExportSettings`** with **FullWithVideo** or **`BidscubeAndroidGradlePostprocessor.FeatureSet`**; see **`ANDROID_BUNDLED_SDK.md`**). |
 | **Native** | `getNativeAdView` → payload | Adapter builds **MaxNativeAd** (assets); **do not** pass the Bidscube SDK view as the MAX creative. |
 
-### Video playback: Direct vs MAX (this UPM version)
+### Video playback: Direct vs MAX
+
+Canonical guide: **`VIDEO_PLAYBACK.md`** (default vs custom, Unity vs Java).
 
 | Path | Custom player |
 |------|----------------|
-| **Direct SDK** (Unity C# creatives) | Supported — **`SDKConfig.Builder.VideoPlaybackFactory`** / **`IVideoSurfacePlayback`** (see **`INTEGRATION.md`**). |
-| **AppLovin MAX / native** (`showVideoAd`, MAX adapter) | **Not** wired from this Unity package. Playback follows the **published** native **`com.bidscube:bidscube-sdk`** behaviour (default native / IMA stack for that SDK version). |
+| **Direct SDK** (Unity C# creatives) | **`SDKConfig.Builder.VideoPlaybackFactory`** + **`IVideoSurfacePlayback`** (Unity `VideoAdView` linear path). |
+| **AppLovin MAX / native** | Native **`com.bidscube.sdk`** (IMA + fullscreen video surface). Optional **Java** `VideoPlayerProvider` / `videoPlayerProvider` on **`SDKConfig.Builder`** on the **first** successful native `BidscubeSDK.initialize` — **not** forwarded from C# in this UPM; confirm API names on your pinned AAR. |
 
-There is **no** Unity C# API here that injects a host native VAST player into the MAX mediation pipeline. If a future **published** Android SDK adds a stable, documented hook for that, the Unity package can forward it again via **`BidscubeAndroidSdkInterop`**.
+There is **no** Unity C# hook in this package that injects a native MAX VAST player. A future interop could expose **`BidscubeAndroidSdkInterop`** forwarding if the published Android SDK stabilizes it.
 
 ## MAX dashboard (custom SDK network)
 

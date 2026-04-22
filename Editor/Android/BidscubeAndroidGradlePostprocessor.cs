@@ -36,8 +36,9 @@ namespace BidscubeSDK.Editor.Android
     /// <summary>
     /// Injects Gradle dependencies for the **core** Bidscube Android SDK and transitives for the bundled <b>AppLovin MAX</b> adapter AAR.
     /// Core resolution is controlled by <see cref="CoreDependencyMode"/> (default: <see cref="BidscubeAndroidCoreDependencyMode.BundledUnityLibraryLibsAar"/> — local <c>libs/</c> + <c>files(...)</c>).
+    /// Effective feature set = <see cref="BidscubeAndroidExportSettings"/> asset if present, else <see cref="FeatureSet"/> (default <see cref="BidscubeAndroidFeatureSet.LiteNoVideo"/>). That chooses lite vs full core AAR and toggles Media3 / Google IMA Maven lines.
     /// Plus transitives for the bundled <b>AppLovin MAX</b> adapter AAR (local AARs do not pull their own Maven graph).
-    /// The UPM package ships <c>applovin-bidscube-max-adapter-*.aar</c> (Android-enabled) and <c>bidscube-sdk-*.aar</c> (Android import disabled in <c>.meta</c> so Unity does not merge it twice; the post-processor copies it into <c>unityLibrary/libs/</c> in bundled mode).
+    /// The UPM package ships <c>applovin-bidscube-max-adapter-*.aar</c> (Android-enabled) and two core AARs (Android import disabled in <c>.meta</c>; the post-processor copies the selected file into <c>unityLibrary/libs/</c> in bundled mode).
     /// When <see cref="NoDesugarMode"/> is <c>false</c> (default), appends <b>launcher</b> Gradle lines for <c>coreLibraryDesugaringEnabled</c> and <c>com.android.tools:desugar_jdk_libs</c> so <c>CheckAarMetadata</c> passes for <c>com.bidscube:bidscube-sdk</c> (AAR metadata requires desugaring on <c>:launcher</c>). Set <see cref="NoDesugarMode"/> to <c>true</c> to skip that injection and own desugaring in Custom Launcher / Base Gradle.
     /// Also raises <c>compileSdk</c> / <c>minSdk</c> when needed so <c>CheckAarMetadata</c> passes against Material / AndroidX.
     /// </summary>
@@ -56,6 +57,15 @@ namespace BidscubeSDK.Editor.Android
 
         /// <summary>How <c>unityLibrary</c> obtains the core Bidscube Android SDK. Default: bundled AAR copied to <c>unityLibrary/libs/</c> + <c>files(...)</c> (no Maven for the core). Set <see cref="BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar"/> to resolve <c>com.bidscube:bidscube-sdk:…@aar</c> from repos instead.</summary>
         public static BidscubeAndroidCoreDependencyMode CoreDependencyMode = BidscubeAndroidCoreDependencyMode.BundledUnityLibraryLibsAar;
+
+        /// <summary>
+        /// Code-only fallback when no <see cref="BidscubeAndroidExportSettings"/> asset exists in the project.
+        /// Prefer committing a <see cref="BidscubeAndroidExportSettings"/> asset for teams / GitHub Actions (same mode for everyone without Editor bootstrap scripts).
+        /// </summary>
+        public static BidscubeAndroidFeatureSet FeatureSet = BidscubeAndroidFeatureSet.LiteNoVideo;
+
+        /// <summary>Resolved once per Gradle export from asset (if any) or <see cref="FeatureSet"/>.</summary>
+        private static BidscubeAndroidFeatureSet _resolvedExportFeatureSet = BidscubeAndroidFeatureSet.LiteNoVideo;
 
         /// <summary>
         /// When <see cref="CoreDependencyMode"/> is <see cref="BidscubeAndroidCoreDependencyMode.CustomGradleLines"/>, Gradle line(s) inserted after <see cref="Marker"/>.
@@ -81,6 +91,19 @@ namespace BidscubeSDK.Editor.Android
 
         public void OnPostGenerateGradleAndroidProject(string path)
         {
+            _resolvedExportFeatureSet = BidscubeAndroidExportSettingsResolver.GetEffectiveFeatureSet();
+            Debug.Log(
+                "[BidscubeSDK] Effective Bidscube Android feature set: " + _resolvedExportFeatureSet + " (" +
+                BidscubeAndroidExportSettingsResolver.DescribeEffectiveFeatureSetSource() + "). CoreDependencyMode: " +
+                CoreDependencyMode + ".");
+
+            if (_resolvedExportFeatureSet == BidscubeAndroidFeatureSet.LiteNoVideo &&
+                CoreDependencyMode == BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar)
+            {
+                Debug.LogWarning(
+                    "[BidscubeSDK] FeatureSet=LiteNoVideo with CoreDependencyMode=MavenBidscubeSdkAar — the Maven coordinate may still pull a full SDK; prefer BundledUnityLibraryLibsAar + bundled bidscube-sdk-lite-*.aar for a true lite graph.");
+            }
+
             var unityLib = FindUnityLibraryBuildGradle(path);
             if (string.IsNullOrEmpty(unityLib))
             {
@@ -95,18 +118,10 @@ namespace BidscubeSDK.Editor.Android
                 if (!text.Contains(Marker))
                 {
                     var coreLines = BuildCoreGradleLinesForMarkerBlock();
+                    var transitiveLines = BuildTransitiveBidscubeGradleLines();
                     var depsBlock = $@"
     {Marker}
-{coreLines}    implementation '{AppLovinSdkGradleCoordinate}'
-    implementation 'androidx.media3:media3-common:1.4.1'
-    implementation 'androidx.media3:media3-ui:1.4.1'
-    implementation 'com.google.android.ump:user-messaging-platform:2.2.0'
-    implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
-    implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.33.0'
-    implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'com.google.android.material:material:1.12.0'
-    implementation 'com.github.bumptech.glide:glide:4.15.1'
-";
+{coreLines}{transitiveLines}";
 
                     var idx = text.IndexOf("dependencies {", StringComparison.Ordinal);
                     if (idx < 0)
@@ -118,7 +133,7 @@ namespace BidscubeSDK.Editor.Android
                         var insertAt = idx + "dependencies {".Length;
                         text = text.Insert(insertAt, depsBlock);
                         File.WriteAllText(unityLib, text);
-                        Debug.Log("[BidscubeSDK] Injected Bidscube Android SDK Maven dependencies into " + unityLib);
+                        Debug.Log("[BidscubeSDK] Injected Bidscube Android SDK Gradle dependencies into " + unityLib);
                     }
                 }
 
@@ -422,7 +437,7 @@ android.suppressUnsupportedCompileSdk=34,35,36
                 case BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar:
                     return "    implementation 'com.bidscube:bidscube-sdk:" + Constants.NativeAndroidBidscubeSdkVersion + "@aar'\n";
                 case BidscubeAndroidCoreDependencyMode.BundledUnityLibraryLibsAar:
-                    return "    implementation files('libs/bidscube-sdk-" + Constants.NativeAndroidBidscubeSdkVersion + ".aar')\n";
+                    return "    implementation files('libs/" + BundledCoreJarFileNameForGradleExport + "')\n";
                 case BidscubeAndroidCoreDependencyMode.CustomGradleLines:
                 {
                     var raw = CustomCoreImplementationGradleLines?.Trim();
@@ -439,8 +454,39 @@ android.suppressUnsupportedCompileSdk=34,35,36
                 case BidscubeAndroidCoreDependencyMode.SkipInjectionIntegratorOwnsCore:
                     return "    // Core bidscube-sdk: supplied by integrator (BidscubeAndroidGradlePostprocessor.CoreDependencyMode=SkipInjectionIntegratorOwnsCore)\n";
                 default:
-                    return "    implementation files('libs/bidscube-sdk-" + Constants.NativeAndroidBidscubeSdkVersion + ".aar')\n";
+                    return "    implementation files('libs/" + BundledCoreJarFileNameForGradleExport + "')\n";
             }
+        }
+
+        /// <summary>Filename only (e.g. <c>bidscube-sdk-lite-1.2.3.aar</c>) placed under <c>unityLibrary/libs/</c>.</summary>
+        private static string BundledCoreJarFileNameForGradleExport =>
+            _resolvedExportFeatureSet == BidscubeAndroidFeatureSet.FullWithVideo
+                ? Constants.NativeAndroidBundledCoreAarFullFileName
+                : Constants.NativeAndroidBundledCoreAarLiteFileName;
+
+        /// <summary>AppLovin + optional video stack + shared non-video deps (banner/native).</summary>
+        private static string BuildTransitiveBidscubeGradleLines()
+        {
+            var sb = new StringBuilder();
+            sb.Append("    implementation '").Append(AppLovinSdkGradleCoordinate).AppendLine("'");
+            if (_resolvedExportFeatureSet == BidscubeAndroidFeatureSet.FullWithVideo)
+            {
+                Debug.Log("[BidscubeSDK] Including Media3 and Google IMA Maven dependencies (FullWithVideo).");
+                sb.AppendLine("    implementation 'androidx.media3:media3-common:1.4.1'");
+                sb.AppendLine("    implementation 'androidx.media3:media3-ui:1.4.1'");
+                sb.AppendLine("    implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.33.0'");
+            }
+            else
+            {
+                Debug.Log("[BidscubeSDK] Skipping Media3 / Google IMA dependencies for LiteNoVideo.");
+            }
+
+            sb.AppendLine("    implementation 'com.google.android.ump:user-messaging-platform:2.2.0'");
+            sb.AppendLine("    implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'");
+            sb.AppendLine("    implementation 'androidx.cardview:cardview:1.0.0'");
+            sb.AppendLine("    implementation 'com.google.android.material:material:1.12.0'");
+            sb.AppendLine("    implementation 'com.github.bumptech.glide:glide:4.15.1'");
+            return sb.ToString();
         }
 
         private static string NormalizeCustomCoreGradleLinesIndent(string raw)
@@ -512,16 +558,16 @@ android.suppressUnsupportedCompileSdk=34,35,36
                     }
                     case BidscubeAndroidCoreDependencyMode.BundledUnityLibraryLibsAar:
                     {
-                        var ver = Regex.Escape(Constants.NativeAndroidBidscubeSdkVersion);
+                        var jar = Regex.Escape(BundledCoreJarFileNameForGradleExport);
                         if (Regex.IsMatch(
                                 text,
-                                @"implementation\s+files\s*\(\s*['""]libs/bidscube-sdk-" + ver + @"\.aar['""]\s*\)",
+                                @"implementation\s+files\s*\(\s*['""]libs/" + jar + @"['""]\s*\)",
                                 RegexOptions.Multiline))
                             return;
 
                         Debug.LogError(
-                            "[BidscubeSDK] BundledUnityLibraryLibsAar: expected implementation files('libs/bidscube-sdk-" +
-                            Constants.NativeAndroidBidscubeSdkVersion + ".aar') after marker — check export and BidscubeAndroidGradlePostprocessor.");
+                            "[BidscubeSDK] BundledUnityLibraryLibsAar: expected implementation files('libs/" +
+                            BundledCoreJarFileNameForGradleExport + "') after marker — check export, FeatureSet, and BidscubeAndroidGradlePostprocessor.");
                         return;
                     }
                     case BidscubeAndroidCoreDependencyMode.CustomGradleLines:
@@ -575,11 +621,17 @@ android.suppressUnsupportedCompileSdk=34,35,36
                         "",
                         RegexOptions.Multiline);
 
-                    var ver = Constants.NativeAndroidBidscubeSdkVersion;
-                    var escapedVer = Regex.Escape(ver);
+                    var escapedVer = Regex.Escape(Constants.NativeAndroidBidscubeSdkVersion);
+                    text = Regex.Replace(
+                        text,
+                        @"^\s*implementation\s+files\s*\(\s*['""]libs/bidscube-sdk(?:-lite)?-" + escapedVer + @"\.aar['""]\s*\)\s*\r?\n",
+                        "",
+                        RegexOptions.Multiline);
+
+                    var escapedJar = Regex.Escape(BundledCoreJarFileNameForGradleExport);
                     if (Regex.IsMatch(
                             text,
-                            @"implementation\s+files\s*\(\s*['""]libs/bidscube-sdk-" + escapedVer + @"\.aar['""]\s*\)",
+                            @"implementation\s+files\s*\(\s*['""]libs/" + escapedJar + @"['""]\s*\)",
                             RegexOptions.Multiline))
                     {
                         File.WriteAllText(unityLibGradlePath, text);
@@ -593,10 +645,10 @@ android.suppressUnsupportedCompileSdk=34,35,36
                         return;
                     }
 
-                    var line = "\n    implementation files('libs/bidscube-sdk-" + ver + ".aar')";
+                    var line = "\n    implementation files('libs/" + BundledCoreJarFileNameForGradleExport + "')";
                     text = text.Insert(markerIdx + Marker.Length, line);
                     File.WriteAllText(unityLibGradlePath, text);
-                    Debug.Log("[BidscubeSDK] Injected bundled core SDK (unityLibrary/libs/) after " + Marker + ".");
+                    Debug.Log("[BidscubeSDK] Injected bundled core SDK (unityLibrary/libs/) after " + Marker + ": " + BundledCoreJarFileNameForGradleExport + ".");
                     return;
                 }
 
@@ -669,8 +721,6 @@ android.suppressUnsupportedCompileSdk=34,35,36
             }
         }
 
-        private static string BundledCoreAarFileName => "bidscube-sdk-" + Constants.NativeAndroidBidscubeSdkVersion + ".aar";
-
         /// <summary>
         /// Copies the UPM-bundled core AAR into <c>unityLibrary/libs/</c> so <c>implementation files('libs/…')</c> resolves during Gradle.
         /// </summary>
@@ -688,18 +738,19 @@ android.suppressUnsupportedCompileSdk=34,35,36
                 var libsDir = Path.Combine(unityLibDir, "libs");
                 Directory.CreateDirectory(libsDir);
 
-                var destPath = Path.Combine(libsDir, BundledCoreAarFileName);
+                var jarName = BundledCoreJarFileNameForGradleExport;
+                var destPath = Path.Combine(libsDir, jarName);
 
-                if (!TryFindBundledCoreAarAssetAbsolutePath(out var sourcePath))
+                if (!TryFindBundledCoreAarAssetAbsolutePath(jarName, out var sourcePath))
                 {
                     Debug.LogError(
-                        "[BidscubeSDK] BundledUnityLibraryLibsAar: could not locate " + BundledCoreAarFileName +
+                        "[BidscubeSDK] BundledUnityLibraryLibsAar: could not locate " + jarName +
                         " in the Unity project. Reinstall the full UPM package or set CoreDependencyMode=MavenBidscubeSdkAar / CustomGradleLines. See Documentation~/ANDROID_BUNDLED_SDK.md.");
                     return;
                 }
 
                 File.Copy(sourcePath, destPath, true);
-                Debug.Log("[BidscubeSDK] Copied bundled core SDK AAR to exported project: " + destPath);
+                Debug.Log("[BidscubeSDK] Copied bundled core AAR: " + jarName + " → " + destPath);
             }
             catch (Exception e)
             {
@@ -707,18 +758,17 @@ android.suppressUnsupportedCompileSdk=34,35,36
             }
         }
 
-        private static bool TryFindBundledCoreAarAssetAbsolutePath(out string absolutePath)
+        private static bool TryFindBundledCoreAarAssetAbsolutePath(string expectedFileName, out string absolutePath)
         {
             absolutePath = null;
-            var expectedName = BundledCoreAarFileName;
-            var searchToken = Path.GetFileNameWithoutExtension(expectedName);
+            var searchToken = Path.GetFileNameWithoutExtension(expectedFileName);
 
             foreach (var guid in AssetDatabase.FindAssets(searchToken))
             {
                 var assetPath = AssetDatabase.GUIDToAssetPath(guid);
                 if (!assetPath.EndsWith(".aar", StringComparison.OrdinalIgnoreCase))
                     continue;
-                if (!string.Equals(Path.GetFileName(assetPath), expectedName, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(Path.GetFileName(assetPath), expectedFileName, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 var projectRoot = Path.GetDirectoryName(Application.dataPath);

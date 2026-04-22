@@ -34,12 +34,19 @@ namespace BidscubeSDK
         /// <summary>
         /// Unity UPM package version (user-agent, diagnostics). Must match <c>package.json</c> <c>version</c>.
         /// </summary>
-        public const string SdkVersion = "1.0.7";
+        public const string SdkVersion = "1.0.8";
 
         /// <summary>
-        /// Native Android core SDK semver (must match the bundled <c>bidscube-sdk-*.aar</c> filename and the Maven coordinate when using <c>MavenBidscubeSdkAar</c>). Default export copies <c>bidscube-sdk-&lt;NativeAndroidBidscubeSdkVersion&gt;.aar</c> into <c>unityLibrary/libs/</c> and injects <c>files('libs/…')</c>; override via <c>BidscubeAndroidGradlePostprocessor.CoreDependencyMode</c>.
+        /// Native Android core SDK semver (must match bundled AAR filenames and the Maven coordinate when using <c>MavenBidscubeSdkAar</c>).
+        /// Default export copies one of <see cref="NativeAndroidBundledCoreAarFullFileName"/> / <see cref="NativeAndroidBundledCoreAarLiteFileName"/> into <c>unityLibrary/libs/</c> per <c>BidscubeAndroidGradlePostprocessor.FeatureSet</c>.
         /// </summary>
         public const string NativeAndroidBidscubeSdkVersion = "1.2.3";
+
+        /// <summary>Bundled full (with IMA) core AAR under <c>Runtime/Plugins/Android/</c> — copied when <c>FeatureSet == FullWithVideo</c>.</summary>
+        public static string NativeAndroidBundledCoreAarFullFileName => "bidscube-sdk-" + NativeAndroidBidscubeSdkVersion + ".aar";
+
+        /// <summary>Bundled lite (no IMA) core AAR — copied when <c>FeatureSet == LiteNoVideo</c> (default).</summary>
+        public static string NativeAndroidBundledCoreAarLiteFileName => "bidscube-sdk-lite-" + NativeAndroidBidscubeSdkVersion + ".aar";
 
         /// <summary>
         /// Error codes

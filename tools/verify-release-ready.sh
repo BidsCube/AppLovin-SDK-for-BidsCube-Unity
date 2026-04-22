@@ -78,12 +78,15 @@ if ! grep -q "Constants.NativeAndroidBidscubeSdkVersion" Editor/Android/Bidscube
 fi
 echo "Constants.NativeAndroidBidscubeSdkVersion: $NATIVE_SDK_VER (default: BundledUnityLibraryLibsAar → unityLibrary/libs + files(...); MavenBidscubeSdkAar = com.bidscube:bidscube-sdk … @aar)"
 
-BUNDLED_CORE="Runtime/Plugins/Android/bidscube-sdk-${NATIVE_SDK_VER}.aar"
-if [[ ! -f "$BUNDLED_CORE" ]]; then
-  echo "ERROR: expected bundled core AAR at $BUNDLED_CORE (BundledUnityLibraryLibsAar default)" >&2
-  exit 1
-fi
-echo "Bundled core AAR (default mode): $BUNDLED_CORE"
+BUNDLED_CORE_FULL="Runtime/Plugins/Android/bidscube-sdk-${NATIVE_SDK_VER}.aar"
+BUNDLED_CORE_LITE="Runtime/Plugins/Android/bidscube-sdk-lite-${NATIVE_SDK_VER}.aar"
+for f in "$BUNDLED_CORE_FULL" "$BUNDLED_CORE_LITE"; do
+  if [[ ! -f "$f" ]]; then
+    echo "ERROR: expected bundled core AAR at $f (FullWithVideo + LiteNoVideo)" >&2
+    exit 1
+  fi
+done
+echo "Bundled core AARs: $BUNDLED_CORE_FULL (full), $BUNDLED_CORE_LITE (lite)"
 
 echo "Suggested git tag (must match package.json): v$VER"
 echo "  git tag -a \"v$VER\" -m \"com.bidscube.sdk $VER\""

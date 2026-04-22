@@ -29,6 +29,9 @@ namespace BidscubeSDK
         private static List<BannerAdView> _activeBanners = new List<BannerAdView>();
         private static List<AdViewController> _activeControllers = new List<AdViewController>();
 
+        private const string LiteNoVideoVideoUnsupportedMessage =
+            "Video ads are not supported in LiteNoVideo Android build. Create a BidscubeAndroidExportSettings asset (Assets → Create → Bidscube → Android Export Settings) with FullWithVideo, or set BidscubeAndroidGradlePostprocessor.FeatureSet before export — see Documentation~/ANDROID_BUNDLED_SDK.md.";
+
         private static BidscubeSDK Instance
         {
             get
@@ -80,11 +83,23 @@ namespace BidscubeSDK
         private static void LogInitPublisherRow(SDKConfig config)
         {
             var mode = config.IntegrationMode.ToWireString();
+#if UNITY_ANDROID && !UNITY_EDITOR
+#if BIDSCUBE_ANDROID_LITE_NO_VIDEO
+            var androidBundledCore = "libs/" + Constants.NativeAndroidBundledCoreAarLiteFileName + " (LiteNoVideo; no IMA/Media3 Gradle lines)";
+#else
+            var androidBundledCore = "libs/" + Constants.NativeAndroidBundledCoreAarFullFileName + " (FullWithVideo; IMA+Media3 Gradle lines)";
+#endif
+#else
+            var androidBundledCore =
+                "Android export default LiteNoVideo → libs/" + Constants.NativeAndroidBundledCoreAarLiteFileName +
+                "; FullWithVideo → libs/" + Constants.NativeAndroidBundledCoreAarFullFileName +
+                " (BidscubeAndroidExportSettings asset or BidscubeAndroidGradlePostprocessor.FeatureSet)";
+#endif
             var row =
                 $"Init (publisher row): unityUPM={Constants.SdkVersion} " +
                 $"androidCoreSdkVersion={Constants.NativeAndroidBidscubeSdkVersion} " +
-                $"androidCoreDefault=libs/bidscube-sdk-{Constants.NativeAndroidBidscubeSdkVersion}.aar " +
-                $"(BundledUnityLibraryLibsAar; alt Maven=com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar via CoreDependencyMode — see ANDROID_BUNDLED_SDK.md) " +
+                $"androidBundledCore={androidBundledCore} " +
+                $"(BundledUnityLibraryLibsAar default; alt Maven=com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar via CoreDependencyMode — see ANDROID_BUNDLED_SDK.md) " +
                 $"integrationMode={mode} csharp_BidscubeSDK_IsInitialized=true";
 #if UNITY_ANDROID && !UNITY_EDITOR
             Logger.Info(row + " | " + BidscubeAndroidSdkInterop.FormatPublisherChecklistLine());
@@ -504,6 +519,13 @@ namespace BidscubeSDK
 
             AssertDirectSdkForCreativeApis(nameof(ShowVideoAd));
 
+            if (BidscubeAndroidBuildFeatures.IsLiteNoVideoAndroid)
+            {
+                Logger.InfoError("[BidscubeSDK] " + LiteNoVideoVideoUnsupportedMessage);
+                callback?.OnAdFailed(placementId, Constants.ErrorCodes.UnknownError, LiteNoVideoVideoUnsupportedMessage);
+                return;
+            }
+
             Logger.Info($"ShowVideoAd called for placement: {placementId}");
 
             var effectivePosition = GetEffectiveAdPosition();
@@ -590,6 +612,14 @@ namespace BidscubeSDK
         public static GameObject GetVideoAdView(string placementId, IAdCallback callback = null)
         {
             AssertDirectSdkForCreativeApis(nameof(GetVideoAdView));
+
+            if (BidscubeAndroidBuildFeatures.IsLiteNoVideoAndroid)
+            {
+                Logger.InfoError("[BidscubeSDK] " + LiteNoVideoVideoUnsupportedMessage);
+                callback?.OnAdLoading(placementId);
+                callback?.OnAdFailed(placementId, Constants.ErrorCodes.UnknownError, LiteNoVideoVideoUnsupportedMessage);
+                return CreateVideoAdView();
+            }
 
             var view = CreateVideoAdView();
 

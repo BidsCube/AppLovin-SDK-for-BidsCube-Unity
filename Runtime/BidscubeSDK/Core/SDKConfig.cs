@@ -32,7 +32,7 @@ namespace BidscubeSDK
         public BidscubeIntegrationMode IntegrationMode { get; private set; }
 
         /// <summary>
-        /// Optional factory for linear VAST / direct-URL playback when IMA is off. Prefer setting this on <see cref="Builder"/> so it lives next to other SDK options; <see cref="VideoAdView.VideoPlaybackFactory"/> is a fallback for tests or pre-<c>Initialize</c> wiring.
+        /// Optional factory for <strong>Direct SDK</strong> linear VAST / direct-URL surface playback (Unity <c>VideoAdView</c>). Prefer <see cref="Builder.VideoPlaybackFactory"/>; <see cref="VideoAdView.VideoPlaybackFactory"/> is a fallback. See package <c>Documentation~/VIDEO_PLAYBACK.md</c>.
         /// </summary>
         public Func<GameObject, RawImage, IVideoSurfacePlayback> VideoPlaybackFactory { get; private set; }
 
@@ -165,7 +165,7 @@ namespace BidscubeSDK
             }
 
             /// <summary>
-            /// Custom linear video backend for VAST / direct URL when Google IMA is not used (e.g. AVPro). With scripting define <c>BIDSCUBE_DISABLE_UNITY_VIDEO</c>, this factory (or <see cref="VideoAdView.VideoPlaybackFactory"/>) is required for that code path.
+            /// Custom linear video backend for Direct SDK <c>VideoAdView</c> (e.g. AVPro). With <c>BIDSCUBE_DISABLE_UNITY_VIDEO</c>, this or <see cref="VideoAdView.VideoPlaybackFactory"/> is required for that path. Not used for AppLovin MAX native video — see <c>Documentation~/VIDEO_PLAYBACK.md</c>.
             /// </summary>
             public Builder VideoPlaybackFactory(Func<GameObject, RawImage, IVideoSurfacePlayback> factory)
             {

@@ -2,6 +2,19 @@
 
 ---
 
+## [1.0.8] - 2026-04-23
+
+### Added
+
+- **Android:** **`BidscubeAndroidFeatureSet`** (Runtime) — **`LiteNoVideo`** (default) vs **`FullWithVideo`**. **`BidscubeAndroidExportSettings`** ScriptableObject (optional, commit to Git) overrides **`BidscubeAndroidGradlePostprocessor.FeatureSet`** for Gradle + scripting defines. Post-processor copies **`bidscube-sdk-lite-*.aar`** vs **`bidscube-sdk-*.aar`** and skips Media3 / IMA in lite mode. **`BidscubeAndroidScriptingDefinesPreprocessor`**, **`BidscubeAndroidBuildFeatures`**, **`ShowVideoAd` / `GetVideoAdView`** guards.
+
+### Changed
+
+- **Docs:** **`VIDEO_PLAYBACK.md`**, **`INTEGRATION.md`**, **`APPLOVIN_MAX.md`**, **`README.md`**, **`ANDROID_BUNDLED_SDK.md`** — **`FeatureSet`**, dual core AARs, MAX video vs lite export, client Git workflow.
+- **`Constants.SdkVersion`** / **`package.json`** → **1.0.8**.
+
+---
+
 ## [1.0.7] - 2026-04-22
 
 ### Added

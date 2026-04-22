@@ -1,8 +1,8 @@
 # Bidscube Unity SDK Integration Guide
 
-If you use **AppLovin MAX** mediation, read `Documentation~/APPLOVIN_MAX.md` first. This guide focuses on the **direct** Unity/C# SDK (creatives from C#).
+**AppLovin MAX:** start with `Documentation~/APPLOVIN_MAX.md`. **Which player (default vs custom, Unity vs native Android):** `Documentation~/VIDEO_PLAYBACK.md`.
 
-This guide will help you integrate the Bidscube Unity SDK into your Unity project and start showing ads.
+This guide focuses on **direct** Unity/C# usage (creatives from C#), init, logs, and API examples.
 
 ## Table of Contents
 
@@ -10,15 +10,14 @@ This guide will help you integrate the Bidscube Unity SDK into your Unity projec
 2. [Initialization](#initialization)
 3. [Configure SDK in code (detailed)](#configure-sdk-in-code-detailed)
 4. [Verifying the integration (logs)](#verifying-the-integration-logs)
-5. [Custom video player (`IVideoSurfacePlayback`)](#custom-video-player-ivideosurfaceplayback)
-6. [AppLovin MAX mediation (init)](#applovin-max-mediation-init)
-7. [Configuration](#configuration)
-8. [Showing Ads](#showing-ads)
-9. [Ad Callbacks](#ad-callbacks)
-10. [Ad Positioning](#ad-positioning)
-11. [Consent Management](#consent-management)
-12. [Examples](#examples)
-13. [SDK Test Scene](#sdk-test-scene)
+5. [Video playback paths](#video-playback-paths)
+6. [Configuration](#configuration)
+7. [Showing Ads](#showing-ads)
+8. [Ad Callbacks](#ad-callbacks)
+9. [Ad Positioning](#ad-positioning)
+10. [Consent Management](#consent-management)
+11. [Examples](#examples)
+12. [SDK Test Scene](#sdk-test-scene)
 
 ---
 
@@ -33,7 +32,7 @@ The Bidscube Unity SDK can be installed in two ways:
 3. Select `Add package from git URL...`
 4. Enter the repository URL: `https://github.com/BidsCube/AppLovin-SDK-Unity.git`  
    The public **Bidscube Unity SDK** sample line is [github.com/BidsCube/bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) (same `com.bidscube.sdk` name; **AppLovin-SDK-Unity** adds bundled Android SDK + MAX adapter AARs, Gradle AppLovin 13+, and optional Podfile hook — see `README.md`).
-5. Optionally, specify a version tag: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.7`
+5. Optionally, specify a version tag: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.8`
 6. Click `Add`
 7. The SDK will be added as a package dependency
 
@@ -42,7 +41,7 @@ The Bidscube Unity SDK can be installed in two ways:
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.7"
+    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.8"
   }
 }
 ```
@@ -199,54 +198,15 @@ Enable **`EnableLogging(true)`** (default on `SDKConfig.Builder`). Unity prefixe
 
 ---
 
-## Custom video player (`IVideoSurfacePlayback`)
+## Video playback paths
 
-Use a **custom player** when you want **AVPro**, a **native texture**, or to **avoid** linking **`UnityEngine.VideoModule`** (smaller APK). Applies to the **Unity `VideoAdView`** linear path (VAST XML / direct MP4 URL) when **Google IMA** is **not** driving that ad.
+**Direct SDK (Unity):** default = IMA (when used for that path) and/or **`UnityEngine.Video.VideoPlayer`** on `VideoAdView`; custom = **`IVideoSurfacePlayback`** via **`SDKConfig.Builder.VideoPlaybackFactory`** (call **`BindToRawImage`** on your instance inside the factory). **`BIDSCUBE_DISABLE_UNITY_VIDEO`** removes the Unity Video module — you must then supply a factory for the linear surface path.
 
-### Contract
+**AppLovin MAX (Android native):** not `VideoAdView` — native **`com.bidscube.sdk`** playback; optional Java **`VideoPlayerProvider` / `videoPlayerProvider`** on the **first** successful native `initialize` per your AAR docs. This UPM does **not** forward that from C#.
 
-Implement **`IVideoSurfacePlayback`** (`Runtime/BidscubeSDK/Views/IVideoSurfacePlayback.cs`):
+Full matrix, Gradle/AAR context, and stubs: **`VIDEO_PLAYBACK.md`**, **`APPLOVIN_MAX.md`**, **`ANDROID_BUNDLED_SDK.md`**.
 
-- **`BindToRawImage(RawImage)`** — bind decoded video to the SDK’s fullscreen **`RawImage`** (e.g. assign **`texture`** or **`RenderTexture`**).
-- **`SourceUrl` { get; set; }** — URL set by **`VideoAdView`** before **`Prepare()`**.
-- **`Prepare()`** / **`Play()`** / **`Pause()`** / **`Stop()`** — lifecycle; **`Prepare()`** must eventually fire **`Prepared`** when ready (or never, if you surface errors via **`OnAdFailed`** upstream).
-- Events: **`Prepared`**, **`Started`**, **`Completed`** — **`Completed`** when the creative ends or is dismissed.
-
-### Wiring (pick one)
-
-1. **Recommended:** **`SDKConfig.Builder().VideoPlaybackFactory((go, raw) => …)`** before **`Initialize`** — factory is stored on **`BidscubeSDK.ActiveConfiguration`** and used by **`VideoAdView`**.
-2. **Fallback:** static **`VideoAdView.VideoPlaybackFactory`** — useful in tests or if you must assign before `Initialize` (resolution order: **active `SDKConfig`** → **static** → built-in Unity player).
-
-Factory signature: **`Func<GameObject, RawImage, IVideoSurfacePlayback>`** — the **`GameObject`** is the host used for **`VideoAdView`**; add your **`MonoBehaviour`** implementation with **`AddComponent<T>()`** and return it as the interface.
-
-### Strip Unity `VideoPlayer` from the build
-
-1. **Player Settings → Scripting Define Symbols:** add **`BIDSCUBE_DISABLE_UNITY_VIDEO`**.
-2. You **must** supply **`VideoPlaybackFactory`** (builder or static); otherwise **`[VideoAdView] Surface playback not available`** / load failure.
-
-### Minimal stub (tests only)
-
-The sample test app includes **`TestStubColorVideoPlayback`** (solid color, no real decode) under the test project — use it only to verify wiring; replace with your production decoder.
-
-**AppLovin MAX:** mediated video/rewarded on Android runs the **native** Bidscube stack (see **`APPLOVIN_MAX.md`**), **not** Unity **`VideoAdView`**. **`IVideoSurfacePlayback`** / **`VideoPlaybackFactory`** apply **only** to **Direct SDK** Unity creatives. This UPM version does **not** expose a Unity-side hook for a custom native MAX/VAST player — use the default native playback for your pinned **`com.bidscube:bidscube-sdk`** version until a future SDK + package documents one.
-
----
-
-## AppLovin MAX mediation (init)
-
-Use `IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)`. **Android:** call `Initialize` **before** the AppLovin MAX SDK so native `AdRequestAuthority` and options match C#. **iOS:** C# `Initialize` is **optional** if you use the **`BidscubeSDKAppLovin`** adapter-only path; see `Documentation~/APPLOVIN_MAX.md` and [AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS). Do **not** use C# APIs that attach creatives (`GetBannerAdView`, `ShowVideoAd`, etc.) in MAX mode; they throw. Full flow: `Documentation~/APPLOVIN_MAX.md`.
-
-For JSON / `PlayerPrefs`, `IntegrationModeFromWire("levelPlay")` still maps to MAX mediation (backward compatible).
-
-Build **`SDKConfig`** once (see [Configure SDK in code (detailed)](#configure-sdk-in-code-detailed)); on **Android + MAX** call **`BidscubeSDK.Initialize(config)`** before **`MaxSdk.InitializeSdk`**. Avoid a **second** core line in Custom Gradle (duplicate **`files('libs/…')`** or Maven **`…@aar`**) — the post-processor already injects **one** core **`implementation`**. Verify init with **[Verifying the integration (logs)](#verifying-the-integration-logs)** (`[BidscubeSDK] Init`).
-
-### Android: bundled native SDK (self-contained)
-
-- Adding **`com.bidscube.sdk`** from Git (e.g. `…/AppLovin-SDK-Unity.git#v1.0.7`) is enough for Android: the package ships **`applovin-bidscube-max-adapter-*.aar`** and **`bidscube-sdk-*.aar`**; **`BidscubeAndroidGradlePostprocessor`** **default** copies the core AAR into **`unityLibrary/libs/`** and injects **`implementation files('libs/bidscube-sdk-….aar')`** (no Maven for the core). Set **`CoreDependencyMode = MavenBidscubeSdkAar`** for **`com.bidscube:bidscube-sdk:<version>@aar`** from your Gradle repos — **`ANDROID_BUNDLED_SDK.md`**. **Do not** add a **second** core `implementation` in **Custom Base Gradle** / **mainTemplate** — duplicates classes. Remove any legacy **`project(':bidscube-sdk-…')`** lines that vendor a second core SDK.
-- On Gradle export, **`BidscubeAndroidGradlePostprocessor`** injects AppLovin 13.x, Media3, IMA, UMP, Glide, Material, **and** the core Bidscube dependency (**default:** **`files('libs/bidscube-sdk-….aar')`** after copying the bundled AAR; **`MavenBidscubeSdkAar`** uses **`…@aar`** from repos) into **`unityLibrary`**, and (by default) **launcher** **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** so **`CheckAarMetadata`** passes for **`com.bidscube:bidscube-sdk`**. Set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** to skip launcher desugaring injection if your **Custom Launcher** / **Base** Gradle already declares it. See **`ANDROID_BUNDLED_SDK.md`**. Install Unity **Android Build Support** so the Editor script compiles. **`CustomGradleLines`** / **`SkipInjectionIntegratorOwnsCore`** are documented in **`ANDROID_BUNDLED_SDK.md`**. Validate with clean cache, **`--refresh-dependencies`**, full **`assemble*`**, and a **lower-API** device smoke test.
-- **Optional build size (Unity `VideoPlayer`):** for **AppLovin MAX–only** games you never call `ShowVideoAd` / `GetVideoAdView`, Unity may still include the **Video** module if the default `VideoAdView` path references it. To drop **`UnityEngine.VideoModule`**, add scripting define **`BIDSCUBE_DISABLE_UNITY_VIDEO`**. For **direct SDK** VAST without IMA, register a factory on **`SDKConfig.Builder().VideoPlaybackFactory(...)`** before `Initialize` (recommended — one place with SSP / mode / logging), or set **`VideoAdView.VideoPlaybackFactory`** as a fallback. Factory returns **`IVideoSurfacePlayback`** (e.g. AVPro). With **IMA only**, no custom factory is needed.
-- Set player **Minimum API Level** to **24+** (matches the Android SDK).
-- **AppLovin MAX**: add the MAX Unity plugin. **Android:** Bidscube MAX adapter AAR is bundled; Gradle injects **AppLovin SDK 13.0+**. **iOS:** CocoaPods **`BidscubeSDKAppLovin`** `1.0.4` and **`AppLovinSDK`** **13.x** (or rely on **`BidscubeIosPodfilePostprocessor`** on Podfile export) — `Documentation~/APPLOVIN_MAX.md`.
+**MAX init (short):** `IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)`; **Android:** `BidscubeSDK.Initialize(config)` **before** `MaxSdk.InitializeSdk`; do not call C# creative APIs in MAX mode. `IntegrationModeFromWire("levelPlay")` still maps to MAX.
 
 ---
 
@@ -266,7 +226,7 @@ The `SDKConfig` class allows you to configure various aspects of the SDK:
 | `DefaultAdPosition` | `AdPosition` | `Unknown` | Default ad position (centered) |
 | `AdRequestAuthority` | `string` | `ssp-bcc-ads.com` | SSP host (optional port / IPv6). Normalized; see `Documentation~/AD_REQUEST_ENDPOINT.md`. |
 | `BaseURL` | `string` (read-only) | `https://ssp-bcc-ads.com/sdk` | Derived: `https://<AdRequestAuthority>/sdk`. Builder alias: `BaseURL(string)` same normalization as `AdRequestAuthority(string)`. |
-| `VideoPlaybackFactory` | `Func<GameObject, RawImage, IVideoSurfacePlayback>` | `null` | Optional custom linear video for VAST without IMA; see Android bundled SDK section. Builder: `VideoPlaybackFactory(...)`. |
+| `VideoPlaybackFactory` | `Func<GameObject, RawImage, IVideoSurfacePlayback>` | `null` | Optional **Direct SDK** linear surface; see **`VIDEO_PLAYBACK.md`**. Builder: `VideoPlaybackFactory(...)`. |
 
 ### Configuration Builder Pattern
 
@@ -746,6 +706,7 @@ The test scene serves as both a testing tool and a reference implementation for 
 
 ## Additional Resources
 
+- **Video playback (Direct vs MAX):** `Documentation~/VIDEO_PLAYBACK.md`
 - **GitHub:** `https://github.com/BidsCube/AppLovin-SDK-Unity`
 - **Releases / issues:** use the same repository on GitHub.
 
