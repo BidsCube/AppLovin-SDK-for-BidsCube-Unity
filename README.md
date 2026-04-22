@@ -1,6 +1,6 @@
 # Bidscube SDK for Unity (`com.bidscube.sdk`)
 
-**Package (UPM):** `1.0.6` · **Git tag:** `v1.0.6` · **Android core (`com.bidscube:bidscube-sdk`, Maven AAR):** `1.2.2@aar` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
+**Package (UPM):** `1.0.6` · **Git tag:** `v1.0.6` · **Android core (`com.bidscube:bidscube-sdk`, default Gradle @aar pin):** `1.2.2@aar` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
 
 UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drives banners, video, native, interstitials) and **AppLovin MAX mediation** (MAX drives load/show via the Bidscube adapter; **Android:** early C# **`BidscubeSDK.Initialize`** recommended; **iOS:** optional — adapter can init native BidCube — see [`APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)).
 
@@ -8,16 +8,16 @@ UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drive
 
 | Topic | Summary |
 |--------|---------|
-| **Android Gradle** | **Launcher** **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** injected by default so **`CheckAarMetadata`** passes for **`com.bidscube:bidscube-sdk`**. Set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** if your host Gradle already owns desugaring. |
+| **Android Gradle** | **Launcher** **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** injected by default (**`NoDesugarMode = true`** skips). Core **`com.bidscube:bidscube-sdk`** as **`…@aar`**; **`BidscubeAndroidCoreDependencyMode`** for local **`files(...)`** / **`project(...)`** / integrator-owned core — **`ANDROID_BUNDLED_SDK.md`**. |
+| **Docs / MAX** | Direct vs MAX playback clarified (**`APPLOVIN_MAX.md`**, **`INTEGRATION.md`**). |
+| **Diagnostics** | Init publisher row + **`ClassNotFoundException`** guidance (AAR vs POM). |
 
 ### What’s new in **1.0.5**
 
 | Topic | Summary |
 |--------|---------|
 | **UPM `1.0.5`** | Semver **`1.0.5`** in [`package.json`](package.json); release tag **`v1.0.5`** — see [`RELEASE.md`](RELEASE.md). |
-| **Android Gradle** | Core **`com.bidscube:bidscube-sdk`** injected as **`…@aar`**; legacy plain coordinates normalized; Editor **error** if **`@aar`** missing after export. |
-| **Runtime diagnostics** | **`ClassNotFoundException`** hints mention **AAR vs POM** resolution. |
-| **1.0.4 baseline** | Init publisher row, **`@aar`** Maven core, VideoAdView logging, Direct SDK video fixes — see **`[1.0.4]`** in [`CHANGELOG.md`](CHANGELOG.md). |
+| **1.0.4 baseline** | Init publisher row, VideoAdView logging, Direct SDK video fixes — see **`[1.0.4]`** in [`CHANGELOG.md`](CHANGELOG.md). |
 
 Full list: [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -72,7 +72,7 @@ Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube SDK*
 |------|----------|
 | **BidsCube SDK** (default) | C# APIs: `GetBannerAdView`, `GetVideoAdView`, `GetNativeAdView`, `ShowImageAd`, `ShowVideoAd`, `ShowNativeAd`, consent helpers, etc. |
 | **AppLovin MAX** | `BidscubeIntegrationMode.AppLovinMaxMediation` — early `BidscubeSDK.Initialize`; creatives **only** through MAX + Bidscube adapter (C# creative APIs throw) |
-| **Android** | Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`**; core **`com.bidscube:bidscube-sdk:1.2.2@aar`** from Maven on export; Editor **`BidscubeAndroidGradlePostprocessor`** (AppLovin SDK `13.+`, Maven deps, compileSdk / minSdk; **launcher** core library desugaring injected by default — **`NoDesugarMode = true`** skips). One Maven coordinate for the core SDK — avoid a second `implementation` line in Custom Gradle. |
+| **Android** | Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`**; core **`com.bidscube:bidscube-sdk:1.2.2@aar`** injected by default on export (or **`CoreDependencyMode`** / **`CustomCoreImplementationGradleLines`** for local AAR — see **`ANDROID_BUNDLED_SDK.md`**); Editor **`BidscubeAndroidGradlePostprocessor`** (AppLovin SDK `13.+`, Maven deps, compileSdk / minSdk; **launcher** core library desugaring injected by default — **`NoDesugarMode = true`** skips). Exactly **one** core SDK on the classpath — avoid a second `implementation` line in Custom Gradle. |
 | **iOS** | WebView plugins under `Runtime/Plugins/iOS/`; MAX: CocoaPods **`BidscubeSDKAppLovin` `1.0.4`** + **`AppLovinSDK` `13.x`** ([iOS repo](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)); **`BidscubeIosPodfilePostprocessor`** can append pods to the exported **Podfile** |
 | **Legacy configs** | Wire values `levelPlay` / `level_play` → **AppLovin MAX mediation** (same idea as Flutter) |
 
@@ -210,7 +210,7 @@ Implement **`IAdCallback`** (or your project’s callback type) for load / fail 
 | Path | Role |
 |------|------|
 | `Runtime/BidscubeSDK/` | Core C# SDK, `BidscubeSDK`, `SDKConfig`, Android interop |
-| `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.4.aar`** (+ WebView templates); core **`com.bidscube:bidscube-sdk:1.2.2@aar`** via injected Gradle coordinate |
+| `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.4.aar`** (+ WebView templates); core SDK via default injected Gradle coordinate **`com.bidscube:bidscube-sdk:1.2.2@aar`** or **`CoreDependencyMode`** |
 | `Runtime/Plugins/iOS/` | WebView native plugins |
 | `Editor/Android/` | **`BidscubeAndroidGradlePostprocessor`** |
 | `Documentation~/` | Markdown docs (this package) |
@@ -241,8 +241,8 @@ In **Package Manager**, select **Bidscube SDK** → **Samples** → import **SDK
 | Issue | What to check |
 |-------|----------------|
 | **Android Gradle / AAR metadata errors** | **minSdk ≥ 26**, clean Gradle export; see [`Documentation~/ANDROID_BUNDLED_SDK.md`](Documentation~/ANDROID_BUNDLED_SDK.md). **UPM ≥ 1.0.6:** the post-processor injects **launcher** desugaring by default. If you duplicate lines, set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** and own desugaring in Custom Launcher Gradle. |
-| **Duplicate class / DEX `com.bidscube.sdk`** | Remove any extra `implementation 'com.bidscube:bidscube-sdk:…@aar'` (or plain coordinate) or local AAR — the post-processor already injects one Maven line with **`@aar`**. |
-| **`ClassNotFoundException` / `com.bidscube.sdk.BidscubeSDK`** | Ensure **`unityLibrary/build.gradle`** contains **`implementation '…:bidscube-sdk:<ver>@aar'`** after export. If the Maven publication uses **`packaging=pom`** at the root coordinate, a plain dependency can resolve metadata only — use **`@aar`** (post-processor default) or a local **`.aar`**. Do not add a conflicting second line in Custom Gradle. |
+| **Duplicate class / DEX `com.bidscube.sdk`** | Remove any extra core line (second Maven **`@aar`**, duplicate **`files(...)`**, etc.) — keep a single core source; see **`CoreDependencyMode`** in **`ANDROID_BUNDLED_SDK.md`**. |
+| **`ClassNotFoundException` / `com.bidscube.sdk.BidscubeSDK`** | Ensure **`unityLibrary/build.gradle`** declares core once (default **`implementation '…:bidscube-sdk:<ver>@aar'`**, or **`files('libs/….aar')`** via **`CoreDependencyMode`**). If the Maven publication uses **`packaging=pom`** at the root coordinate, a plain dependency can resolve metadata only — use **`@aar`** (default) or local **`.aar`**. Do not add a conflicting second line in Custom Gradle. |
 | **Ads not loading** | `BaseURL`, placement IDs, device logs, network |
 | **MAX mode** | `IntegrationMode` is **AppLovinMaxMediation**, adapter + MAX SDK versions, dashboard network setup |
 | **MAX vs Direct SDK** | In MAX mode, load and show ads through MAX only; use **`BidscubeIntegrationMode.DirectSdk`** for C# `ShowVideoAd` / banner APIs. |

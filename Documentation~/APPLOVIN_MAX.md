@@ -24,6 +24,15 @@ Single documented path — native **Bidscube SDK** APIs invoked by the **AppLovi
 | **Video / rewarded** | `showVideoAd` | **IMA** + fullscreen container. |
 | **Native** | `getNativeAdView` → payload | Adapter builds **MaxNativeAd** (assets); **do not** pass the Bidscube SDK view as the MAX creative. |
 
+### Video playback: Direct vs MAX (this UPM version)
+
+| Path | Custom player |
+|------|----------------|
+| **Direct SDK** (Unity C# creatives) | Supported — **`SDKConfig.Builder.VideoPlaybackFactory`** / **`IVideoSurfacePlayback`** (see **`INTEGRATION.md`**). |
+| **AppLovin MAX / native** (`showVideoAd`, MAX adapter) | **Not** wired from this Unity package. Playback follows the **published** native **`com.bidscube:bidscube-sdk`** behaviour (default native / IMA stack for that SDK version). |
+
+There is **no** Unity C# API here that injects a host native VAST player into the MAX mediation pipeline. If a future **published** Android SDK adds a stable, documented hook for that, the Unity package can forward it again via **`BidscubeAndroidSdkInterop`**.
+
 ## MAX dashboard (custom SDK network)
 
 In **MAX → Mediation → Manage → Networks →** *add Custom Network* ([AppLovin: integrating custom SDK networks](https://support.axon.ai/en/max/mediated-network-guides/integrating-custom-sdk-networks/)):
@@ -61,7 +70,7 @@ On each ad unit, enable **Bidscube** under **Custom Networks & Deals** and set f
 ## Unity project setup
 
 1. Add this package and the **AppLovin MAX Unity plugin** (or integrate MAX natively per AppLovin docs).
-2. **Android:** the package bundles **`applovin-bidscube-max-adapter-1.0.4.aar`** only; **`BidscubeAndroidGradlePostprocessor`** injects **`com.bidscube:bidscube-sdk:<version>@aar`** (from **`Constants.NativeAndroidBidscubeSdkVersion`**, Maven Central) and **`com.applovin:applovin-sdk:13.+`** plus other Maven deps — no separate adapter distribution. Do **not** add a **second** `implementation 'com.bidscube:bidscube-sdk:…'` in Custom Gradle. See **`ANDROID_BUNDLED_SDK.md`** (Gradle export raises **minSdk** to **26** for AAR metadata; AppLovin allows **23+**). The adapter AAR ships **consumer ProGuard rules** so R8 keeps `BidscubeMediationAdapter` when minification is on.
+2. **Android:** the package bundles **`applovin-bidscube-max-adapter-1.0.4.aar`** only; **`BidscubeAndroidGradlePostprocessor`** injects the core SDK (default **`com.bidscube:bidscube-sdk:<version>@aar`** from **`Constants.NativeAndroidBidscubeSdkVersion`**, resolved via your Gradle repos — or **`CustomGradleLines`** / **`SkipInjectionIntegratorOwnsCore`** per **`ANDROID_BUNDLED_SDK.md`**) and **`com.applovin:applovin-sdk:13.+`** plus other Maven deps — no separate adapter distribution. Do **not** add a **second** core `implementation` for Bidscube in Custom Gradle. See **`ANDROID_BUNDLED_SDK.md`** (Gradle export raises **minSdk** to **26** for AAR metadata; AppLovin allows **23+**). The adapter AAR ships **consumer ProGuard rules** so R8 keeps `BidscubeMediationAdapter` when minification is on.
 3. **iOS:** use CocoaPods **`BidscubeSDKAppLovin`** (BidCube runtime + **`ALBidscubeMediationAdapter`**) and **`AppLovinSDK`** **13.x**. On Unity iOS exports that generate a **Podfile**, **`BidscubeIosPodfilePostprocessor`** appends missing lines (see below). **Do not** add a separate **`BidscubeSDK`** pod for the same target if you already use **`BidscubeSDKAppLovin`**. **Google IMA** remains required by the native stack where applicable. Official reference: [AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS).
 4. **Optional C# startup** (recommended on **Android**; **optional** on **iOS** if the adapter initializes native BidCube and you set **`request_authority` / `ssp_host`** in MAX when needed):
 

@@ -60,19 +60,23 @@ if [[ -z "$NATIVE_SDK_VER" ]]; then
   echo "ERROR: could not parse NativeAndroidBidscubeSdkVersion from Constants.cs" >&2
   exit 1
 fi
+if ! grep -q "BidscubeAndroidCoreDependencyMode" Editor/Android/BidscubeAndroidGradlePostprocessor.cs; then
+  echo "ERROR: BidscubeAndroidGradlePostprocessor must define BidscubeAndroidCoreDependencyMode (core SDK resolution)" >&2
+  exit 1
+fi
 if ! grep -q "com.bidscube:bidscube-sdk:" Editor/Android/BidscubeAndroidGradlePostprocessor.cs; then
-  echo "ERROR: BidscubeAndroidGradlePostprocessor must inject com.bidscube:bidscube-sdk (Maven core)" >&2
+  echo "ERROR: BidscubeAndroidGradlePostprocessor must still define default Maven coordinate com.bidscube:bidscube-sdk (MavenBidscubeSdkAar mode)" >&2
   exit 1
 fi
 if ! grep -qF 'bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar' Editor/Android/BidscubeAndroidGradlePostprocessor.cs; then
-  echo "ERROR: BidscubeAndroidGradlePostprocessor must inject bidscube-sdk with @aar (AAR artifact, not POM-only resolution)" >&2
+  echo "ERROR: BidscubeAndroidGradlePostprocessor must inject bidscube-sdk with @aar in default mode (AAR artifact, not POM-only resolution)" >&2
   exit 1
 fi
 if ! grep -q "Constants.NativeAndroidBidscubeSdkVersion" Editor/Android/BidscubeAndroidGradlePostprocessor.cs; then
-  echo "ERROR: Gradle postprocessor should reference Constants.NativeAndroidBidscubeSdkVersion for the Maven coordinate" >&2
+  echo "ERROR: Gradle postprocessor should reference Constants.NativeAndroidBidscubeSdkVersion for the default Maven coordinate" >&2
   exit 1
 fi
-echo "Constants.NativeAndroidBidscubeSdkVersion: $NATIVE_SDK_VER (Gradle injects com.bidscube:bidscube-sdk from Maven as @aar)"
+echo "Constants.NativeAndroidBidscubeSdkVersion: $NATIVE_SDK_VER (default Gradle: com.bidscube:bidscube-sdk … @aar; optional CoreDependencyMode in postprocessor)"
 
 echo "Suggested git tag (must match package.json): v$VER"
 echo "  git tag -a \"v$VER\" -m \"com.bidscube.sdk $VER\""

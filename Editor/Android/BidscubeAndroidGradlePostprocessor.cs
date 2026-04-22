@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using BidscubeSDK;
 using UnityEditor.Android;
@@ -9,10 +10,26 @@ using UnityEngine;
 namespace BidscubeSDK.Editor.Android
 {
     /// <summary>
-    /// Injects Maven dependencies for the **core** Bidscube Android SDK (<c>com.bidscube:bidscube-sdk</c>, version <see cref="Constants.NativeAndroidBidscubeSdkVersion"/>)
-    /// as an <b>AAR</b> artifact (<c>@aar</c>) so Gradle does not stop at a root <c>packaging=pom</c> shell on Maven Central.
+    /// How the **core** Bidscube Android SDK (<c>com.bidscube.sdk.*</c>) is added to <c>unityLibrary/build.gradle</c>.
+    /// Default <see cref="BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar"/> keeps backward-compatible <c>implementation 'com.bidscube:bidscube-sdk:…@aar'</c> (any reachable Gradle repo — Central, mirror, <c>mavenLocal()</c>, private host).
+    /// </summary>
+    public enum BidscubeAndroidCoreDependencyMode
+    {
+        /// <summary>Inject <c>implementation 'com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar'</c> after <see cref="BidscubeAndroidGradlePostprocessor.Marker"/>.</summary>
+        MavenBidscubeSdkAar = 0,
+
+        /// <summary>Inject <see cref="BidscubeAndroidGradlePostprocessor.CustomCoreImplementationGradleLines"/> after the marker (local <c>files(...)</c>, <c>flatDir</c>, <c>project(...)</c>, etc.).</summary>
+        CustomGradleLines = 1,
+
+        /// <summary>Do not inject core; integrator must declare exactly one core SDK on the classpath (duplicate classes if two).</summary>
+        SkipInjectionIntegratorOwnsCore = 2,
+    }
+
+    /// <summary>
+    /// Injects Gradle dependencies for the **core** Bidscube Android SDK and transitives for the bundled <b>AppLovin MAX</b> adapter AAR.
+    /// Core resolution is controlled by <see cref="CoreDependencyMode"/> (default: Maven coordinate with <c>@aar</c>).
     /// Plus transitives for the bundled <b>AppLovin MAX</b> adapter AAR (local AARs do not pull their own Maven graph).
-    /// The UPM package ships only <c>applovin-bidscube-max-adapter-*.aar</c>; core classes resolve from Maven Central — do <b>not</b> add a second <c>implementation 'com.bidscube:bidscube-sdk:…'</c> in Custom Gradle.
+    /// The UPM package ships only <c>applovin-bidscube-max-adapter-*.aar</c>; do <b>not</b> add a second core <c>implementation</c> in Custom Gradle.
     /// When <see cref="NoDesugarMode"/> is <c>false</c> (default), appends <b>launcher</b> Gradle lines for <c>coreLibraryDesugaringEnabled</c> and <c>com.android.tools:desugar_jdk_libs</c> so <c>CheckAarMetadata</c> passes for <c>com.bidscube:bidscube-sdk</c> (AAR metadata requires desugaring on <c>:launcher</c>). Set <see cref="NoDesugarMode"/> to <c>true</c> to skip that injection and own desugaring in Custom Launcher / Base Gradle.
     /// Also raises <c>compileSdk</c> / <c>minSdk</c> when needed so <c>CheckAarMetadata</c> passes against Material / AndroidX.
     /// </summary>
@@ -28,6 +45,15 @@ namespace BidscubeSDK.Editor.Android
 
         /// <summary>Pinned <c>desugar_jdk_libs</c> for <see cref="EnsureLauncherCoreLibraryDesugaring"/> (AGP 8.x).</summary>
         public const string DesugarJdkLibsVersion = "2.1.4";
+
+        /// <summary>How <c>unityLibrary</c> obtains the core Bidscube Android SDK. Default: Maven-style coordinate with <c>@aar</c> (repo is host-defined — Central, mirror, private, <c>mavenLocal()</c>).</summary>
+        public static BidscubeAndroidCoreDependencyMode CoreDependencyMode = BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar;
+
+        /// <summary>
+        /// When <see cref="CoreDependencyMode"/> is <see cref="BidscubeAndroidCoreDependencyMode.CustomGradleLines"/>, Gradle line(s) inserted after <see cref="Marker"/>.
+        /// Example: <c>"    implementation files('libs/bidscube-sdk-1.2.2.aar')\n"</c>. Leading/trailing whitespace trimmed; final newline optional.
+        /// </summary>
+        public static string CustomCoreImplementationGradleLines = null;
 
         /// <summary>Minimum AppLovin MAX Android SDK line (13.0+); resolved to latest 13.x from Maven Central.</summary>
         public const string AppLovinSdkGradleCoordinate = "com.applovin:applovin-sdk:13.+";
@@ -57,10 +83,10 @@ namespace BidscubeSDK.Editor.Android
                 var text = File.ReadAllText(unityLib);
                 if (!text.Contains(Marker))
                 {
+                    var coreLines = BuildCoreGradleLinesForMarkerBlock();
                     var depsBlock = $@"
     {Marker}
-    implementation 'com.bidscube:bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar'
-    implementation '{AppLovinSdkGradleCoordinate}'
+{coreLines}    implementation '{AppLovinSdkGradleCoordinate}'
     implementation 'androidx.media3:media3-common:1.4.1'
     implementation 'androidx.media3:media3-ui:1.4.1'
     implementation 'com.google.android.ump:user-messaging-platform:2.2.0'
@@ -89,8 +115,8 @@ namespace BidscubeSDK.Editor.Android
                 EnsureMinMinSdkInFile(unityLib, MinMinSdkForBidscube);
 
                 NormalizeBidscubeCoreSdkCoordinateInFile(unityLib);
-                EnsureMavenBidscubeCoreSdk(unityLib);
-                ValidateBidscubeCoreSdkUsesAarSuffix(unityLib);
+                EnsureCoreBidscubeSdkAfterMarker(unityLib);
+                ValidateCoreBidscubeSdkDependency(unityLib);
             }
 
             var launcher = FindLauncherBuildGradle(path);
@@ -358,6 +384,9 @@ android.suppressUnsupportedCompileSdk=34,35,36
         {
             try
             {
+                if (CoreDependencyMode != BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar)
+                    return;
+
                 if (string.IsNullOrEmpty(gradlePath) || !File.Exists(gradlePath))
                     return;
 
@@ -375,7 +404,74 @@ android.suppressUnsupportedCompileSdk=34,35,36
             }
         }
 
-        private static void ValidateBidscubeCoreSdkUsesAarSuffix(string unityLibGradlePath)
+        private static string BuildCoreGradleLinesForMarkerBlock()
+        {
+            switch (CoreDependencyMode)
+            {
+                case BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar:
+                    return "    implementation 'com.bidscube:bidscube-sdk:" + Constants.NativeAndroidBidscubeSdkVersion + "@aar'\n";
+                case BidscubeAndroidCoreDependencyMode.CustomGradleLines:
+                {
+                    var raw = CustomCoreImplementationGradleLines?.Trim();
+                    if (string.IsNullOrEmpty(raw))
+                    {
+                        Debug.LogError(
+                            "[BidscubeSDK] CoreDependencyMode=CustomGradleLines but CustomCoreImplementationGradleLines is empty; " +
+                            "falling back to Maven @aar for this export.");
+                        return "    implementation 'com.bidscube:bidscube-sdk:" + Constants.NativeAndroidBidscubeSdkVersion + "@aar'\n";
+                    }
+
+                    return NormalizeCustomCoreGradleLinesIndent(raw);
+                }
+                case BidscubeAndroidCoreDependencyMode.SkipInjectionIntegratorOwnsCore:
+                    return "    // Core bidscube-sdk: supplied by integrator (BidscubeAndroidGradlePostprocessor.CoreDependencyMode=SkipInjectionIntegratorOwnsCore)\n";
+                default:
+                    return "    implementation 'com.bidscube:bidscube-sdk:" + Constants.NativeAndroidBidscubeSdkVersion + "@aar'\n";
+            }
+        }
+
+        private static string NormalizeCustomCoreGradleLinesIndent(string raw)
+        {
+            var sb = new StringBuilder();
+            using (var reader = new StringReader(raw))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    var t = line.TrimEnd();
+                    if (string.IsNullOrWhiteSpace(t))
+                        continue;
+                    if (t.StartsWith("    ", StringComparison.Ordinal))
+                        sb.AppendLine(t);
+                    else
+                        sb.Append("    ").AppendLine(t.TrimStart());
+                }
+            }
+
+            var s = sb.ToString();
+            if (string.IsNullOrEmpty(s))
+            {
+                Debug.LogError("[BidscubeSDK] CustomCoreImplementationGradleLines produced no non-empty lines; falling back to Maven @aar.");
+                return "    implementation 'com.bidscube:bidscube-sdk:" + Constants.NativeAndroidBidscubeSdkVersion + "@aar'\n";
+            }
+
+            return s.EndsWith("\n", StringComparison.Ordinal) ? s : s + "\n";
+        }
+
+        private static bool GradleDeclaresBidscubeCoreSdk(string text)
+        {
+            if (Regex.IsMatch(text, @"implementation\s+['""]com\.bidscube:bidscube-sdk:", RegexOptions.Multiline))
+                return true;
+            if (Regex.IsMatch(text, @"implementation\s+files\s*\([^)]*bidscube[^)]*\)", RegexOptions.IgnoreCase | RegexOptions.Multiline))
+                return true;
+            if (Regex.IsMatch(text, @"implementation\s+fileTree\s*\([^)]*bidscube", RegexOptions.IgnoreCase | RegexOptions.Multiline))
+                return true;
+            if (Regex.IsMatch(text, @"implementation\s+project\s*\([^)]*bidscube", RegexOptions.IgnoreCase | RegexOptions.Multiline))
+                return true;
+            return Regex.IsMatch(text, @"implementation\s+name\s*:\s*['""][^'""]*bidscube", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        }
+
+        private static void ValidateCoreBidscubeSdkDependency(string unityLibGradlePath)
         {
             try
             {
@@ -386,27 +482,56 @@ android.suppressUnsupportedCompileSdk=34,35,36
                 if (!text.Contains(Marker))
                     return;
 
-                var ver = Regex.Escape(Constants.NativeAndroidBidscubeSdkVersion);
-                if (Regex.IsMatch(
-                        text,
-                        @"implementation\s+['""]com\.bidscube:bidscube-sdk:" + ver + @"@aar['""]",
-                        RegexOptions.Multiline))
-                    return;
+                switch (CoreDependencyMode)
+                {
+                    case BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar:
+                    {
+                        var ver = Regex.Escape(Constants.NativeAndroidBidscubeSdkVersion);
+                        if (Regex.IsMatch(
+                                text,
+                                @"implementation\s+['""]com\.bidscube:bidscube-sdk:" + ver + @"@aar['""]",
+                                RegexOptions.Multiline))
+                            return;
 
-                Debug.LogError(
-                    "Bidscube core SDK dependency was injected without @aar; Android Java classes may be missing at runtime.");
+                        Debug.LogError(
+                            "Bidscube core SDK dependency was injected without @aar; Android Java classes may be missing at runtime.");
+                        return;
+                    }
+                    case BidscubeAndroidCoreDependencyMode.CustomGradleLines:
+                    {
+                        var needle = CustomCoreImplementationGradleLines?.Trim();
+                        if (string.IsNullOrEmpty(needle))
+                            return;
+                        var normalized = NormalizeCustomCoreGradleLinesIndent(needle).TrimEnd();
+                        if (text.IndexOf(normalized, StringComparison.Ordinal) >= 0)
+                            return;
+
+                        Debug.LogWarning(
+                            "[BidscubeSDK] CustomGradleLines: expected CustomCoreImplementationGradleLines (normalized) not found in unityLibrary/build.gradle after export — verify the block was inserted.");
+                        return;
+                    }
+                    case BidscubeAndroidCoreDependencyMode.SkipInjectionIntegratorOwnsCore:
+                    {
+                        if (GradleDeclaresBidscubeCoreSdk(text))
+                            return;
+
+                        Debug.LogWarning(
+                            "[BidscubeSDK] SkipInjectionIntegratorOwnsCore: no implementation line referencing bidscube core SDK was detected in unityLibrary/build.gradle. " +
+                            "Add one core source (Maven @aar, files('libs/….aar'), or project module) to avoid ClassNotFoundException for com.bidscube.sdk.BidscubeSDK.");
+                        return;
+                    }
+                }
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[BidscubeSDK] ValidateBidscubeCoreSdkUsesAarSuffix: {e.Message}");
+                Debug.LogWarning($"[BidscubeSDK] ValidateCoreBidscubeSdkDependency: {e.Message}");
             }
         }
 
         /// <summary>
-        /// Older Unity exports had our <see cref="Marker"/> block without a Maven line for the core SDK (core used to ship as a local AAR).
-        /// Inserts <c>implementation 'com.bidscube:bidscube-sdk:…@aar'</c> immediately after the marker when missing.
+        /// Ensures the core Bidscube Android SDK appears after <see cref="Marker"/> per <see cref="CoreDependencyMode"/>.
         /// </summary>
-        private static void EnsureMavenBidscubeCoreSdk(string unityLibGradlePath)
+        private static void EnsureCoreBidscubeSdkAfterMarker(string unityLibGradlePath)
         {
             try
             {
@@ -414,33 +539,72 @@ android.suppressUnsupportedCompileSdk=34,35,36
                     return;
 
                 var text = File.ReadAllText(unityLibGradlePath);
-                text = NormalizeBidscubeCoreSdkImplementationToAar(text);
+                if (CoreDependencyMode == BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar)
+                    text = NormalizeBidscubeCoreSdkImplementationToAar(text);
 
-                var ver = Regex.Escape(Constants.NativeAndroidBidscubeSdkVersion);
-                if (Regex.IsMatch(
-                        text,
-                        @"implementation\s+['""]com\.bidscube:bidscube-sdk:" + ver + @"@aar['""]",
-                        RegexOptions.Multiline))
+                if (CoreDependencyMode == BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar)
+                {
+                    var ver = Regex.Escape(Constants.NativeAndroidBidscubeSdkVersion);
+                    if (Regex.IsMatch(
+                            text,
+                            @"implementation\s+['""]com\.bidscube:bidscube-sdk:" + ver + @"@aar['""]",
+                            RegexOptions.Multiline))
+                    {
+                        File.WriteAllText(unityLibGradlePath, text);
+                        return;
+                    }
+
+                    var markerIdx = text.IndexOf(Marker, StringComparison.Ordinal);
+                    if (markerIdx < 0)
+                    {
+                        File.WriteAllText(unityLibGradlePath, text);
+                        return;
+                    }
+
+                    var line = "\n    implementation 'com.bidscube:bidscube-sdk:" + Constants.NativeAndroidBidscubeSdkVersion + "@aar'";
+                    text = text.Insert(markerIdx + Marker.Length, line);
+                    File.WriteAllText(unityLibGradlePath, text);
+                    Debug.Log("[BidscubeSDK] Injected Maven core SDK (@aar) after " + Marker + ".");
+                    return;
+                }
+
+                if (CoreDependencyMode == BidscubeAndroidCoreDependencyMode.SkipInjectionIntegratorOwnsCore)
                 {
                     File.WriteAllText(unityLibGradlePath, text);
                     return;
                 }
 
-                var markerIdx = text.IndexOf(Marker, StringComparison.Ordinal);
-                if (markerIdx < 0)
+                // CustomGradleLines
+                var customRaw = CustomCoreImplementationGradleLines?.Trim();
+                if (string.IsNullOrEmpty(customRaw))
+                {
+                    Debug.LogError("[BidscubeSDK] CustomGradleLines with empty CustomCoreImplementationGradleLines — skipping core insert.");
+                    File.WriteAllText(unityLibGradlePath, text);
+                    return;
+                }
+
+                var normalizedCustom = NormalizeCustomCoreGradleLinesIndent(customRaw).TrimEnd();
+                if (text.IndexOf(normalizedCustom, StringComparison.Ordinal) >= 0)
                 {
                     File.WriteAllText(unityLibGradlePath, text);
                     return;
                 }
 
-                var line = "\n    implementation 'com.bidscube:bidscube-sdk:" + Constants.NativeAndroidBidscubeSdkVersion + "@aar'";
-                text = text.Insert(markerIdx + Marker.Length, line);
+                var idx = text.IndexOf(Marker, StringComparison.Ordinal);
+                if (idx < 0)
+                {
+                    File.WriteAllText(unityLibGradlePath, text);
+                    return;
+                }
+
+                var block = "\n" + normalizedCustom + "\n";
+                text = text.Insert(idx + Marker.Length, block);
                 File.WriteAllText(unityLibGradlePath, text);
-                Debug.Log("[BidscubeSDK] Injected Maven core SDK (@aar) after " + Marker + ".");
+                Debug.Log("[BidscubeSDK] Injected CustomCoreImplementationGradleLines after " + Marker + ".");
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[BidscubeSDK] EnsureMavenBidscubeCoreSdk: {e.Message}");
+                Debug.LogWarning($"[BidscubeSDK] EnsureCoreBidscubeSdkAfterMarker: {e.Message}");
             }
         }
 

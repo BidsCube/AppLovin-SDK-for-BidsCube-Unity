@@ -4,15 +4,21 @@
 
 ## [1.0.6] - 2026-04-21
 
+### Added
+
+- **Android:** **`BidscubeAndroidCoreDependencyMode`** on **`BidscubeAndroidGradlePostprocessor`** — default **`MavenBidscubeSdkAar`**; optional **`CustomGradleLines`** / **`SkipInjectionIntegratorOwnsCore`** for local **`.aar`**, **`project(...)`**, integrator-owned core, or internal Maven — see **`Documentation~/ANDROID_BUNDLED_SDK.md`**.
+
 ### Fixed
 
-- **Android:** **`BidscubeAndroidGradlePostprocessor`** now injects **launcher** **`coreLibraryDesugaringEnabled`** and **`coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'`** (idempotent) so **`CheckAarMetadata`** succeeds when **`com.bidscube:bidscube-sdk`** declares that **`:launcher`** must enable core library desugaring. Set **`NoDesugarMode = true`** to skip injection if your host Gradle already declares desugaring.
+- **Android:** **`BidscubeAndroidGradlePostprocessor`** injects **launcher** **`coreLibraryDesugaringEnabled`** and **`coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'`** (idempotent) so **`CheckAarMetadata`** succeeds when **`com.bidscube:bidscube-sdk`** requires desugaring on **`:launcher`**. Set **`NoDesugarMode = true`** to skip if host Gradle already owns desugaring.
+- **Android:** Gradle post-processor injects **`com.bidscube:bidscube-sdk:<version>@aar`** so the core resolves as an **AAR** (avoids POM-only **`packaging=pom`** issues). Legacy lines without **`@aar`** are normalized on export; missing **`@aar`** logs an Editor **error**.
 
 ### Changed
 
-- **`BidscubeAndroidGradlePostprocessor.NoDesugarMode`** defaults to **`false`** (plugin-managed launcher desugaring). **`true`** restores the previous “host owns desugaring” behaviour and logs an export **warning** instead of injecting.
-
-- **`Constants.SdkVersion`** / **`package.json`** → **1.0.6**. Bundled Android MAX adapter AAR and iOS pod pins unchanged from **1.0.5**.
+- **`BidscubeAndroidGradlePostprocessor.NoDesugarMode`** defaults to **`false`** (plugin injects launcher desugaring). **`true`** skips injection and logs an export **warning**.
+- **Android:** Publisher init log mentions **`CoreDependencyMode`**; validation renamed to **`ValidateCoreBidscubeSdkDependency`** (**`TEST_PLAN.md`**).
+- **Docs:** **`ANDROID_BUNDLED_SDK.md`** — **`CoreDependencyMode`** scope vs AppLovin/Media3 transitives; **`APPLOVIN_MAX.md`** / **`INTEGRATION.md`** — Direct vs MAX playback (custom **`IVideoSurfacePlayback`** only in Direct; MAX uses default native playback for the pinned **`com.bidscube:bidscube-sdk`**).
+- **`Constants.SdkVersion`** / **`package.json`** → **1.0.6**. Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`**; iOS CocoaPods **`BidscubeSDKAppLovin`** pin **1.0.4**; native core pin **`NativeAndroidBidscubeSdkVersion`** **1.2.2**.
 
 ---
 
