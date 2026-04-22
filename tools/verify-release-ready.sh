@@ -76,7 +76,14 @@ if ! grep -q "Constants.NativeAndroidBidscubeSdkVersion" Editor/Android/Bidscube
   echo "ERROR: Gradle postprocessor should reference Constants.NativeAndroidBidscubeSdkVersion for the default Maven coordinate" >&2
   exit 1
 fi
-echo "Constants.NativeAndroidBidscubeSdkVersion: $NATIVE_SDK_VER (default Gradle: com.bidscube:bidscube-sdk … @aar; optional CoreDependencyMode in postprocessor)"
+echo "Constants.NativeAndroidBidscubeSdkVersion: $NATIVE_SDK_VER (default: BundledUnityLibraryLibsAar → unityLibrary/libs + files(...); MavenBidscubeSdkAar = com.bidscube:bidscube-sdk … @aar)"
+
+BUNDLED_CORE="Runtime/Plugins/Android/bidscube-sdk-${NATIVE_SDK_VER}.aar"
+if [[ ! -f "$BUNDLED_CORE" ]]; then
+  echo "ERROR: expected bundled core AAR at $BUNDLED_CORE (BundledUnityLibraryLibsAar default)" >&2
+  exit 1
+fi
+echo "Bundled core AAR (default mode): $BUNDLED_CORE"
 
 echo "Suggested git tag (must match package.json): v$VER"
 echo "  git tag -a \"v$VER\" -m \"com.bidscube.sdk $VER\""

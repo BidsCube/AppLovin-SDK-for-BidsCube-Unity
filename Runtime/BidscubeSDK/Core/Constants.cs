@@ -34,7 +34,7 @@ namespace BidscubeSDK
         /// <summary>
         /// Unity UPM package version (user-agent, diagnostics). Must match <c>package.json</c> <c>version</c>.
         /// </summary>
-        public const string SdkVersion = "1.0.6";
+        public const string SdkVersion = "1.0.7";
 
         /// <summary>
         /// Native Android core SDK semver (must match the bundled <c>bidscube-sdk-*.aar</c> filename and the Maven coordinate when using <c>MavenBidscubeSdkAar</c>). Default export copies <c>bidscube-sdk-&lt;NativeAndroidBidscubeSdkVersion&gt;.aar</c> into <c>unityLibrary/libs/</c> and injects <c>files('libs/…')</c>; override via <c>BidscubeAndroidGradlePostprocessor.CoreDependencyMode</c>.

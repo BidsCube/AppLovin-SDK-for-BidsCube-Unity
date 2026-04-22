@@ -64,7 +64,7 @@ jobs:
         run: |
           set -euo pipefail
           NAME="Bidscube-SDK-Unity-${RELEASE_VERSION}"
-          zip -r "$NAME.zip" . -x ".git/*" -x "$NAME.zip"
+          zip -r "$NAME.zip" . -x ".git/*" -x "__MACOSX/*" -x "*.DS_Store" -x "$NAME.zip"
           echo "ZIP_NAME=$NAME.zip" >> "$GITHUB_ENV"
           ls -la "$NAME.zip"
 

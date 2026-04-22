@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+---
+
+## [1.0.7] - 2026-04-22
+
 ### Added
 
 - **Android:** **`BidscubeAndroidCoreDependencyMode.BundledUnityLibraryLibsAar`** — on Gradle export, copies **`bidscube-sdk-<ver>.aar`** from the UPM package into **`unityLibrary/libs/`** and injects **`implementation files('libs/…')`** so the core SDK does not require a Maven repository.
@@ -8,6 +12,8 @@
 
 - **Android (default):** **`BidscubeAndroidGradlePostprocessor.CoreDependencyMode`** is now **`BundledUnityLibraryLibsAar`** (was **`MavenBidscubeSdkAar`**). To keep resolving the core from Gradle repos only, set **`CoreDependencyMode = MavenBidscubeSdkAar`** before export (**`ANDROID_BUNDLED_SDK.md`**).
 - **Android:** **`Runtime/Plugins/Android/bidscube-sdk-1.2.3.aar`** — **PluginImporter** leaves **Android disabled** so Unity does not merge the same AAR twice; the post-processor owns the copy into **`unityLibrary/libs/`**.
+- **Release:** GitHub Actions ZIP excludes **`__MACOSX/*`** and **`*.DS_Store`** in addition to **`.git/*`**.
+- **`Constants.SdkVersion`** / **`package.json`** → **1.0.7**.
 
 ---
 

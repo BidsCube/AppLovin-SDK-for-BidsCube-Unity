@@ -3,7 +3,7 @@
 ## Android: Gradle export (`@aar`, desugaring, init)
 
 1. Clean Gradle state: remove prior exported **`Library/Bee/.../Gradle`** (or full **`Library`**) in the Unity project, then **Export** / **Build** Android again.
-2. In generated **`unityLibrary/build.gradle`**: confirm the core Bidscube line (default **`implementation 'com.bidscube:bidscube-sdk:<ver>@aar'`**, or your **`CustomGradleLines`** / integrator line when **`CoreDependencyMode`** is not **`MavenBidscubeSdkAar`**). Editor validation: **`ValidateCoreBidscubeSdkDependency`**.
+2. In generated **`unityLibrary/build.gradle`**: confirm the core Bidscube line (default **`implementation files('libs/bidscube-sdk:<ver>.aar')`** after copy, **`MavenBidscubeSdkAar`** **`…@aar`**, or **`CustomGradleLines`** / integrator line). On disk: **`unityLibrary/libs/bidscube-sdk-<ver>.aar`** exists when using **`BundledUnityLibraryLibsAar`**. Editor validation: **`ValidateCoreBidscubeSdkDependency`**.
 3. In generated **`launcher/build.gradle`**: confirm **`coreLibraryDesugaringEnabled true`** and **`coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:…'`** (post-processor default) unless **`NoDesugarMode = true`** — then host Custom Launcher Gradle must supply them (**`ANDROID_BUNDLED_SDK.md`**).
 4. From Gradle project root: **`./gradlew :unityLibrary:assembleRelease --refresh-dependencies`** (or **`assembleDebug`**).
 5. Device/emulator (prefer **lower minSdk** you support): smoke **`BidscubeSDK.Initialize`** — expect **`[BidscubeSDK] Init (Android Java): SUCCESS`**, no **`ClassNotFoundException`** for **`com.bidscube.sdk.BidscubeSDK`**.

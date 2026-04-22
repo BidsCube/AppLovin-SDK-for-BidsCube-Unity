@@ -1,14 +1,22 @@
 # Bidscube SDK for Unity (`com.bidscube.sdk`)
 
-**Package (UPM):** `1.0.6` · **Git tag:** `v1.0.6` · **Android core (`com.bidscube:bidscube-sdk`, default Gradle @aar pin):** `1.2.3@aar` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
+**Package (UPM):** `1.0.7` · **Git tag:** `v1.0.7` · **Android core (default: bundled `libs/bidscube-sdk-1.2.3.aar` + `files(...)`; optional Maven `…@aar`):** `1.2.3` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
 
 UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drives banners, video, native, interstitials) and **AppLovin MAX mediation** (MAX drives load/show via the Bidscube adapter; **Android:** early C# **`BidscubeSDK.Initialize`** recommended; **iOS:** optional — adapter can init native BidCube — see [`APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)).
+
+### What’s new in **1.0.7**
+
+| Topic | Summary |
+|--------|---------|
+| **Android default core** | **`BundledUnityLibraryLibsAar`** — export copies **`bidscube-sdk-*.aar`** to **`unityLibrary/libs/`** and injects **`files('libs/…')`**; opt back to Maven with **`MavenBidscubeSdkAar`** — **`ANDROID_BUNDLED_SDK.md`**. |
+| **Release ZIP** | **`release.yml`** excludes **`__MACOSX/*`**, **`*.DS_Store`**, **`.git/*`**. |
+| **Tooling** | **`verify-release-ready.sh`** requires the bundled core AAR next to **`NativeAndroidBidscubeSdkVersion`**. |
 
 ### What’s new in **1.0.6**
 
 | Topic | Summary |
 |--------|---------|
-| **Android Gradle** | **Launcher** **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** injected by default (**`NoDesugarMode = true`** skips). Core SDK **default:** bundled **`libs/bidscube-sdk-….aar`** + **`files(...)`**; **`MavenBidscubeSdkAar`** / **`CustomGradleLines`** / **`SkipInjectionIntegratorOwnsCore`** — **`ANDROID_BUNDLED_SDK.md`**. |
+| **Android Gradle** | **Launcher** **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** injected by default (**`NoDesugarMode = true`** skips). **`BidscubeAndroidCoreDependencyMode`** (default then: **`MavenBidscubeSdkAar`** + **`…@aar`**). |
 | **Docs / MAX** | Direct vs MAX playback clarified (**`APPLOVIN_MAX.md`**, **`INTEGRATION.md`**). |
 | **Diagnostics** | Init publisher row + **`ClassNotFoundException`** guidance (AAR vs POM). |
 
@@ -47,12 +55,12 @@ Add to the Unity project **`Packages/manifest.json`**:
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.6"
+    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.7"
   }
 }
 ```
 
-Or **Package Manager → Add package from git URL** with the same URL (replace **org / repo / tag** with your fork and release; tag example **`v1.0.6`**).
+Or **Package Manager → Add package from git URL** with the same URL (replace **org / repo / tag** with your fork and release; tag example **`v1.0.7`**).
 
 **Unity UI dependencies:** `com.unity.ugui` and `com.unity.textmeshpro` are listed in [`package.json`](package.json) and resolve with the package from Git URL. The Editor may run **`BidscubeUpmDependencyInstaller`** once per session to align those dependencies — same idea as the [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) README (“no manual setup”).
 
@@ -240,7 +248,7 @@ In **Package Manager**, select **Bidscube SDK** → **Samples** → import **SDK
 
 | Issue | What to check |
 |-------|----------------|
-| **Android Gradle / AAR metadata errors** | **minSdk ≥ 26**, clean Gradle export; see [`Documentation~/ANDROID_BUNDLED_SDK.md`](Documentation~/ANDROID_BUNDLED_SDK.md). **UPM ≥ 1.0.6:** the post-processor injects **launcher** desugaring by default. If you duplicate lines, set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** and own desugaring in Custom Launcher Gradle. |
+| **Android Gradle / AAR metadata errors** | **minSdk ≥ 26**, clean Gradle export; see [`Documentation~/ANDROID_BUNDLED_SDK.md`](Documentation~/ANDROID_BUNDLED_SDK.md). **UPM ≥ 1.0.7:** default bundled core + **launcher** desugaring from the post-processor. If you duplicate lines, set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** and own desugaring in Custom Launcher Gradle. |
 | **Duplicate class / DEX `com.bidscube.sdk`** | Remove any extra core line (second Maven **`@aar`**, duplicate **`files(...)`**, etc.) — keep a single core source; see **`CoreDependencyMode`** in **`ANDROID_BUNDLED_SDK.md`**. |
 | **`ClassNotFoundException` / `com.bidscube.sdk.BidscubeSDK`** | Ensure **`unityLibrary/build.gradle`** declares core once (default **`files('libs/bidscube-sdk-<ver>.aar')`** after export, or **`MavenBidscubeSdkAar`** with **`…@aar`**). Do not add a conflicting second line in Custom Gradle. |
 | **Ads not loading** | `BaseURL`, placement IDs, device logs, network |

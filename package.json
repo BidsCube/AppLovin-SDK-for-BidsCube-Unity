@@ -1,8 +1,8 @@
 {
   "name": "com.bidscube.sdk",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "displayName": "Bidscube SDK",
-  "description": "Bidscube advertising for Unity — two integration paths: (1) Direct SDK — C# APIs for banner, fullscreen video/VAST, native, and interstitials against your SSP. (2) AppLovin MAX — Bidscube as a custom mediated network; Android ships the MAX adapter AAR; Unity Editor injects com.bidscube:bidscube-sdk as @aar by default (Constants.NativeAndroidBidscubeSdkVersion) or optional local/custom Gradle via BidscubeAndroidGradlePostprocessor.CoreDependencyMode; AppLovin SDK 13.x, Media3, IMA, UMP, Glide, Material; launcher coreLibraryDesugaring injected by default (NoDesugarMode=true skips). iOS uses bundled WebView plugins and optional CocoaPods BidscubeSDKAppLovin. UPM 1.0.6: Android Gradle @aar + launcher desugaring for CheckAarMetadata; use Git tag v1.0.6.",
+  "description": "Bidscube advertising for Unity — two integration paths: (1) Direct SDK — C# APIs for banner, fullscreen video/VAST, native, and interstitials against your SSP. (2) AppLovin MAX — Bidscube as a custom mediated network; Android ships the MAX adapter AAR and bidscube-sdk AAR; Unity Editor default copies core to unityLibrary/libs and injects files('libs/bidscube-sdk-….aar') (BundledUnityLibraryLibsAar) or Maven @aar / custom Gradle via BidscubeAndroidGradlePostprocessor.CoreDependencyMode; AppLovin SDK 13.x, Media3, IMA, UMP, Glide, Material; launcher coreLibraryDesugaring injected by default (NoDesugarMode=true skips). iOS uses bundled WebView plugins and optional CocoaPods BidscubeSDKAppLovin. UPM 1.0.7: bundled core AAR + launcher desugaring for CheckAarMetadata; use Git tag v1.0.7.",
   "unity": "2020.3",
   "changelogUrl": "https://github.com/BidsCube/AppLovin-SDK-Unity/blob/main/CHANGELOG.md",
   "documentationUrl": "https://github.com/BidsCube/AppLovin-SDK-Unity/blob/main/README.md",

@@ -9,7 +9,7 @@
 | **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.6.zip` |
 | **GitHub Release title** (workflow) | `com.bidscube.sdk {version}` | `com.bidscube.sdk 1.0.6` |
 | **GitHub repository** (recommended) | `AppLovin-SDK-Unity` | `github.com/BidsCube/AppLovin-SDK-Unity` |
-| **`Constants.SdkVersion`** | Unity package / user-agent string | Must match UPM `version`; **`Constants.NativeAndroidBidscubeSdkVersion`** pins the **default** Gradle line **`com.bidscube:bidscube-sdk`** as **`…@aar`** (e.g. **1.2.3**); optional **`BidscubeAndroidGradlePostprocessor.CoreDependencyMode`** overrides how core is injected |
+| **`Constants.SdkVersion`** | Unity package / user-agent string | Must match UPM `version`; **`Constants.NativeAndroidBidscubeSdkVersion`** must match **`bidscube-sdk-<ver>.aar`** and the **`files('libs/…')`** line (default **BundledUnityLibraryLibsAar**); **`MavenBidscubeSdkAar`** uses **`…@aar`** from repos; **`CoreDependencyMode`** overrides |
 | **`BidscubeIosPodfilePostprocessor.BidscubeAppLovinPodVersion`** | CocoaPods **`BidscubeSDKAppLovin`** line appended to exported Podfile | May match UPM or stay on an earlier native pin (e.g. UPM **1.0.6** with pod **1.0.4**) until CocoaPods ships a newer adapter |
 
 
@@ -17,7 +17,7 @@
 ## Version sources
 
 1. **`package.json`** — UPM package version; must equal the tag **without** `v`.
-2. **`Runtime/BidscubeSDK/Core/Constants.cs` → `SdkVersion`** — Unity / user-agent version (match **`package.json`**). **`NativeAndroidBidscubeSdkVersion`** must match the **`com.bidscube:bidscube-sdk`** version you ship when using default **`MavenBidscubeSdkAar`** mode (**`@aar`** in **`BidscubeAndroidGradlePostprocessor`**). If you use **`CustomGradleLines`** / **`SkipInjectionIntegratorOwnsCore`**, keep the constant aligned with the native AAR you actually link for support parity.
+2. **`Runtime/BidscubeSDK/Core/Constants.cs` → `SdkVersion`** — Unity / user-agent version (match **`package.json`**). **`NativeAndroidBidscubeSdkVersion`** must match the bundled **`Runtime/Plugins/Android/bidscube-sdk-<ver>.aar`** filename and the copied **`unityLibrary/libs/`** artifact (default **`BundledUnityLibraryLibsAar`**). For **`MavenBidscubeSdkAar`**, keep the same semver as the published **`com.bidscube:bidscube-sdk`** coordinate. If you use **`CustomGradleLines`** / **`SkipInjectionIntegratorOwnsCore`**, keep the constant aligned with the native AAR you actually link for support parity.
 
 ## Pre-release check
 
