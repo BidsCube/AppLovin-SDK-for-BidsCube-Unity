@@ -182,7 +182,7 @@ namespace BidscubeSDK.Editor.Android
                     return;
 
                 var hasEnabled = Regex.IsMatch(text, @"coreLibraryDesugaringEnabled\s+true", RegexOptions.Multiline);
-                var hasDep = Regex.IsMatch(text, @"coreLibraryDesugaring\s+['\"]", RegexOptions.Multiline);
+                var hasDep = Regex.IsMatch(text, @"coreLibraryDesugaring\s+['""]", RegexOptions.Multiline);
                 if (hasEnabled && hasDep)
                     return;
 
@@ -206,7 +206,7 @@ namespace BidscubeSDK.Editor.Android
                         text = injected;
                 }
 
-                if (!Regex.IsMatch(text, @"coreLibraryDesugaring\s+['\"]", RegexOptions.Multiline))
+                if (!Regex.IsMatch(text, @"coreLibraryDesugaring\s+['""]", RegexOptions.Multiline))
                 {
                     var injectedDeps = Regex.Replace(
                         text,
