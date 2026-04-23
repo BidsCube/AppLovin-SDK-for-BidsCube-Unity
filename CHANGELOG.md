@@ -2,6 +2,19 @@
 
 ---
 
+## [1.0.9] - 2026-04-23
+
+### Fixed
+
+- **UPM:** Added missing **`.meta`** for **`BidscubeAndroidBuildFeatures`**, **`BidscubeAndroidFeatureSet`**, **`BidscubeAndroidExportSettings`**, **`BidscubeAndroidExportSettingsResolver`**, and **`BidscubeAndroidScriptingDefinesPreprocessor`** so Unity Package Manager can import the package from a read-only cache without missing-meta / script import errors. **`BidscubeAndroidSdkInterop.cs.meta`** completed with **`MonoImporter`** (was GUID-only).
+
+### Changed
+
+- **Release ZIP:** Exclude AppleDouble **`._*`** / **`*/._*`** in addition to **`.git`**, **`__MACOSX/*`**, and **`*.DS_Store`**.
+- **`Constants.SdkVersion`** / **`package.json`** → **1.0.9**.
+
+---
+
 ## [1.0.8] - 2026-04-23
 
 ### Added

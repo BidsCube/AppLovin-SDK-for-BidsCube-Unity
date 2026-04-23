@@ -1,8 +1,8 @@
 {
   "name": "com.bidscube.sdk",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "displayName": "Bidscube SDK",
-  "description": "Bidscube advertising for Unity — Direct SDK (C#) and AppLovin MAX mediation. Android: bundled MAX adapter + dual core AARs (lite no-IMA vs full with IMA), BidscubeAndroidExportSettings / FeatureSet, optional Maven core; AppLovin 13.x, UMP, Glide, Material; launcher desugaring by default. iOS: WebView plugins and CocoaPods BidscubeSDKAppLovin. UPM 1.0.8; Git tag v1.0.8.",
+  "description": "Bidscube advertising for Unity — Direct SDK (C#) and AppLovin MAX mediation. Android: bundled MAX adapter + dual core AARs (lite no-IMA vs full with IMA), BidscubeAndroidExportSettings / FeatureSet, optional Maven core; AppLovin 13.x, UMP, Glide, Material; launcher desugaring by default. iOS: WebView plugins and CocoaPods BidscubeSDKAppLovin. UPM 1.0.9; Git tag v1.0.9.",
   "unity": "2020.3",
   "changelogUrl": "https://github.com/BidsCube/AppLovin-SDK-Unity/blob/main/CHANGELOG.md",
   "documentationUrl": "https://github.com/BidsCube/AppLovin-SDK-Unity/blob/main/README.md",
