@@ -14,7 +14,7 @@ namespace BidscubeSDK.Editor.Android
         /// <summary>First <see cref="BidscubeAndroidExportSettings"/> in the project, or <see cref="BidscubeAndroidGradlePostprocessor.FeatureSet"/>.</summary>
         public static BidscubeAndroidFeatureSet GetEffectiveFeatureSet()
         {
-            return TryLoadFirst(out var s) ? s.featureSet : BidscubeAndroidGradlePostprocessor.FeatureSet;
+            return TryLoadFirst(out var s, out _) ? s.featureSet : BidscubeAndroidGradlePostprocessor.FeatureSet;
         }
 
         /// <summary>For export logs: where the effective value came from.</summary>

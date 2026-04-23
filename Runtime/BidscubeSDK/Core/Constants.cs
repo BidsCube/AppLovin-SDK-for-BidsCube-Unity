@@ -34,7 +34,7 @@ namespace BidscubeSDK
         /// <summary>
         /// Unity UPM package version (user-agent, diagnostics). Must match <c>package.json</c> <c>version</c>.
         /// </summary>
-        public const string SdkVersion = "1.0.10";
+        public const string SdkVersion = "1.0.11";
 
         /// <summary>
         /// Native Android core SDK semver (must match bundled AAR filenames and the Maven coordinate when using <c>MavenBidscubeSdkAar</c>).

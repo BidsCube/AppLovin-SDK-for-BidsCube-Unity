@@ -2,10 +2,19 @@
 
 ---
 
+## [1.0.11] - 2026-04-23
+
+### Changed
+
+- **`Constants.SdkVersion`** / **`package.json`** → **1.0.11**.
+
+---
+
 ## [1.0.10] - 2026-04-23
 
 ### Fixed
 
+- **Android Editor:** **`BidscubeAndroidExportSettingsResolver.GetEffectiveFeatureSet`** — **`TryLoadFirst`** must receive both **`out`** parameters; use **`TryLoadFirst(out var s, out _)`** (**CS7036**).
 - **Android Editor:** **`BidscubeAndroidGradlePostprocessor`** — invalid verbatim-string regex literals for Gradle quote detection broke C# compilation; match **`['""]`** via doubled quotes in verbatim interpolated strings so **`EnsureLauncherCoreLibraryDesugaring`** compiles in Unity.
 - **UPM:** **`bidscube-sdk-lite-*.aar.meta`** — **`guid`** was **31** hex digits; Unity requires **32** (YAML / asset import).
 - **UPM:** Added missing **`.meta`** for **`BidscubeAndroidBuildFeatures`**, **`BidscubeAndroidFeatureSet`**, **`BidscubeAndroidExportSettings`**, **`BidscubeAndroidExportSettingsResolver`**, and **`BidscubeAndroidScriptingDefinesPreprocessor`** so Package Manager can import from a read-only cache without missing-meta / script import errors. **`BidscubeAndroidSdkInterop.cs.meta`** completed with **`MonoImporter`** (was GUID-only).

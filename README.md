@@ -1,8 +1,14 @@
 # Bidscube SDK for Unity (`com.bidscube.sdk`)
 
-**Package (UPM):** `1.0.8` · **Git tag:** `v1.0.8` · **Android core (default lite: `libs/bidscube-sdk-lite-1.2.3.aar`; full: `bidscube-sdk-1.2.3.aar`; optional Maven `…@aar`):** `1.2.3` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
+**Package (UPM):** `1.0.11` · **Git tag:** `v1.0.11` · **Android core (default lite: `libs/bidscube-sdk-lite-1.2.3.aar`; full: `bidscube-sdk-1.2.3.aar`; optional Maven `…@aar`):** `1.2.3` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
 
 UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drives banners, video, native, interstitials) and **AppLovin MAX mediation** (MAX drives load/show via the Bidscube adapter; **Android:** early C# **`BidscubeSDK.Initialize`** recommended; **iOS:** optional — adapter can init native BidCube — see [`APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)).
+
+### What’s new in **1.0.11**
+
+| Topic | Summary |
+|--------|---------|
+| **Release** | UPM / tag **1.0.11** — see **[CHANGELOG.md](CHANGELOG.md)** (**1.0.10** packaging and Editor fixes remain in that section). |
 
 ### What’s new in **1.0.8**
 
@@ -61,7 +67,7 @@ Add to the Unity project **`Packages/manifest.json`**:
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.8"
+    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.11"
   }
 }
 ```
