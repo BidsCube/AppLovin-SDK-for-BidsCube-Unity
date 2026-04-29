@@ -1,6 +1,6 @@
 # Bidscube AppLovin MAX adapter (`com.bidscube.applovin.max`)
 
-**Package (UPM):** `com.bidscube.applovin.max` **1.0.12** · **Git tag:** `v1.0.12` · **Android bundled:** **MAX** adapter `1.0.4` · **lite** core AAR `1.2.3` (full **video** stack: Maven or upstream **`com.bidscube.sdk`**) · **iOS:** **`BidscubeSDKAppLovin`** pod `1.0.4` (unchanged)
+**Package (UPM):** `com.bidscube.applovin.max` **1.0.12** · **Git tag:** `v1.0.12` · **Core UPM peer:** `com.bidscube.sdk` **1.2.5** (from `package.json` → `dependencies`) · **Android bundled:** **MAX** adapter **1.0.4** · **lite** core AAR **1.2.3** (full core: **`com.bidscube:bidscube-sdk:1.2.3@aar`** or AAR **1.2.3**) · **iOS:** **`BidscubeSDKAppLovin`** **1.0.4** · **AppLovin** native **13.x**
 
 **Companion** package for **Bidscube** + **AppLovin MAX**: Android **MAX** adapter AAR, **lite** core AAR (reference), and **`AppLovinMaxUnityReflection`** so C# can call **`MaxSdk`** when the official AppLovin plugin is present. **You also add** **`com.bidscube.sdk`** (core Unity SDK) — this repo does not ship the full C# runtime anymore.
 

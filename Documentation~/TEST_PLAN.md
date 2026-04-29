@@ -1,5 +1,7 @@
 # Minimal test plan (Unity)
 
+**Version alignment:** this adapter UPM declares **`com.bidscube.applovin.max` 1.0.12**, peer **`com.bidscube.sdk` 1.2.5**, native Android core **1.2.3**, MAX adapter / iOS pod **1.0.4** — see [`ANDROID_BUNDLED_SDK.md`](ANDROID_BUNDLED_SDK.md) and [`APPLOVIN_MAX.md`](APPLOVIN_MAX.md). Steps below assume **Gradle** checks from your project (post-processor from **`com.bidscube.sdk`** or **manual** `unityLibrary` edits).
+
 ## Android: Gradle export (`@aar`, desugaring, init)
 
 1. Clean Gradle state: remove prior exported **`Library/Bee/.../Gradle`** (or full **`Library`**) in the Unity project, then **Export** / **Build** Android again.

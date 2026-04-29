@@ -8,6 +8,7 @@
 
 - **Package split:** **`com.bidscube.applovin.max`** is a **companion** to **`com.bidscube.sdk`**: ships **`AppLovinMaxUnityReflection`**, bundled **MAX** adapter AAR, and **lite** core AAR; **C# SDK surface** and optional **Editor / Gradle** automation are expected from **`com.bidscube.sdk`** (see README / INTEGRATION scope).
 - **`AdapterPackageInfo.UpmVersion`** / **`package.json`** → **1.0.12** (replaces version sync via removed **`Constants.SdkVersion`** in this package).
+- **Docs:** version matrix and peer **`com.bidscube.sdk` 1.2.5** / native **1.2.3** / MAX **1.0.4** / AppLovin **13.x** in **`ANDROID_BUNDLED_SDK.md`**, **`APPLOVIN_MAX.md`**, **`README`**, **`INTEGRATION.md`**, **`TEST_PLAN.md`**, **`RELEASE.md`**; removed misleading “this package injects AppLovin 13.+” and stale **`Constants.*`** references in favour of **`AdapterPackageInfo`**.
 
 ### Removed (from this package; use core SDK or your Gradle templates)
 

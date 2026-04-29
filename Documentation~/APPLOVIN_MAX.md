@@ -2,6 +2,14 @@
 
 > **`com.bidscube.applovin.max` 1.0.12+** no longer ships Editor **Gradle**/**Podfile** scripts in this repo. Apply **`ANDROID_BUNDLED_SDK.md`** (or use **`com.bidscube.sdk`**-provided automation if available) so **`unityLibrary`** and native deps match the bundled AARs. C# **`BidscubeSDK`** and **`SDKConfig`** remain in **`com.bidscube.sdk`**.
 
+| Component | Version |
+|-----------|--------:|
+| This UPM (`com.bidscube.applovin.max`) | **1.0.12** |
+| Core UPM peer (`com.bidscube.sdk`, see `package.json` → `dependencies`) | **1.2.5** |
+| Android MAX adapter AAR + iOS `BidscubeSDKAppLovin` | **1.0.4** |
+| Android core native (`bidscube-sdk` / lite AAR) | **1.2.3** |
+| AppLovin MAX Android (`com.applovin:applovin-sdk` / AppLovin iOS pod) | **13.x** |
+
 Bidscube as a **custom SDK network** in **AppLovin MAX**: the app is built in Unity; **load and show** run through MAX. **Android:** call **`BidscubeSDK.Initialize`** early (MAX mediation mode) so the Java SDK shares **`AdRequestAuthority`**, test mode, and logging with the bundled adapter — same idea as the Flutter plugin. **iOS:** the native **`BidscubeSDKAppLovin`** pod’s adapter can initialize the BidCube runtime internally ([iOS distribution](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)); optional C# **`BidscubeSDK.Initialize`** when you want Unity-driven **`SDKConfig`** before MAX runs.
 
 ## Integration modes (C#)
@@ -81,8 +89,8 @@ After you import the **SDK Demo** sample and the official **AppLovin MAX Unity p
 - In **AppLovin MAX** integration mode: **Init SDK** runs `BidscubeSDK.Initialize` with mediation config first, then `MaxSdk.SetSdkKey` (optional) and `MaxSdk.InitializeSdk()`, then a **MAX toolbar** (load/show interstitial and rewarded, banner toggle, mediation debugger). Assign your MAX **ad unit IDs** and optional **AppLovin SDK key** on the `BidscubeExampleScene` component. This mirrors the native flow: MAX loads the network stack; the Bidscube **custom adapter** serves creatives.
 
 1. Add this package and the **AppLovin MAX Unity plugin** (or integrate MAX natively per AppLovin docs).
-2. **Android:** this package bundles **`applovin-bidscube-max-adapter-1.0.4.aar`**, a **lite** **`bidscube-sdk-lite-1.2.3.aar`**, and expects you to wire the **full** core and **`com.applovin:applovin-sdk:13.+`** in Gradle per **`ANDROID_BUNDLED_SDK.md`**. Do **not** add a **second** core `implementation` for Bidscube. **minSdk** often **26**+ for the bundled AARs; AppLovin allows **23+** in principle — validate with a clean Gradle build. The adapter AAR includes **ProGuard** consumer rules for `BidscubeMediationAdapter`.
-3. **iOS:** use CocoaPods **`BidscubeSDKAppLovin`** (BidCube runtime + **`ALBidscubeMediationAdapter`**) and **`AppLovinSDK`** **13.x**. On Unity iOS exports that generate a **Podfile**, **`BidscubeIosPodfilePostprocessor`** appends missing lines (see below). **Do not** add a separate **`BidscubeSDK`** pod for the same target if you already use **`BidscubeSDKAppLovin`**. **Google IMA** remains required by the native stack where applicable. Official reference: [AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS).
+2. **Android:** this package bundles **`applovin-bidscube-max-adapter-1.0.4.aar`**, a **lite** **`bidscube-sdk-lite-1.2.3.aar`**, and expects you to wire the **full** core (**1.2.3** — Maven or AAR) and **AppLovin** **13.x** in Gradle per **`ANDROID_BUNDLED_SDK.md`**. Do **not** add a **second** core `implementation` for Bidscube. **minSdk** often **26**+ for the bundled AARs; AppLovin allows **23+** in principle — validate with a clean Gradle build. The adapter AAR includes **ProGuard** consumer rules for `BidscubeMediationAdapter`.
+3. **iOS:** use CocoaPods **`BidscubeSDKAppLovin` `1.0.4`** (BidCube runtime + **`ALBidscubeMediationAdapter`**) and **`AppLovinSDK`** **13.x** (see snippet below). If another package (e.g. **`com.bidscube.sdk`**) provides **`BidscubeIosPodfilePostprocessor`**, it may append these lines on export; otherwise add them **manually**. **Do not** add a separate **`BidscubeSDK`** pod for the same target if you already use **`BidscubeSDKAppLovin`**. **Google IMA** remains required by the native stack where applicable. Official reference: [AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS).
 4. **Optional C# startup** (recommended on **Android**; **optional** on **iOS** if the adapter initializes native BidCube and you set **`request_authority` / `ssp_host`** in MAX when needed):
 
 ```csharp
@@ -110,7 +118,7 @@ target 'YourApp' do
 end
 ```
 
-Then **`pod install`** and open the **`.xcworkspace`**. If **`BidscubeIosPodfilePostprocessor`** runs, it appends the same pods **only when** they are not already declared (and skips adding **`BidscubeSDKAppLovin`** if a standalone **`BidscubeSDK`** pod is present).
+Then **`pod install`** and open the **`.xcworkspace`**. A **`BidscubeIosPodfilePostprocessor`**, if present in your project (e.g. from **`com.bidscube.sdk`**), may append the same pods **only when** they are not already declared (and may skip **`BidscubeSDKAppLovin`** if a standalone **`BidscubeSDK`** pod is present).
 
 ### Supported ad formats (MAX)
 
@@ -126,7 +134,7 @@ Do **not** call C# APIs that attach Bidscube creatives to the Unity scene (`GetB
 
 - **Adapter not found / ClassNotFoundException** — Dashboard class name must be exactly `com.applovin.mediation.adapters.BidscubeMediationAdapter`. Confirm **`applovin-bidscube-max-adapter-1.0.4.aar`** is enabled for Android in the Unity Inspector (no “Any Platform” disable). With **R8 / minify**, the AAR’s consumer rules should keep the adapter; if you use a custom ProGuard file, add the same `-keep` lines as in the AAR’s `proguard.txt`.
 - **Bidscube stuck “not initialized” in MAX** — Call **`BidscubeSDK.Initialize`** (MAX mode + your SSP authority) **before** MAX SDK init. If you only use adapter-side init, set a non-empty **App ID** (placement ID) on the custom network in MAX and/or **`request_authority` / `ssp_host`** server parameters.
-- **Duplicate `com.applovin:applovin-sdk`** — This package injects **`13.+`**; the AppLovin MAX Unity plugin also adds the SDK. Gradle should resolve a single version; if you see duplicate-class errors, align versions in **Custom Main Gradle Template** or temporarily comment one `implementation` line and rebuild.
+- **Duplicate `com.applovin:applovin-sdk`** — The **AppLovin MAX Unity plugin** and/or your **Custom Main Gradle Template** / **`com.bidscube.sdk`** automation may each add an `implementation`. Gradle should resolve a **single** version; if you see duplicate-class errors, align to **one** `com.applovin:applovin-sdk` line (typically **13.x** with the MAX plugin) or remove the duplicate.
 
 ## Troubleshooting (iOS)
 

@@ -1,6 +1,6 @@
 # Bidscube Unity SDK Integration Guide
 
-> **Repository scope (this UPM: `com.bidscube.applovin.max` ≥ 1.0.12):** the **C# SDK** and **`BidscubeSDK` APIs** come from the **`com.bidscube.sdk`** package. **This** repo adds **AppLovin MAX**-related AARs and **`AppLovinMaxUnityReflection`**. Install both dependencies; see root [`README.md`](../README.md). The sections below document **usage with `com.bidscube.sdk`** and MAX behaviour — they are kept here for one-stop reading with [`APPLOVIN_MAX.md`](APPLOVIN_MAX.md).
+> **Repository scope (this UPM: `com.bidscube.applovin.max` ≥ 1.0.12):** the **C# SDK** and **`BidscubeSDK` APIs** come from the **`com.bidscube.sdk`** package (**1.2.5** peer per this package’s `package.json` → `dependencies` — pin the same in your `manifest.json`). **This** repo adds **AppLovin MAX**-related AARs and **`AppLovinMaxUnityReflection`**. Install both dependencies; see root [`README.md`](../README.md). The sections below document **usage with `com.bidscube.sdk`** and MAX behaviour — they are kept here for one-stop reading with [`APPLOVIN_MAX.md`](APPLOVIN_MAX.md).
 
 **AppLovin MAX:** start with `Documentation~/APPLOVIN_MAX.md`. **Which player (default vs custom, Unity vs native Android):** `Documentation~/VIDEO_PLAYBACK.md`.
 

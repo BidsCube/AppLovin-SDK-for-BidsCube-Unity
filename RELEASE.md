@@ -16,8 +16,8 @@
 
 ## Version sources
 
-1. **`package.json`** — UPM package version; must equal the tag **without** `v` (`com.bidscube.applovin.max`).
-2. **`AdapterPackageInfo.UpmVersion`** — must match **`package.json`**. **`NativeAndroidBidscubeSdkVersion`** / **`BundledMaxAdapterAarVersion`** must match the bundled AAR **filenames** on disk. Core C# version strings for the SDK itself live in **`com.bidscube.sdk`**.
+1. **`package.json`** — UPM package version; must equal the tag **without** `v` (`com.bidscube.applovin.max`). **`dependencies` → `com.bidscube.sdk`** (e.g. **1.2.5**) is the **declared** core peer — update README / `INTEGRATION.md` examples when you bump it; keep it aligned with what you ship in **bidscube-sdk-unity**.
+2. **`AdapterPackageInfo.UpmVersion`** — must match **`package.json`**. **`NativeAndroidBidscubeSdkVersion`** / **`BundledMaxAdapterAarVersion`** must match the bundled AAR **filenames** on disk. See also **`Documentation~/ANDROID_BUNDLED_SDK.md`** — **Version matrix**.
 
 ## Pre-release check
 
@@ -30,7 +30,7 @@
 - [ ] `CHANGELOG.md` includes an entry for this version.
 - [ ] `README.md` / `Documentation~/` — `#vX.Y.Z` examples match `package.json`.
 - [ ] `package.json` → `repository.url` points to the **actual** GitHub repository.
-- [ ] Bundled **`applovin-bidscube-max-adapter-*.aar`**, **`bidscube-sdk-lite-<ver>.aar`**, **`.meta`** import flags, and **`AdapterPackageInfo`** version fields match the native release you intend to support.
+- [ ] Bundled **`applovin-bidscube-max-adapter-*.aar`**, **`bidscube-sdk-lite-1.2.3.aar`** (or new **`<ver>`** after a bump), **`.meta`** import flags, **`AdapterPackageInfo`**, and **`package.json` → `com.bidscube.sdk`** match the native / UPM releases you intend to support.
 
 ## Create a release on GitHub
 
