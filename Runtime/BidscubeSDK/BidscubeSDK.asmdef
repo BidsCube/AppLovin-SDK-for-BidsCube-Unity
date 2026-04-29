@@ -1,5 +1,5 @@
 {
-    "name": "BidscubeSDK",
+    "name": "BidscubeSDK.AppLovinMax",
     "rootNamespace": "BidscubeSDK",
     "references": [
         "Unity.TextMeshPro"

@@ -1,4 +1,4 @@
-# GitHub Release for UPM package com.bidscube.sdk
+# GitHub Release for UPM package com.bidscube.applovin.max (add com.bidscube.sdk in the host project)
 #
 # The published version is ALWAYS the version string in package.json (e.g. 1.0.8):
 #   • Push tag v*     → RELEASE_VERSION = tag without "v"; must equal package.json["version"].
@@ -44,7 +44,7 @@ jobs:
             exit 1
           fi
           echo "RELEASE_VERSION=$V" >> "$GITHUB_ENV"
-          echo "::notice::com.bidscube.sdk UPM **$V** → ZIP \`Bidscube-SDK-Unity-${V}.zip\` • Git tag \`v${V}\`"
+          echo "::notice::com.bidscube.applovin.max UPM **$V** → ZIP \`Bidscube-SDK-Unity-${V}.zip\` • Git tag \`v${V}\`"
 
       - name: Verify package.json matches tag (tag push only)
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -73,7 +73,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: com.bidscube.sdk ${{ env.RELEASE_VERSION }}
+          name: com.bidscube.applovin.max ${{ env.RELEASE_VERSION }}
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: ${{ env.ZIP_NAME }}
@@ -83,12 +83,12 @@ jobs:
             Add the dependency in `Packages/manifest.json`:
 
             ```json
-            "com.bidscube.sdk": "https://github.com/${{ github.repository }}.git#${{ github.ref_name }}"
+            "com.bidscube.applovin.max": "https://github.com/${{ github.repository }}.git#${{ github.ref_name }}"
             ```
 
             Or use **Package Manager → Add package from git URL** with the same URL and branch/tag **`${{ github.ref_name }}`**.
 
-            Package version (UPM): **`${{ env.RELEASE_VERSION }}`** — must match the tag (without `v`).
+            Also add **`com.bidscube.sdk`** (core Unity SDK) from [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity). Package version (this repo): **`${{ env.RELEASE_VERSION }}`** — must match the tag (without `v`).
 
             Asset **`${{ env.ZIP_NAME }}`** = `Bidscube-SDK-Unity-{version}.zip` (repo snapshot without `.git`). Naming table: [`RELEASE.md`](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/RELEASE.md).
 
@@ -108,7 +108,7 @@ jobs:
           fi
           gh release create "$TAG_NAME" \
             --repo "${{ github.repository }}" \
-            --title "com.bidscube.sdk ${RELEASE_VERSION}" \
+            --title "com.bidscube.applovin.max ${RELEASE_VERSION}" \
             --generate-notes \
             "$ZIP"
           echo "Created release $TAG_NAME with asset $ZIP (UPM ${{ env.RELEASE_VERSION }})"

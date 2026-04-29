@@ -2,6 +2,19 @@
 
 ---
 
+## [1.0.12] - 2026-04-29
+
+### Changed
+
+- **Package split:** **`com.bidscube.applovin.max`** is a **companion** to **`com.bidscube.sdk`**: ships **`AppLovinMaxUnityReflection`**, bundled **MAX** adapter AAR, and **lite** core AAR; **C# SDK surface** and optional **Editor / Gradle** automation are expected from **`com.bidscube.sdk`** (see README / INTEGRATION scope).
+- **`AdapterPackageInfo.UpmVersion`** / **`package.json`** → **1.0.12** (replaces version sync via removed **`Constants.SdkVersion`** in this package).
+
+### Removed (from this package; use core SDK or your Gradle templates)
+
+- Monolithic **Runtime** SDK sources, **WebView** native plugins, and **Editor** Android/iOS post-processors (lines previously under **`Editor/`** and most of **`Runtime/BidscubeSDK/`** outside **`Mediation/`**). Integrators who relied on the in-repo Gradle / Podfile hooks should follow **`Documentation~/ANDROID_BUNDLED_SDK.md`** manually or use tooling from **`com.bidscube.sdk`**.
+
+---
+
 ## [1.0.11] - 2026-04-23
 
 ### Changed

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<linker>
+  <!-- APPLOVIN_MAX_IL2CPP: MaxSdk.Scripts has no compile-time callers from Bidscube (reflection-only). IL2CPP strips it unless preserved. -->
+  <assembly fullname="MaxSdk.Scripts" preserve="all" />
+</linker>

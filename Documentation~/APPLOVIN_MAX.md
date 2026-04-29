@@ -1,5 +1,7 @@
 # AppLovin MAX mediation (Unity)
 
+> **`com.bidscube.applovin.max` 1.0.12+** no longer ships Editor **Gradle**/**Podfile** scripts in this repo. Apply **`ANDROID_BUNDLED_SDK.md`** (or use **`com.bidscube.sdk`**-provided automation if available) so **`unityLibrary`** and native deps match the bundled AARs. C# **`BidscubeSDK`** and **`SDKConfig`** remain in **`com.bidscube.sdk`**.
+
 Bidscube as a **custom SDK network** in **AppLovin MAX**: the app is built in Unity; **load and show** run through MAX. **Android:** call **`BidscubeSDK.Initialize`** early (MAX mediation mode) so the Java SDK shares **`AdRequestAuthority`**, test mode, and logging with the bundled adapter — same idea as the Flutter plugin. **iOS:** the native **`BidscubeSDKAppLovin`** pod’s adapter can initialize the BidCube runtime internally ([iOS distribution](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)); optional C# **`BidscubeSDK.Initialize`** when you want Unity-driven **`SDKConfig`** before MAX runs.
 
 ## Integration modes (C#)
@@ -71,8 +73,15 @@ On each ad unit, enable **Bidscube** under **Custom Networks & Deals** and set f
 
 ## Unity project setup
 
+### SDK Demo sample (`BidscubeExampleScene`)
+
+After you import the **SDK Demo** sample and the official **AppLovin MAX Unity plugin** (`MaxSdk` / `MaxSdk.Scripts` assembly), the example scene shows:
+
+- A top bar to switch **Direct Unity SDK** vs **AppLovin MAX (adapter)** (stored in `PlayerPrefs` when you use the default key `bidscube_integration_mode` and enable **Load Integration Mode From Player Prefs**, or you can set the mode in the Inspector).
+- In **AppLovin MAX** integration mode: **Init SDK** runs `BidscubeSDK.Initialize` with mediation config first, then `MaxSdk.SetSdkKey` (optional) and `MaxSdk.InitializeSdk()`, then a **MAX toolbar** (load/show interstitial and rewarded, banner toggle, mediation debugger). Assign your MAX **ad unit IDs** and optional **AppLovin SDK key** on the `BidscubeExampleScene` component. This mirrors the native flow: MAX loads the network stack; the Bidscube **custom adapter** serves creatives.
+
 1. Add this package and the **AppLovin MAX Unity plugin** (or integrate MAX natively per AppLovin docs).
-2. **Android:** the package bundles **`applovin-bidscube-max-adapter-1.0.4.aar`** for MAX and **`bidscube-sdk-1.2.3.aar`** (Android import off in **`.meta`**); **`BidscubeAndroidGradlePostprocessor`** **default** copies the core AAR to **`unityLibrary/libs/`** and injects **`files('libs/bidscube-sdk-….aar')`** — or **`MavenBidscubeSdkAar`** / **`CustomGradleLines`** / **`SkipInjectionIntegratorOwnsCore`** per **`ANDROID_BUNDLED_SDK.md`**. Also injects **`com.applovin:applovin-sdk:13.+`** and other Maven deps — no separate adapter distribution. Do **not** add a **second** core `implementation` for Bidscube in Custom Gradle. See **`ANDROID_BUNDLED_SDK.md`** (Gradle export raises **minSdk** to **26** for AAR metadata; AppLovin allows **23+**). The adapter AAR ships **consumer ProGuard rules** so R8 keeps `BidscubeMediationAdapter` when minification is on.
+2. **Android:** this package bundles **`applovin-bidscube-max-adapter-1.0.4.aar`**, a **lite** **`bidscube-sdk-lite-1.2.3.aar`**, and expects you to wire the **full** core and **`com.applovin:applovin-sdk:13.+`** in Gradle per **`ANDROID_BUNDLED_SDK.md`**. Do **not** add a **second** core `implementation` for Bidscube. **minSdk** often **26**+ for the bundled AARs; AppLovin allows **23+** in principle — validate with a clean Gradle build. The adapter AAR includes **ProGuard** consumer rules for `BidscubeMediationAdapter`.
 3. **iOS:** use CocoaPods **`BidscubeSDKAppLovin`** (BidCube runtime + **`ALBidscubeMediationAdapter`**) and **`AppLovinSDK`** **13.x**. On Unity iOS exports that generate a **Podfile**, **`BidscubeIosPodfilePostprocessor`** appends missing lines (see below). **Do not** add a separate **`BidscubeSDK`** pod for the same target if you already use **`BidscubeSDKAppLovin`**. **Google IMA** remains required by the native stack where applicable. Official reference: [AppLovin-SDK-for-BidsCube-iOS](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS).
 4. **Optional C# startup** (recommended on **Android**; **optional** on **iOS** if the adapter initializes native BidCube and you set **`request_authority` / `ssp_host`** in MAX when needed):
 

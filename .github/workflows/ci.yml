@@ -31,19 +31,14 @@ jobs:
           print("package.json version:", v)
           PY
 
-      - name: Name congruence (UPM id vs folder)
+      - name: Name congruence (UPM id)
         run: |
           python3 << 'PY'
           import json
           pkg = json.load(open("package.json"))
-          assert pkg.get("name") == "com.bidscube.sdk", pkg.get("name")
-          print("UPM package name OK: com.bidscube.sdk")
+          assert pkg.get("name") == "com.bidscube.applovin.max", pkg.get("name")
+          print("UPM package name OK: com.bidscube.applovin.max")
           PY
 
-      - name: Release sanity (Constants + semver)
+      - name: Release sanity (AdapterPackageInfo + semver)
         run: bash tools/verify-release-ready.sh
-
-      - name: Android core Gradle inject uses @aar
-        run: |
-          test -f Editor/Android/BidscubeAndroidGradlePostprocessor.cs
-          grep -qF 'bidscube-sdk:{Constants.NativeAndroidBidscubeSdkVersion}@aar' Editor/Android/BidscubeAndroidGradlePostprocessor.cs

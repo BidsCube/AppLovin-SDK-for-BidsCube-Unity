@@ -1,14 +1,22 @@
-# Bidscube SDK for Unity (`com.bidscube.sdk`)
+# Bidscube AppLovin MAX adapter (`com.bidscube.applovin.max`)
 
-**Package (UPM):** `1.0.11` · **Git tag:** `v1.0.11` · **Android core (default lite: `libs/bidscube-sdk-lite-1.2.3.aar`; full: `bidscube-sdk-1.2.3.aar`; optional Maven `…@aar`):** `1.2.3` · **Android MAX adapter AAR:** `1.0.4` · **iOS CocoaPods `BidscubeSDKAppLovin`:** `1.0.4`
+**Package (UPM):** `com.bidscube.applovin.max` **1.0.12** · **Git tag:** `v1.0.12` · **Android bundled:** **MAX** adapter `1.0.4` · **lite** core AAR `1.2.3` (full **video** stack: Maven or upstream **`com.bidscube.sdk`**) · **iOS:** **`BidscubeSDKAppLovin`** pod `1.0.4` (unchanged)
 
-UPM package for **Bidscube** ads in Unity: **BidsCube SDK** mode (Unity/C# drives banners, video, native, interstitials) and **AppLovin MAX mediation** (MAX drives load/show via the Bidscube adapter; **Android:** early C# **`BidscubeSDK.Initialize`** recommended; **iOS:** optional — adapter can init native BidCube — see [`APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)).
+**Companion** package for **Bidscube** + **AppLovin MAX**: Android **MAX** adapter AAR, **lite** core AAR (reference), and **`AppLovinMaxUnityReflection`** so C# can call **`MaxSdk`** when the official AppLovin plugin is present. **You also add** **`com.bidscube.sdk`** (core Unity SDK) — this repo does not ship the full C# runtime anymore.
 
-### What’s new in **1.0.11**
+### AppLovin MAX Unity SDK — потрібен окремо
+
+Цей UPM-пакет **не містить** AppLovin MAX Unity Plugin (нема збірки з класом **`MaxSdk`**, яку шукає reflection). Його потрібно підключити **окремо** з дистрибутива AppLovin (Unity Package Manager або `.unitypackage` з їхнього сайту / Git integration). Тоді **`AppLovinMaxUnityReflection.IsMaxSdkAvailable`** стане `true`, і викличеться **`MaxSdk.InitializeSdk`**.
+
+- Залежність у `manifest`: лиш **`com.bidscube.sdk`** + **`com.bidscube.applovin.max`**; пакета **`com.applovin.mediation.ads`** (офіційний MAX) немає в `package.json` цього адаптера — його додає видавець у свій проєкт вручну.
+
+Докладніше про порядок ініціалізації (**Android:** `BidscubeSDK.Initialize` перед `MaxSdk.InitializeSdk`): [`Documentation~/APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md).
+
+### What’s new in **1.0.12**
 
 | Topic | Summary |
 |--------|---------|
-| **Release** | UPM / tag **1.0.11** — see **[CHANGELOG.md](CHANGELOG.md)** (**1.0.10** packaging and Editor fixes remain in that section). |
+| **Scope** | Split **adapter** package: **`AppLovinMaxUnityReflection`** + AARs; **core** API + init from **`com.bidscube.sdk`**. No in-repo **Editor** Gradle/Podfile post-processors — see [CHANGELOG](CHANGELOG.md) and [ANDROID_BUNDLED_SDK](Documentation~/ANDROID_BUNDLED_SDK.md). |
 
 ### What’s new in **1.0.8**
 
@@ -62,27 +70,32 @@ Full list: [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Install (UPM)
 
-Add to the Unity project **`Packages/manifest.json`**:
+Add to the Unity project **`Packages/manifest.json`** the **core SDK** (`com.bidscube.sdk`) і цей адаптер (`com.bidscube.applovin.max`), наприклад локально:
 
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.11"
+    "com.bidscube.sdk": "1.2.5",
+    "com.bidscube.applovin.max": "file:../../AppLovin-SDK-Unity"
   }
 }
 ```
 
-Or **Package Manager → Add package from git URL** with the same URL (replace **org / repo / tag** with your fork and release; tag example **`v1.0.8`**).
+(Або git URL + тег, напр. `"com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.12"`.)
 
-**Unity UI dependencies:** `com.unity.ugui` and `com.unity.textmeshpro` are listed in [`package.json`](package.json) and resolve with the package from Git URL. The Editor may run **`BidscubeUpmDependencyInstaller`** once per session to align those dependencies — same idea as the [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) README (“no manual setup”).
+Через **Package Manager** додайте спочатку **`com.bidscube.sdk`**, потім цей адаптер (див. `repository.url` у [`package.json`](package.json)).
 
-**Local development** (this repo next to your project):
+**Окремо** установіть **офіційний AppLovin MAX Unity SDK** за інструкцією AppLovin (UPM або `.unitypackage`). Без нього в рантаймі не зʼявиться **`MaxSdk`**, і `AppLovinMaxUnityReflection` лишиться «порожнім».
+
+**Unity UI dependencies:** `com.unity.ugui` and `com.unity.textmeshpro` are peers of [`package.json`](package.json).
+
+**Local development** alias for adapter-only line:
 
 ```json
-"com.bidscube.sdk": "file:../AppLovin-SDK-Unity"
+"com.bidscube.applovin.max": "file:../AppLovin-SDK-Unity"
 ```
 
-Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube SDK**).
+Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube AppLovin MAX Adapter**).
 
 ---
 
@@ -90,10 +103,10 @@ Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube SDK*
 
 | Area | Behavior |
 |------|----------|
-| **BidsCube SDK** (default) | C# APIs: `GetBannerAdView`, `GetVideoAdView`, `GetNativeAdView`, `ShowImageAd`, `ShowVideoAd`, `ShowNativeAd`, consent helpers, etc. |
-| **AppLovin MAX** | `BidscubeIntegrationMode.AppLovinMaxMediation` — early `BidscubeSDK.Initialize`; creatives **only** through MAX + Bidscube adapter (C# creative APIs throw) |
-| **Android** | Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`**; **two** core AARs (lite + full). Export mode: commit **`BidscubeAndroidExportSettings`** (*Assets → Create → Bidscube → Android Export Settings*) or set **`BidscubeAndroidGradlePostprocessor.FeatureSet`**. See **`ANDROID_BUNDLED_SDK.md`**, **`VIDEO_PLAYBACK.md`**. |
-| **iOS** | WebView plugins under `Runtime/Plugins/iOS/`; MAX: CocoaPods **`BidscubeSDKAppLovin` `1.0.4`** + **`AppLovinSDK` `13.x`** ([iOS repo](https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-iOS)); **`BidscubeIosPodfilePostprocessor`** can append pods to the exported **Podfile** |
+| **BidsCube SDK** (from **`com.bidscube.sdk`**) | C# APIs: `GetBannerAdView`, `GetVideoAdView`, init, etc. — see that package. |
+| **AppLovin MAX** | `BidscubeIntegrationMode.AppLovinMaxMediation` — `BidscubeSDK.Initialize` then MAX; creatives through MAX + Bidscube adapter. |
+| **Android** | Bundled **`applovin-bidscube-max-adapter-1.0.4.aar`** and **`bidscube-sdk-lite-1.2.3.aar`**. Add **`unityLibrary/build.gradle`** / Custom Gradle lines for the **full** core and AppLovin lines as in **`ANDROID_BUNDLED_SDK.md`** (or use tooling from **`com.bidscube.sdk`**, if your version includes it). |
+| **iOS** | MAX: CocoaPods **`BidscubeSDKAppLovin` `1.0.4`** + **`AppLovinSDK` `13.x`** — add to **Podfile** manually or via your own post-build script. |
 | **Legacy configs** | Wire values `levelPlay` / `level_play` → **AppLovin MAX mediation** (same idea as Flutter) |
 
 ---
@@ -104,7 +117,7 @@ Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube SDK*
 |-------------|---------|
 | **Unity** | **2020.3+** (see [`package.json`](package.json) `unity`) |
 | **UPM dependencies** | `com.unity.ugui`, `com.unity.textmeshpro` (declared in `package.json`) |
-| **Android** | **Minimum API Level ≥ 26** recommended with the injected dependency set; **compileSdk** raised by post-processor as needed — [`Documentation~/ANDROID_BUNDLED_SDK.md`](Documentation~/ANDROID_BUNDLED_SDK.md) |
+| **Android** | **Minimum API Level ≥ 26**; align **compileSdk** / Gradle with your templates and `ANDROID_BUNDLED_SDK.md` |
 | **MAX mediation** | **AppLovin MAX** (Unity plugin or native). **Android:** adapter AAR **1.0.4** bundled. **iOS:** **`BidscubeSDKAppLovin` `1.0.4`** + **`AppLovinSDK` `13.x`** (see [`Documentation~/APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md)) |
 
 ---
@@ -229,12 +242,11 @@ Implement **`IAdCallback`** (or your project’s callback type) for load / fail 
 
 | Path | Role |
 |------|------|
-| `Runtime/BidscubeSDK/` | Core C# SDK, `BidscubeSDK`, `SDKConfig`, Android interop |
-| `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.4.aar`** (Android on); **`bidscube-sdk-1.2.3.aar`** + **`bidscube-sdk-lite-1.2.3.aar`** (Android off in **`.meta`** — post-processor copies the chosen flavor to **`unityLibrary/libs/`**); WebView templates |
-| `Runtime/Plugins/iOS/` | WebView native plugins |
-| `Editor/Android/` | **`BidscubeAndroidGradlePostprocessor`** |
-| `Documentation~/` | Markdown docs (this package) |
-| `Samples~/SDK Demo/` | Example scenes (import via **Samples** in Package Manager) |
+| `Runtime/BidscubeSDK/Mediation/` | **`AppLovinMaxUnityReflection`** (MAX via reflection) |
+| `Runtime/BidscubeSDK/Properties/` | **`AdapterPackageInfo`** (UPM + native version strings for checks) |
+| `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.4.aar`**, **`bidscube-sdk-lite-1.2.3.aar`** (import flags per **`.meta`**) |
+| `Documentation~/` | Markdown (MAX + Android layout; C# API lives with **`com.bidscube.sdk`**) |
+| `Samples~/SDK Demo/` | Demo scenes (require **`com.bidscube.sdk`**) — import via **Samples** |
 
 ---
 
@@ -253,7 +265,7 @@ Implement **`IAdCallback`** (or your project’s callback type) for load / fail 
 
 ## Samples
 
-In **Package Manager**, select **Bidscube SDK** → **Samples** → import **SDK Demo** (`Samples~/SDK Demo`: scenes and scripts).
+In **Package Manager**, open **`com.bidscube.applovin.max`** → **Samples** → import **SDK Demo** (scenes/scripts; they reference **`com.bidscube.sdk`**).
 
 ---
 
@@ -261,7 +273,7 @@ In **Package Manager**, select **Bidscube SDK** → **Samples** → import **SDK
 
 | Issue | What to check |
 |-------|----------------|
-| **Android Gradle / AAR metadata errors** | **minSdk ≥ 26**, clean Gradle export; see [`Documentation~/ANDROID_BUNDLED_SDK.md`](Documentation~/ANDROID_BUNDLED_SDK.md). **UPM ≥ 1.0.8:** bundled lite/full core + **launcher** desugaring from the post-processor. If you duplicate lines, set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** and own desugaring in Custom Launcher Gradle. |
+| **Android Gradle / AAR metadata errors** | **minSdk ≥ 26**, single **`com.bidscube:bidscube-sdk`** / **`files('libs/…')`** line — see [`Documentation~/ANDROID_BUNDLED_SDK.md`](Documentation~/ANDROID_BUNDLED_SDK.md); add **desugaring** on **launcher** if the core AAR requires it. |
 | **Duplicate class / DEX `com.bidscube.sdk`** | Remove any extra core line (second Maven **`@aar`**, duplicate **`files(...)`**, etc.) — keep a single core source; see **`CoreDependencyMode`** in **`ANDROID_BUNDLED_SDK.md`**. |
 | **`ClassNotFoundException` / `com.bidscube.sdk.BidscubeSDK`** | Ensure **`unityLibrary/build.gradle`** declares core once (default **`files('libs/bidscube-sdk-<ver>.aar')`** after export, or **`MavenBidscubeSdkAar`** with **`…@aar`**). Do not add a conflicting second line in Custom Gradle. |
 | **Ads not loading** | `BaseURL`, placement IDs, device logs, network |

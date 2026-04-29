@@ -1,6 +1,8 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using BidscubeSDK;
+using BidscubeSDK.Mediation;
 
 namespace BidscubeSDK.Controllers
 {
@@ -22,6 +24,14 @@ namespace BidscubeSDK.Controllers
         [SerializeField] private BidscubeIntegrationMode _integrationMode = BidscubeIntegrationMode.DirectSdk;
         [SerializeField] private bool _loadIntegrationModeFromPlayerPrefs = false;
         [SerializeField] private string _integrationModePlayerPrefsKey = "bidscube_integration_mode";
+
+        [Header("AppLovin MAX Unity (after Bidscube init in mediation mode)")]
+        [Tooltip("Optional; MAX sample also reads the key from AppLovin Integration Manager.")]
+        [SerializeField] private string _appLovinSdkKey = "";
+        [SerializeField] private string _maxInterstitialAdUnitId = "";
+        [SerializeField] private string _maxRewardedAdUnitId = "";
+        [SerializeField] private string _maxBannerAdUnitId = "";
+        [SerializeField] private bool _showIntegrationModeBar = true;
 
         [Header("UI References")]
         [SerializeField] private Button _initButton;
@@ -51,10 +61,23 @@ namespace BidscubeSDK.Controllers
         [SerializeField] private Button _windowedAdButton;
 
         private string _logContent = "";
+        private Text _integrationModeHintText;
+        private bool _maxBannerVisible;
+
+        private void Awake()
+        {
+            if (_loadIntegrationModeFromPlayerPrefs &&
+                !string.IsNullOrEmpty(_integrationModePlayerPrefsKey) &&
+                PlayerPrefs.HasKey(_integrationModePlayerPrefsKey))
+            {
+                _integrationMode = BidscubeIntegrationModeWire.FromWire(PlayerPrefs.GetString(_integrationModePlayerPrefsKey));
+            }
+        }
 
         private void Start()
         {
             SetupUI();
+            BuildIntegrationModeBar();
             UpdateStatus("Ready to initialize SDK");
         }
 
@@ -105,8 +128,145 @@ namespace BidscubeSDK.Controllers
                 _windowedAdButton.onClick.AddListener(() => GetComponent<SceneManager>()?.LoadWindowedAdScene());
         }
 
+        private void BuildIntegrationModeBar()
+        {
+            if (!_showIntegrationModeBar)
+                return;
+            if (GameObject.Find("BccIntegrationModeBar") != null)
+                return;
+            var canvas = ResolveHostCanvas();
+            if (canvas == null)
+                return;
+
+            var root = new GameObject("BccIntegrationModeBar");
+            var rootRt = root.AddComponent<RectTransform>();
+            root.transform.SetParent(canvas.transform, false);
+            rootRt.SetAsFirstSibling();
+            rootRt.anchorMin = new Vector2(0f, 1f);
+            rootRt.anchorMax = new Vector2(1f, 1f);
+            rootRt.pivot = new Vector2(0.5f, 1f);
+            rootRt.anchoredPosition = Vector2.zero;
+            rootRt.sizeDelta = new Vector2(0f, 96f);
+
+            root.AddComponent<Image>().color = new Color(0.08f, 0.09f, 0.12f, 0.97f);
+            var vlg = root.AddComponent<VerticalLayoutGroup>();
+            vlg.padding = new RectOffset(10, 10, 6, 6);
+            vlg.spacing = 4;
+            vlg.childForceExpandWidth = true;
+
+            CreateBarLabel(root.transform, "Bidscube integration", 12, FontStyle.Bold);
+            var row = new GameObject("ModeRow");
+            row.transform.SetParent(root.transform, false);
+            row.AddComponent<LayoutElement>().preferredHeight = 36f;
+            var hlg = row.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 8;
+            hlg.childForceExpandWidth = true;
+
+            CreateModeButton(row.transform, "Direct Unity SDK", BidscubeIntegrationMode.DirectSdk);
+            CreateModeButton(row.transform, "AppLovin MAX (adapter)", BidscubeIntegrationMode.AppLovinMaxMediation);
+
+            _integrationModeHintText = CreateBarLabel(root.transform, DescribeIntegrationMode(_integrationMode), 11, FontStyle.Normal);
+        }
+
+        private static string DescribeIntegrationMode(BidscubeIntegrationMode mode)
+        {
+            return mode.IsMediationMode()
+                ? "MAX mode: Bidscube.Initialize (mediation) then MaxSdk — load/show via MAX; Bidscube creatives from C# stay off."
+                : "Direct mode: use sample buttons; native adapter not used for these creatives.";
+        }
+
+        private Canvas ResolveHostCanvas()
+        {
+            var t = transform;
+            while (t != null)
+            {
+                var c = t.GetComponent<Canvas>();
+                if (c != null)
+                    return c;
+                t = t.parent;
+            }
+
+#if UNITY_2023_1_OR_NEWER
+            return Object.FindFirstObjectByType<Canvas>();
+#else
+            return FindObjectOfType<Canvas>();
+#endif
+        }
+
+        private static Font BuiltinBarFont()
+        {
+            return Resources.GetBuiltinResource<Font>("Arial.ttf");
+        }
+
+        private static Text CreateBarLabel(Transform parent, string text, int fontSize, FontStyle style)
+        {
+            var go = new GameObject("Label");
+            go.transform.SetParent(parent, false);
+            var txt = go.AddComponent<Text>();
+            txt.text = text;
+            txt.font = BuiltinBarFont();
+            txt.fontSize = fontSize;
+            txt.fontStyle = style;
+            txt.color = Color.white;
+            txt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            var le = go.AddComponent<LayoutElement>();
+            le.minHeight = fontSize + 6;
+            le.flexibleWidth = 1f;
+            return txt;
+        }
+
+        private void CreateModeButton(Transform parent, string label, BidscubeIntegrationMode mode)
+        {
+            var go = new GameObject("Btn_" + mode);
+            go.transform.SetParent(parent, false);
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.2f, 0.38f, 0.65f, 1f);
+            var btn = go.AddComponent<Button>();
+            var le = go.AddComponent<LayoutElement>();
+            le.preferredHeight = 34f;
+            le.flexibleWidth = 1f;
+
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(go.transform, false);
+            var trt = textGo.AddComponent<RectTransform>();
+            trt.anchorMin = Vector2.zero;
+            trt.anchorMax = Vector2.one;
+            trt.offsetMin = new Vector2(4f, 2f);
+            trt.offsetMax = new Vector2(-4f, -2f);
+            var txt = textGo.AddComponent<Text>();
+            txt.text = label;
+            txt.font = BuiltinBarFont();
+            txt.fontSize = 11;
+            txt.color = Color.white;
+            txt.alignment = TextAnchor.MiddleCenter;
+
+            btn.onClick.AddListener(() => OnIntegrationModeBarClicked(mode));
+        }
+
+        private void OnIntegrationModeBarClicked(BidscubeIntegrationMode mode)
+        {
+            _integrationMode = mode;
+            if (!string.IsNullOrEmpty(_integrationModePlayerPrefsKey))
+            {
+                PlayerPrefs.SetString(_integrationModePlayerPrefsKey, mode.ToWireString());
+                PlayerPrefs.Save();
+            }
+
+            if (_integrationModeHintText != null)
+                _integrationModeHintText.text = DescribeIntegrationMode(mode);
+            LogMessage("[Integration] Mode: " + mode.ToWireString() + " — " + DescribeIntegrationMode(mode));
+            UpdateStatus("Mode: " + mode.ToWireString() + " (tap Init SDK)");
+        }
+
         private void InitializeSDK()
         {
+            var oldToolbar = GameObject.Find("BccMaxMediationToolbar");
+            if (oldToolbar != null)
+            {
+                Destroy(oldToolbar);
+                _maxBannerVisible = false;
+            }
+
             LogMessage("Initializing Bidscube SDK...");
 
             var builder = new SDKConfig.Builder()
@@ -146,6 +306,7 @@ namespace BidscubeSDK.Controllers
                 {
                     LogMessage(" AppLovin MAX mode: do not use C# creative APIs here; load/show via MAX. See Documentation~/APPLOVIN_MAX.md");
                     SetDirectSdkDemoButtonsInteractable(false);
+                    StartCoroutine(InitializeMaxSdkAfterBidscubeCoroutine());
                 }
                 else
                 {
@@ -156,6 +317,213 @@ namespace BidscubeSDK.Controllers
             {
                 UpdateStatus("SDK Initialization Failed");
                 LogMessage(" SDK initialization failed");
+            }
+        }
+
+        private IEnumerator InitializeMaxSdkAfterBidscubeCoroutine()
+        {
+            if (!AppLovinMaxUnityReflection.IsMaxSdkAvailable)
+            {
+                LogMessage("[MAX] AppLovin MAX Unity plugin not found. Add the official MAX plugin (MaxSdk) to this project — see Documentation~/APPLOVIN_MAX.md.");
+                yield break;
+            }
+
+            LogMessage("[MAX] Bidscube initialized in mediation mode. Setting MAX SDK key (if provided) and calling MaxSdk.InitializeSdk() …");
+            AppLovinMaxUnityReflection.TrySetSdkKey(_appLovinSdkKey);
+            if (string.IsNullOrWhiteSpace(_appLovinSdkKey))
+                LogMessage("[MAX] Tip: set _appLovinSdkKey here or set the key in AppLovin > Integration Manager.");
+
+            if (!AppLovinMaxUnityReflection.TryInitializeSdk())
+            {
+                LogMessage("[MAX] MaxSdk.InitializeSdk() could not be invoked.");
+                yield break;
+            }
+
+            const float timeoutSec = 45f;
+            var waited = 0f;
+            while (!AppLovinMaxUnityReflection.TryIsInitialized() && waited < timeoutSec)
+            {
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            if (!AppLovinMaxUnityReflection.TryIsInitialized())
+            {
+                LogMessage("[MAX] Timed out waiting for MaxSdk.IsInitialized(). Check SDK key and network.");
+                yield break;
+            }
+
+            LogMessage("[MAX] MAX Unity SDK is ready. Use the toolbar for Load/Show — mediation uses the native Bidscube adapter.");
+            BuildMaxMediationToolbar();
+        }
+
+        private void BuildMaxMediationToolbar()
+        {
+            if (!BidscubeSDK.IsInitialized() || !_integrationMode.IsMediationMode())
+                return;
+            if (GameObject.Find("BccMaxMediationToolbar") != null)
+                return;
+            var canvas = ResolveHostCanvas();
+            if (canvas == null)
+                return;
+
+            var root = new GameObject("BccMaxMediationToolbar");
+            var rootRt = root.AddComponent<RectTransform>();
+            root.transform.SetParent(canvas.transform, false);
+            rootRt.anchorMin = new Vector2(0f, 1f);
+            rootRt.anchorMax = new Vector2(1f, 1f);
+            rootRt.pivot = new Vector2(0.5f, 1f);
+            rootRt.anchoredPosition = new Vector2(0f, -100f);
+            rootRt.sizeDelta = new Vector2(0f, 152f);
+
+            root.AddComponent<Image>().color = new Color(0.12f, 0.14f, 0.18f, 0.96f);
+            var vlg = root.AddComponent<VerticalLayoutGroup>();
+            vlg.padding = new RectOffset(8, 8, 6, 6);
+            vlg.spacing = 4;
+            vlg.childForceExpandWidth = true;
+
+            CreateBarLabel(root.transform, "AppLovin MAX (Unity) — same flow as native MAX + Bidscube adapter", 11, FontStyle.Bold);
+
+            var row1 = new GameObject("MaxRow1");
+            row1.transform.SetParent(root.transform, false);
+            row1.AddComponent<LayoutElement>().preferredHeight = 34f;
+            var h1 = row1.AddComponent<HorizontalLayoutGroup>();
+            h1.spacing = 6;
+            h1.childForceExpandWidth = true;
+            CreateMaxActionButton(h1.transform, "Load interstitial", () => TryMaxLoadInterstitial());
+            CreateMaxActionButton(h1.transform, "Show interstitial", () => TryMaxShowInterstitial());
+
+            var row2 = new GameObject("MaxRow2");
+            row2.transform.SetParent(root.transform, false);
+            row2.AddComponent<LayoutElement>().preferredHeight = 34f;
+            var h2 = row2.AddComponent<HorizontalLayoutGroup>();
+            h2.spacing = 6;
+            h2.childForceExpandWidth = true;
+            CreateMaxActionButton(h2.transform, "Load rewarded", () => TryMaxLoadRewarded());
+            CreateMaxActionButton(h2.transform, "Show rewarded", () => TryMaxShowRewarded());
+
+            var row3 = new GameObject("MaxRow3");
+            row3.transform.SetParent(root.transform, false);
+            row3.AddComponent<LayoutElement>().preferredHeight = 34f;
+            var h3 = row3.AddComponent<HorizontalLayoutGroup>();
+            h3.spacing = 6;
+            h3.childForceExpandWidth = true;
+            CreateMaxActionButton(h3.transform, "Banner create / show", () => TryMaxToggleBanner());
+            CreateMaxActionButton(h3.transform, "Mediation debugger", () =>
+            {
+                AppLovinMaxUnityReflection.TryShowMediationDebugger();
+                LogMessage("[MAX] ShowMediationDebugger()");
+            });
+        }
+
+        private void CreateMaxActionButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
+        {
+            var go = new GameObject("MaxBtn_" + label.GetHashCode());
+            go.transform.SetParent(parent, false);
+            go.AddComponent<Image>().color = new Color(0.25f, 0.5f, 0.35f, 1f);
+            var btn = go.AddComponent<Button>();
+            go.AddComponent<LayoutElement>().preferredHeight = 32f;
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(go.transform, false);
+            var trt = textGo.AddComponent<RectTransform>();
+            trt.anchorMin = Vector2.zero;
+            trt.anchorMax = Vector2.one;
+            trt.offsetMin = new Vector2(3f, 2f);
+            trt.offsetMax = new Vector2(-3f, -2f);
+            var txt = textGo.AddComponent<Text>();
+            txt.text = label;
+            txt.font = BuiltinBarFont();
+            txt.fontSize = 10;
+            txt.color = Color.white;
+            txt.alignment = TextAnchor.MiddleCenter;
+            btn.onClick.AddListener(onClick);
+        }
+
+        private void TryMaxLoadInterstitial()
+        {
+            if (string.IsNullOrWhiteSpace(_maxInterstitialAdUnitId))
+            {
+                LogMessage("[MAX] Set _maxInterstitialAdUnitId (MAX dashboard ad unit).");
+                return;
+            }
+
+            AppLovinMaxUnityReflection.TryLoadInterstitial(_maxInterstitialAdUnitId);
+            LogMessage("[MAX] LoadInterstitial(" + _maxInterstitialAdUnitId + ")");
+        }
+
+        private void TryMaxShowInterstitial()
+        {
+            if (string.IsNullOrWhiteSpace(_maxInterstitialAdUnitId))
+            {
+                LogMessage("[MAX] Set _maxInterstitialAdUnitId.");
+                return;
+            }
+
+            if (!AppLovinMaxUnityReflection.TryIsInterstitialReady(_maxInterstitialAdUnitId))
+            {
+                LogMessage("[MAX] Interstitial not ready yet.");
+                return;
+            }
+
+            AppLovinMaxUnityReflection.TryShowInterstitial(_maxInterstitialAdUnitId);
+            LogMessage("[MAX] ShowInterstitial(" + _maxInterstitialAdUnitId + ")");
+        }
+
+        private void TryMaxLoadRewarded()
+        {
+            if (string.IsNullOrWhiteSpace(_maxRewardedAdUnitId))
+            {
+                LogMessage("[MAX] Set _maxRewardedAdUnitId.");
+                return;
+            }
+
+            AppLovinMaxUnityReflection.TryLoadRewardedAd(_maxRewardedAdUnitId);
+            LogMessage("[MAX] LoadRewardedAd(" + _maxRewardedAdUnitId + ")");
+        }
+
+        private void TryMaxShowRewarded()
+        {
+            if (string.IsNullOrWhiteSpace(_maxRewardedAdUnitId))
+            {
+                LogMessage("[MAX] Set _maxRewardedAdUnitId.");
+                return;
+            }
+
+            if (!AppLovinMaxUnityReflection.TryIsRewardedAdReady(_maxRewardedAdUnitId))
+            {
+                LogMessage("[MAX] Rewarded not ready yet.");
+                return;
+            }
+
+            AppLovinMaxUnityReflection.TryShowRewardedAd(_maxRewardedAdUnitId);
+            LogMessage("[MAX] ShowRewardedAd(" + _maxRewardedAdUnitId + ")");
+        }
+
+        private void TryMaxToggleBanner()
+        {
+            if (string.IsNullOrWhiteSpace(_maxBannerAdUnitId))
+            {
+                LogMessage("[MAX] Set _maxBannerAdUnitId.");
+                return;
+            }
+
+            if (!_maxBannerVisible)
+            {
+                if (AppLovinMaxUnityReflection.TryCreateBannerBottomCenter(_maxBannerAdUnitId))
+                {
+                    AppLovinMaxUnityReflection.TryShowBanner(_maxBannerAdUnitId);
+                    _maxBannerVisible = true;
+                    LogMessage("[MAX] CreateBanner + ShowBanner(" + _maxBannerAdUnitId + ")");
+                }
+                else
+                    LogMessage("[MAX] CreateBanner failed (check MAX plugin version / API).");
+            }
+            else
+            {
+                AppLovinMaxUnityReflection.TryHideBanner(_maxBannerAdUnitId);
+                AppLovinMaxUnityReflection.TryDestroyBanner(_maxBannerAdUnitId);
+                _maxBannerVisible = false;
+                LogMessage("[MAX] Banner hidden and destroyed.");
             }
         }
 

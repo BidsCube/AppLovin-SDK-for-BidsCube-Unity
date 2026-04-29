@@ -1,8 +1,8 @@
 {
-  "name": "com.bidscube.sdk",
-  "version": "1.0.11",
-  "displayName": "Bidscube SDK",
-  "description": "Bidscube advertising for Unity — Direct SDK (C#) and AppLovin MAX mediation. Android: bundled MAX adapter + dual core AARs (lite no-IMA vs full with IMA), BidscubeAndroidExportSettings / FeatureSet, optional Maven core; AppLovin 13.x, UMP, Glide, Material; launcher desugaring by default. iOS: WebView plugins and CocoaPods BidscubeSDKAppLovin. UPM 1.0.11; Git tag v1.0.11.",
+  "name": "com.bidscube.applovin.max",
+  "version": "1.0.12",
+  "displayName": "Bidscube AppLovin MAX Adapter",
+  "description": "Bidscube ↔ AppLovin MAX adapter for Unity (com.bidscube.sdk companion). Ships Bidscube native mediation AARs and C# helpers (e.g. AppLovinMaxUnityReflection). Does NOT include AppLovin's proprietary MAX Unity SDK: add the official AppLovin MAX Unity plugin separately so MaxSdk appears at runtime.",
   "unity": "2020.3",
   "changelogUrl": "https://github.com/BidsCube/AppLovin-SDK-Unity/blob/main/CHANGELOG.md",
   "documentationUrl": "https://github.com/BidsCube/AppLovin-SDK-Unity/blob/main/README.md",
@@ -22,6 +22,7 @@
     "url": "https://github.com/BidsCube/AppLovin-SDK-Unity.git"
   },
   "dependencies": {
+    "com.bidscube.sdk": "1.2.5",
     "com.unity.ugui": "2.0.0",
     "com.unity.textmeshpro": "3.0.6"
   },

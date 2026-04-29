@@ -1,8 +1,10 @@
 # Bidscube Unity SDK Integration Guide
 
+> **Repository scope (this UPM: `com.bidscube.applovin.max` ≥ 1.0.12):** the **C# SDK** and **`BidscubeSDK` APIs** come from the **`com.bidscube.sdk`** package. **This** repo adds **AppLovin MAX**-related AARs and **`AppLovinMaxUnityReflection`**. Install both dependencies; see root [`README.md`](../README.md). The sections below document **usage with `com.bidscube.sdk`** and MAX behaviour — they are kept here for one-stop reading with [`APPLOVIN_MAX.md`](APPLOVIN_MAX.md).
+
 **AppLovin MAX:** start with `Documentation~/APPLOVIN_MAX.md`. **Which player (default vs custom, Unity vs native Android):** `Documentation~/VIDEO_PLAYBACK.md`.
 
-This guide focuses on **direct** Unity/C# usage (creatives from C#), init, logs, and API examples.
+This guide focuses on **direct** Unity/C# usage (creatives from C#), init, logs, and API examples (assumes **`com.bidscube.sdk`** is in the project).
 
 ## Table of Contents
 
@@ -30,18 +32,18 @@ The Bidscube Unity SDK can be installed in two ways:
 1. In Unity Editor, open the Package Manager (`Window` → `Package Manager`)
 2. Click the `+` button in the top-left corner
 3. Select `Add package from git URL...`
-4. Enter the repository URL: `https://github.com/BidsCube/AppLovin-SDK-Unity.git`  
-   The public **Bidscube Unity SDK** sample line is [github.com/BidsCube/bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) (same `com.bidscube.sdk` name; **AppLovin-SDK-Unity** adds bundled Android SDK + MAX adapter AARs, Gradle AppLovin 13+, and optional Podfile hook — see `README.md`).
-5. Optionally, specify a version tag: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.8`
+4. Add the **core** SDK: [BidsCube/bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) as **`com.bidscube.sdk`**, then this adapter: `https://github.com/BidsCube/AppLovin-SDK-Unity.git` (see `README.md`).
+5. Optionally pin: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.12`
 6. Click `Add`
-7. The SDK will be added as a package dependency
+7. The packages appear under **In Project**
 
-**Note:** For Git import, you may need to add the package to your `Packages/manifest.json`:
+**`Packages/manifest.json` example (Git):**
 
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.8"
+    "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.5",
+    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.12"
   }
 }
 ```

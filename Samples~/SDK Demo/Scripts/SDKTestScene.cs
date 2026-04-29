@@ -275,7 +275,11 @@ namespace BidscubeSDK.Controllers
 #if UNITY_2023_1_OR_NEWER
             var canvas = FindFirstObjectByType<Canvas>();
 #else
+#if UNITY_2023_1_OR_NEWER
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+#else
             var canvas = FindObjectOfType<Canvas>();
+#endif
 #endif
             if (canvas == null)
             {
@@ -585,12 +589,8 @@ namespace BidscubeSDK.Controllers
 
             LogMessage("Wrapping adm content in proper HTML structure");
 
-            // TODO: Get effective position to determine if we need full-screen styling
-            // var effectivePosition = GetEffectiveAdPosition();
-            // bool isFullScreen = effectivePosition == AdPosition.FullScreen;
-
-            // FOR NOW: Always use full-screen styling
-            bool isFullScreen = true;
+            // Demo uses full-screen HTML; production code can branch on ad position from your call stack.
+            const bool isFullScreen = true;
 
             // Wrap content in proper HTML structure with responsive full-screen support
             return $@"<!DOCTYPE html>

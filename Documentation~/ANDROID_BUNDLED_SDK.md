@@ -1,10 +1,11 @@
 # Bundled Bidscube MAX adapter + core Android SDK (Android)
 
+> **UPM `com.bidscube.applovin.max` 1.0.12+** ships the **AARs** and **C#** `AppLovinMaxUnityReflection` only. The **Editor** `BidscubeAndroidGradlePostprocessor` / `BidscubeAndroidExportSettings` flow described in this file was part of **older** monolithic packages; if your tree has no `Editor/Android/*.cs` from this repo, apply the **Gradle** / **`unityLibrary`** steps **manually** (or use automation from **`com.bidscube.sdk`** when your version includes it). The **dependency** and **layout** sections below stay valid as **reference**.
+
 ## What ships in the UPM package
 
 - **`Runtime/Plugins/Android/applovin-bidscube-max-adapter-1.0.4.aar`** — Bidscube **custom network** adapter for AppLovin MAX (`com.applovin.mediation.adapters.BidscubeMediationAdapter`). Unity **PluginImporter** enables this for **Android** so it is part of the exported Gradle project.
-- **`Runtime/Plugins/Android/bidscube-sdk-<version>.aar`** — **full** core **`com.bidscube.sdk`** (with IMA / video flavor). **`.meta` disables Android plugin** so Unity does not merge it twice; the post-processor copies it into **`unityLibrary/libs/`** when **`BidscubeAndroidGradlePostprocessor.FeatureSet == FullWithVideo`**.
-- **`Runtime/Plugins/Android/bidscube-sdk-lite-<version>.aar`** — **lite** core (no IMA). Same **`.meta`** pattern. Copied when **`FeatureSet == LiteNoVideo`** (**default**).
+- **`Runtime/Plugins/Android/bidscube-sdk-lite-<version>.aar`** — **lite** core (no IMA) bundled in this UPM. **`.meta`** typically keeps it out of a duplicate merge; you copy or resolve the **full** `bidscube-sdk` via **`files('libs/…')`** or **`implementation 'com.bidscube:bidscube-sdk:…@aar'`** in **`unityLibrary/build.gradle`** when you need IMA / video. **Full** AARs may be obtained from the same version line as the core SDK (Maven) or an older monolithic UPM.
 
 **Primary path (default):** **`BidscubeAndroidCoreDependencyMode.BundledUnityLibraryLibsAar`** — exactly **one** `implementation files('libs/…')` line for the core, **offline-friendly** (no Maven repo required for the core AAR). Optional **`MavenBidscubeSdkAar`** / **`CustomGradleLines`** / **`SkipInjectionIntegratorOwnsCore`** unchanged.
 

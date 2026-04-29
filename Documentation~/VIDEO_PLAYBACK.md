@@ -1,5 +1,7 @@
 # Video playback: Direct SDK (Unity) vs AppLovin MAX (Android native)
 
+> **Scope:** **`BidscubeSDK`**, **`VideoAdView`**, and `IVideoSurfacePlayback` live in **`com.bidscube.sdk`**. **`com.bidscube.applovin.max`** only adds **MAX** AARs and optional **C#** `AppLovinMaxUnityReflection`.
+
 Two integration surfaces decide **where** video runs and **how** you plug a custom player.
 
 ---
