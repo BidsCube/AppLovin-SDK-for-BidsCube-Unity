@@ -66,6 +66,12 @@ if [[ ! -f "$LITE_AAR" ]]; then
   exit 1
 fi
 echo "Bundled lite core AAR: $LITE_AAR"
+FULL_AAR="Runtime/Plugins/Android/bidscube-sdk-${NATIVE_VER}.aar"
+if [[ -f "$FULL_AAR" ]]; then
+  echo "Optional full core AAR (offline FullWithVideo): $FULL_AAR"
+else
+  echo "Optional full core AAR not present ($FULL_AAR) — FullWithVideo Gradle uses Maven com.bidscube:bidscube-sdk:${NATIVE_VER}@aar"
+fi
 
 # Filename on disk must match our declared MAX adapter version.
 if [[ ! -f "Runtime/Plugins/Android/applovin-bidscube-max-adapter-${MAXA_VER}.aar" ]]; then

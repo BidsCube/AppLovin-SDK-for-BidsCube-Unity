@@ -75,8 +75,13 @@ namespace BidscubeSDK.Controllers
             // Ad creation buttons
             if (_createImageAdButton != null)
                 _createImageAdButton.onClick.AddListener(CreateImageAd);
+#if BIDSCUBE_ENABLE_VIDEO
             if (_createVideoAdButton != null)
                 _createVideoAdButton.onClick.AddListener(CreateVideoAd);
+#else
+            if (_createVideoAdButton != null)
+                _createVideoAdButton.gameObject.SetActive(false);
+#endif
             if (_createNativeAdButton != null)
                 _createNativeAdButton.onClick.AddListener(CreateNativeAd);
 
@@ -173,6 +178,7 @@ namespace BidscubeSDK.Controllers
             LoadImageAdContent();
         }
 
+#if BIDSCUBE_ENABLE_VIDEO
         private void CreateVideoAd()
         {
             if (!_isSDKInitialized)
@@ -185,6 +191,12 @@ namespace BidscubeSDK.Controllers
             ShowPlaceholderAd("VIDEO AD - LOADING...", Color.blue);
             LoadVideoAdContent();
         }
+#else
+        private void CreateVideoAd()
+        {
+            LogMessage("Video ads disabled (LiteNoVideo build).");
+        }
+#endif
 
         private void CreateNativeAd()
         {
@@ -212,6 +224,7 @@ namespace BidscubeSDK.Controllers
             DisplayAdView(adView);
         }
 
+#if BIDSCUBE_ENABLE_VIDEO
         private void LoadVideoAdContent()
         {
             if (!BidscubeSDK.IsInitialized())
@@ -220,10 +233,10 @@ namespace BidscubeSDK.Controllers
                 return;
             }
 
-            // Create a real video ad view
             var adView = BidscubeSDK.GetVideoAdView(_videoAdPlacementId, this);
             DisplayAdView(adView);
         }
+#endif
 
         private void LoadNativeAdContent()
         {

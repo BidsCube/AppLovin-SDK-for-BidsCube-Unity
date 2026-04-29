@@ -38,8 +38,13 @@ namespace BidscubeSDK.Samples
             if (_imageAdButton != null)
                 _imageAdButton.onClick.AddListener(ShowImageAd);
 
+#if BIDSCUBE_ENABLE_VIDEO
             if (_videoAdButton != null)
                 _videoAdButton.onClick.AddListener(ShowVideoAd);
+#else
+            if (_videoAdButton != null)
+                _videoAdButton.gameObject.SetActive(false);
+#endif
 
             if (_nativeAdButton != null)
                 _nativeAdButton.onClick.AddListener(ShowNativeAd);
@@ -80,6 +85,7 @@ namespace BidscubeSDK.Samples
             UpdateStatus("Loading image ad...");
         }
 
+#if BIDSCUBE_ENABLE_VIDEO
         private void ShowVideoAd()
         {
             if (!BidscubeSDK.IsInitialized())
@@ -91,6 +97,12 @@ namespace BidscubeSDK.Samples
             BidscubeSDK.ShowVideoAd(_placementId, this);
             UpdateStatus("Loading video ad...");
         }
+#else
+        private void ShowVideoAd()
+        {
+            UpdateStatus("Video ads disabled (LiteNoVideo build).");
+        }
+#endif
 
         private void ShowNativeAd()
         {

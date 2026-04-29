@@ -1,12 +1,12 @@
 # Bundled Bidscube MAX adapter + core Android SDK (Android)
 
-> **UPM `com.bidscube.applovin.max` 1.0.12+** ships the **AARs** and **C#** `AppLovinMaxUnityReflection` only. The **Editor** `BidscubeAndroidGradlePostprocessor` / `BidscubeAndroidExportSettings` flow described in this file was part of **older** monolithic packages; if your tree has no `Editor/Android/*.cs` from this repo, apply the **Gradle** / **`unityLibrary`** steps **manually** (or use automation from **`com.bidscube.sdk`** when your version includes it). The **dependency** and **layout** sections below stay valid as **reference**.
+> **UPM `com.bidscube.applovin.max` 1.0.13+** ships **AARs**, **`AppLovinMaxUnityReflection`**, and **`Editor/Android/BidscubeAndroidGradlePostprocessor`** (Full/Lite core copy + conditional Media3/IMA). Older paragraphs below about **`BidscubeAndroidExportSettings`** / monolithic **`BidscubeAndroidFeatureSet`** asset APIs remain **reference** if you still use them via **`com.bidscube.sdk`** or legacy projects.
 
 ## Version matrix (align with `package.json` and `AdapterPackageInfo`)
 
 | Item | Version | Where it is set |
 |------|--------:|-----------------|
-| UPM **this** package (`com.bidscube.applovin.max`) | **1.0.12** | `package.json` → `version`; `AdapterPackageInfo.UpmVersion` in `Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs` |
+| UPM **this** package (`com.bidscube.applovin.max`) | **1.0.13** | `package.json` → `version`; `AdapterPackageInfo.UpmVersion` in `Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs` |
 | UPM core SDK peer (`com.bidscube.sdk`, Unity) | **1.2.5** | `package.json` → `dependencies` (must match what you install in the host `manifest.json`) |
 | Android **MAX** adapter AAR | **1.0.4** | `applovin-bidscube-max-adapter-1.0.4.aar`; `AdapterPackageInfo.BundledMaxAdapterAarVersion` |
 | Android **lite** core AAR (bundled) | **1.2.3** | `bidscube-sdk-lite-1.2.3.aar`; `AdapterPackageInfo.NativeAndroidBidscubeSdkVersion` |

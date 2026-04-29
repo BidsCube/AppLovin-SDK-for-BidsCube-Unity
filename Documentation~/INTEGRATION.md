@@ -1,6 +1,6 @@
 # Bidscube Unity SDK Integration Guide
 
-> **Repository scope (this UPM: `com.bidscube.applovin.max` ≥ 1.0.12):** the **C# SDK** and **`BidscubeSDK` APIs** come from the **`com.bidscube.sdk`** package (**1.2.5** peer per this package’s `package.json` → `dependencies` — pin the same in your `manifest.json`). **This** repo adds **AppLovin MAX**-related AARs and **`AppLovinMaxUnityReflection`**. Install both dependencies; see root [`README.md`](../README.md). The sections below document **usage with `com.bidscube.sdk`** and MAX behaviour — they are kept here for one-stop reading with [`APPLOVIN_MAX.md`](APPLOVIN_MAX.md).
+> **Repository scope (this UPM: `com.bidscube.applovin.max` ≥ 1.0.13):** the **C# SDK** and **`BidscubeSDK` APIs** come from the **`com.bidscube.sdk`** package (**1.2.5** peer per this package’s `package.json` → `dependencies` — pin the same in your `manifest.json`). **This** repo adds **AppLovin MAX**-related AARs and **`AppLovinMaxUnityReflection`**. Install both dependencies; see root [`README.md`](../README.md). The sections below document **usage with `com.bidscube.sdk`** and MAX behaviour — they are kept here for one-stop reading with [`APPLOVIN_MAX.md`](APPLOVIN_MAX.md).
 
 **AppLovin MAX:** start with `Documentation~/APPLOVIN_MAX.md`. **Which player (default vs custom, Unity vs native Android):** `Documentation~/VIDEO_PLAYBACK.md`.
 
@@ -33,7 +33,7 @@ The Bidscube Unity SDK can be installed in two ways:
 2. Click the `+` button in the top-left corner
 3. Select `Add package from git URL...`
 4. Add the **core** SDK: [BidsCube/bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) as **`com.bidscube.sdk`**, then this adapter: `https://github.com/BidsCube/AppLovin-SDK-Unity.git` (see `README.md`).
-5. Optionally pin: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.12`
+5. Optionally pin: `https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.13`
 6. Click `Add`
 7. The packages appear under **In Project**
 
@@ -43,7 +43,7 @@ The Bidscube Unity SDK can be installed in two ways:
 {
   "dependencies": {
     "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.5",
-    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.12"
+    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.13"
   }
 }
 ```

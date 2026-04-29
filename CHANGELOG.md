@@ -2,6 +2,19 @@
 
 ---
 
+## [1.0.13] - 2026-04-30
+
+### Added
+
+- **Android `FullWithVideo` / `LiteNoVideo`:** `BidscubeFeatureSet`, Player define **`BIDSCUBE_ENABLE_VIDEO`** (on by default), **Tools → Bidscube SDK → Android Build Features**, and **`BidscubeAndroidGradlePostprocessor`** — copies **`bidscube-sdk-lite-*.aar`** or full core (local **`bidscube-sdk-*.aar`** or Maven **`com.bidscube:bidscube-sdk:…@aar`**) and adds **Media3 + IMA** Gradle lines only in **FullWithVideo**.
+- **Samples:** video buttons / `ShowVideoAd` / `GetVideoAdView` paths wrapped in **`#if BIDSCUBE_ENABLE_VIDEO`**.
+
+### Changed
+
+- **`AdapterPackageInfo.UpmVersion`** / **`package.json`** → **1.0.13**.
+
+---
+
 ## [1.0.12] - 2026-04-29
 
 ### Changed

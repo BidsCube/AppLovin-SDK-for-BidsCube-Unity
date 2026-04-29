@@ -70,8 +70,13 @@ namespace BidscubeSDK.Controllers
             // Ad type buttons
             if (_imageAdButton != null)
                 _imageAdButton.onClick.AddListener(() => ShowAd(AdType.Image));
+#if BIDSCUBE_ENABLE_VIDEO
             if (_videoAdButton != null)
                 _videoAdButton.onClick.AddListener(() => ShowAd(AdType.Video));
+#else
+            if (_videoAdButton != null)
+                _videoAdButton.gameObject.SetActive(false);
+#endif
             if (_nativeAdButton != null)
                 _nativeAdButton.onClick.AddListener(() => ShowAd(AdType.Native));
 
@@ -201,6 +206,14 @@ namespace BidscubeSDK.Controllers
                 LogMessage("SDK not initialized. Please initialize first.");
                 return;
             }
+
+#if !BIDSCUBE_ENABLE_VIDEO
+            if (adType == AdType.Video)
+            {
+                LogMessage("Video ads disabled (LiteNoVideo build — no BIDSCUBE_ENABLE_VIDEO).");
+                return;
+            }
+#endif
 
             string inputPlacement = _placementIdInput != null ? _placementIdInput.text.Trim() : string.Empty;
             string placementId;

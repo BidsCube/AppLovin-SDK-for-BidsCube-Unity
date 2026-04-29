@@ -83,8 +83,13 @@ namespace BidscubeSDK.Controllers
             // Ad testing buttons
             if (_showImageAdButton != null)
                 _showImageAdButton.onClick.AddListener(() => ShowAdIfConsent(AdType.Image));
+#if BIDSCUBE_ENABLE_VIDEO
             if (_showVideoAdButton != null)
                 _showVideoAdButton.onClick.AddListener(() => ShowAdIfConsent(AdType.Video));
+#else
+            if (_showVideoAdButton != null)
+                _showVideoAdButton.gameObject.SetActive(false);
+#endif
             if (_showNativeAdButton != null)
                 _showNativeAdButton.onClick.AddListener(() => ShowAdIfConsent(AdType.Native));
 
@@ -274,7 +279,11 @@ namespace BidscubeSDK.Controllers
                     adViewController.Initialize(placementId, AdType.Image, this);
                     break;
                 case AdType.Video:
+#if BIDSCUBE_ENABLE_VIDEO
                     BidscubeSDK.ShowVideoAd(placementId, this);
+#else
+                    LogMessage("Video ads disabled (LiteNoVideo build).");
+#endif
                     break;
                 case AdType.Native:
                     BidscubeSDK.ShowNativeAd(placementId, this);
