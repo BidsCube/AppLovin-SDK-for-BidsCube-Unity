@@ -56,12 +56,12 @@ When your pinned **`bidscube-sdk-*.aar`** documents a **`VideoPlayerProvider`** 
 
 ### Android export: `LiteNoVideo` vs `FullWithVideo` (Gradle)
 
-**Resolution order:** **`BidscubeAndroidExportSettings`** asset (if any) → else **`BidscubeAndroidFeatureSetStore`** (Editor window / EditorPrefs; default **`FullWithVideo`**). Prefer committing an export settings asset for GitHub / CI parity.
+**Resolution order:** **`BidscubeAndroidExportSettings`** asset (if any) → else **`BidscubeAndroidFeatureSetStore`** (Editor window / EditorPrefs; default **`LiteNoVideo`**). Prefer committing an export settings asset for GitHub / CI parity.
 
 | `BidscubeAndroidFeatureSet` | Core on classpath (`unityLibrary/build.gradle`) | Video-specific Gradle lines |
 |-----------------------------|-----------------------------------------------|-----------------------------|
-| **`FullWithVideo`** (default) | **`files('libs/bidscube-sdk-<ver>.aar')`** if the full AAR is bundled, else **`implementation 'com.bidscube:bidscube-sdk:<ver>@aar'`** | **Media3** + **Google IMA** (see postprocessor) |
-| **`LiteNoVideo`** | **`implementation files('libs/bidscube-sdk-lite-<ver>.aar')`** (postprocessor copy) | **None** — **no** `androidx.media3:*`, **no** `com.google.ads.interactivemedia.v3:interactivemedia` |
+| **`LiteNoVideo`** (default) | **`implementation files('libs/bidscube-sdk-lite-<ver>.aar')`** only — **no** `com.bidscube:bidscube-sdk` Maven line | **None** |
+| **`FullWithVideo`** | **`files('libs/bidscube-sdk-<ver>.aar')`** if bundled, or **`MavenBidscubeSdkAar`** + **`com.bidscube:bidscube-sdk:<ver>@aar`** | **Media3** + **Google IMA** |
 
 Default **core** resolution remains **`BundledUnityLibraryLibsAar`** (`implementation files('libs/…')`) — **no Maven Central required for the core artifact.**  
 Android player builds set **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** when `FeatureSet == LiteNoVideo` so **Direct SDK** C# APIs `ShowVideoAd` / `GetVideoAdView` fail fast with a clear log (banner / native / image flows unchanged).

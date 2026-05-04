@@ -1,6 +1,6 @@
 # Bidscube AppLovin MAX adapter (`com.bidscube.applovin.max`)
 
-**Package (UPM):** `com.bidscube.applovin.max` **1.0.14** · **Git tag:** `v1.0.14` · **Core UPM peer:** `com.bidscube.sdk` **1.2.5** (from `package.json` → `dependencies`) · **Android bundled:** **MAX** adapter **1.0.4** · **lite** core AAR **1.2.3** (full core: **`com.bidscube:bidscube-sdk:1.2.3@aar`** or optional AAR **1.2.3**) · **iOS:** **`BidscubeSDKAppLovin`** **1.0.4** · **AppLovin** native **13.x**
+**Package (UPM):** `com.bidscube.applovin.max` **1.0.15** · **Git tag:** `v1.0.15` · **Core UPM peer:** `com.bidscube.sdk` **1.2.5** (from `package.json` → `dependencies`) · **Android bundled:** **MAX** adapter **1.0.4** · **lite** core AAR **1.2.3** · **iOS:** **`BidscubeSDKAppLovin`** **1.0.4** · **AppLovin** native **13.x**
 
 **Companion** package for **Bidscube** + **AppLovin MAX**: Android **MAX** adapter AAR, **lite** core AAR (reference), and **`AppLovinMaxUnityReflection`** so C# can call **`MaxSdk`** when the official AppLovin plugin is present. **You also add** **`com.bidscube.sdk`** (core Unity SDK) — this repo does not ship the full C# runtime anymore.
 
@@ -12,11 +12,11 @@
 
 Докладніше про порядок ініціалізації (**Android:** `BidscubeSDK.Initialize` перед `MaxSdk.InitializeSdk`): [`Documentation~/APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md).
 
-## Android modes (`FullWithVideo` / `LiteNoVideo`)
+## Android modes (`LiteNoVideo` / `FullWithVideo`)
 
-**Default:** **`BidscubeAndroidFeatureSet.FullWithVideo`** — Gradle injects **`com.bidscube:bidscube-sdk:1.2.3@aar`** (unless you add **`bidscube-sdk-1.2.3.aar`** locally for **`files('libs/…')`**) plus **AndroidX Media3** and **Google IMA**. **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** is **not** set on Android. Suited for AppLovin **rewarded / video** and Bidscube native video paths.
+**Default (1.0.15+):** **`BidscubeAndroidFeatureSet.LiteNoVideo`** — the postprocessor copies only **`bidscube-sdk-lite-1.2.3.aar`** to **`unityLibrary/libs/`** and injects **no** **`com.bidscube:bidscube-sdk`**, **no** Media3, **no** Google IMA. Sets **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** on Android; **banner / native / image** work; direct video APIs fail gracefully.
 
-**`LiteNoVideo` (optional):** smaller graph — only **`bidscube-sdk-lite-1.2.3.aar`** copied to **`unityLibrary/libs/`**; **no** Media3 / IMA lines. Sets **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** so direct video APIs in **`com.bidscube.sdk`** fail gracefully; **banner / native / image** stay available.
+**`FullWithVideo`:** requires **`Runtime/Plugins/Android/bidscube-sdk-1.2.3.aar`** (vendor from native SDK build) **or** **`BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar`** with a reachable **`com.bidscube:bidscube-sdk:1.2.3@aar`**. Then Gradle adds **Media3** + **Google IMA** and does **not** define **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`**. Without the full AAR / Maven repo, Android export logs an **error** — use **LiteNoVideo** for demo/CI without those artifacts.
 
 **`com.bidscube.sdk`** should use **`#if BIDSCUBE_ANDROID_LITE_NO_VIDEO`** (or runtime checks) for **`ShowVideoAd`**, **`GetVideoAdView`**, etc., matching this package’s define and Gradle wiring.
 
@@ -25,12 +25,18 @@
 1. **Assets → Create → Bidscube → Android Export Settings** (ScriptableObject) and set **`featureSet`**, **or** open **Tools → Bidscube SDK → Android Build Features** and toggle **FullWithVideo** vs **LiteNoVideo**.
 2. Re-export / rebuild Android — defines and **`IPostGenerateGradleAndroidProject`** follow the selected mode.
 
+### What’s new in **1.0.15**
+
+| Topic | Summary |
+|--------|---------|
+| **Hotfix** | Editor **`.meta`** files for scripts/tools; **LiteNoVideo** default; **FullWithVideo** no longer injects unresolved Maven core — see [CHANGELOG](CHANGELOG.md). |
+
 ### What’s new in **1.0.14**
 
 | Topic | Summary |
 |--------|---------|
 | **Release** | UPM / tag **1.0.14** — [CHANGELOG](CHANGELOG.md). |
-| **Android default** | **`FullWithVideo`** is default everywhere; **`LiteNoVideo`** is opt-in. Gradle + **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** stay aligned with **`BidscubeAndroidExportSettings`** / Editor window. |
+| **Android default** | **`FullWithVideo`** was default in 1.0.14 (superseded by **1.0.15**). |
 
 ### What’s new in **1.0.13**
 
@@ -109,7 +115,7 @@ Add to the Unity project **`Packages/manifest.json`** the **core SDK** (`com.bid
 }
 ```
 
-(Або git URL + тег, напр. `"com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.14"`.)
+(Або git URL + тег, напр. `"com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.15"`.)
 
 Через **Package Manager** додайте спочатку **`com.bidscube.sdk`**, потім цей адаптер (див. `repository.url` у [`package.json`](package.json)).
 
@@ -133,7 +139,7 @@ Package metadata: [`package.json`](package.json) (`displayName`: **Bidscube AppL
 |------|----------|
 | **BidsCube SDK** (from **`com.bidscube.sdk`**) | C# APIs: `GetBannerAdView`, `GetVideoAdView`, init, etc. — see that package. |
 | **AppLovin MAX** | `BidscubeIntegrationMode.AppLovinMaxMediation` — `BidscubeSDK.Initialize` then MAX; creatives through MAX + Bidscube adapter. |
-| **Android** | **`Editor/Android/BidscubeAndroidGradlePostprocessor`** (with Unity **Android Build Support**): **default FullWithVideo** → Maven **`com.bidscube:bidscube-sdk:…@aar`** (or bundled full AAR) + **Media3/IMA**; **LiteNoVideo** → **`bidscube-sdk-lite-*.aar`** only, no Media3/IMA. Menu: **Tools → Bidscube SDK → Android Build Features**. Optional: add **`bidscube-sdk-1.2.3.aar`** for offline full builds without Maven. |
+| **Android** | **`BidscubeAndroidGradlePostprocessor`**: **default LiteNoVideo** → bundled **`bidscube-sdk-lite-*.aar`**, no Maven core / no Media3/IMA; **FullWithVideo** → **`bidscube-sdk-*.aar`** (or **MavenBidscubeSdkAar**) + **Media3/IMA**. Menu: **Tools → Bidscube SDK → Android Build Features**. |
 | **iOS** | MAX: CocoaPods **`BidscubeSDKAppLovin` `1.0.4`** + **`AppLovinSDK` `13.x`** — add to **Podfile** manually or via your own post-build script. |
 | **Legacy configs** | Wire values `levelPlay` / `level_play` → **AppLovin MAX mediation** (same idea as Flutter) |
 

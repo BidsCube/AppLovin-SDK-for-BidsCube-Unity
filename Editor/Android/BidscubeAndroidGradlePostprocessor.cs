@@ -64,22 +64,14 @@ namespace BidscubeSDK.Editor.Android
                 }
 
                 TryCopySelectedAarForReference(featureSet, liteSrc, fullSrc, liteDst, fullDst);
-                PatchUnityLibraryGradle(path, featureSet, coreMode, customLines, ver, useMavenFullCore: false,
-                    fullCoreLocalPath: null);
+                PatchUnityLibraryGradle(path, featureSet, coreMode, customLines, ver, fullCoreFromMaven: false,
+                    useBundledFullAar: false, useBundledLiteAar: false);
                 return;
             }
 
             if (featureSet == BidscubeAndroidFeatureSet.LiteNoVideo)
             {
                 TryDelete(fullDst);
-                if (coreMode == BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar)
-                {
-                    TryDelete(liteDst);
-                    PatchUnityLibraryGradle(path, featureSet, coreMode, "", ver, useMavenLiteCore: true,
-                        useMavenFullCore: false, fullCoreLocalPath: null);
-                    return;
-                }
-
                 if (!File.Exists(liteSrc))
                 {
                     UnityEngine.Debug.LogError($"[Bidscube AppLovin] LiteNoVideo: missing lite AAR at {liteSrc}");
@@ -88,27 +80,35 @@ namespace BidscubeSDK.Editor.Android
 
                 File.Copy(liteSrc, liteDst, true);
                 UnityEngine.Debug.Log($"[Bidscube AppLovin] Copied bundled core AAR: {liteDst}");
-                PatchUnityLibraryGradle(path, featureSet, coreMode, "", ver, useMavenLiteCore: false,
-                    useMavenFullCore: false, fullCoreLocalPath: null);
+                PatchUnityLibraryGradle(path, featureSet, coreMode, "", ver, fullCoreFromMaven: false,
+                    useBundledFullAar: false, useBundledLiteAar: true);
                 return;
             }
 
+            // FullWithVideo
             TryDelete(liteDst);
-            if (coreMode == BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar || !File.Exists(fullSrc))
+            if (coreMode == BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar)
             {
                 TryDelete(fullDst);
-                if (!File.Exists(fullSrc))
-                    UnityEngine.Debug.LogWarning(
-                        $"[Bidscube AppLovin] FullWithVideo: {fullName} not under Plugins/Android — using Maven com.bidscube:bidscube-sdk:{ver}@aar.");
-                PatchUnityLibraryGradle(path, featureSet, coreMode, "", ver, useMavenLiteCore: false,
-                    useMavenFullCore: true, fullCoreLocalPath: null);
+                PatchUnityLibraryGradle(path, featureSet, coreMode, "", ver, fullCoreFromMaven: true,
+                    useBundledFullAar: false, useBundledLiteAar: false);
+                return;
+            }
+
+            if (!File.Exists(fullSrc))
+            {
+                UnityEngine.Debug.LogError(
+                    "[Bidscube AppLovin] FullWithVideo requires Runtime/Plugins/Android/bidscube-sdk-" + ver +
+                    ".aar, or set coreDependencyMode to MavenBidscubeSdkAar with a reachable Maven artifact com.bidscube:bidscube-sdk:" +
+                    ver + "@aar. Switch to LiteNoVideo for publisher demo / CI without the full AAR.");
+                RemoveManagedBlock(path);
                 return;
             }
 
             File.Copy(fullSrc, fullDst, true);
             UnityEngine.Debug.Log($"[Bidscube AppLovin] Copied bundled core AAR: {fullDst}");
-            PatchUnityLibraryGradle(path, featureSet, coreMode, "", ver, useMavenLiteCore: false,
-                useMavenFullCore: false, fullCoreLocalPath: fullDst);
+            PatchUnityLibraryGradle(path, featureSet, coreMode, "", ver, fullCoreFromMaven: false,
+                useBundledFullAar: true, useBundledLiteAar: false);
         }
 
         static void TryCopySelectedAarForReference(BidscubeAndroidFeatureSet fs, string liteSrc, string fullSrc,
@@ -124,6 +124,19 @@ namespace BidscubeSDK.Editor.Android
             catch (Exception e)
             {
                 UnityEngine.Debug.LogWarning($"[Bidscube AppLovin] Optional AAR copy: {e.Message}");
+            }
+        }
+
+        static void TryDelete(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+            catch
+            {
+                // ignored
             }
         }
 
@@ -143,8 +156,8 @@ namespace BidscubeSDK.Editor.Android
         }
 
         static void PatchUnityLibraryGradle(string gradleProjectRoot, BidscubeAndroidFeatureSet featureSet,
-            BidscubeAndroidCoreDependencyMode coreMode, string customLines, string ver, bool useMavenLiteCore,
-            bool useMavenFullCore, string fullCoreLocalPath)
+            BidscubeAndroidCoreDependencyMode coreMode, string customLines, string ver, bool fullCoreFromMaven,
+            bool useBundledFullAar, bool useBundledLiteAar)
         {
             var gradlePath = Path.Combine(gradleProjectRoot, "unityLibrary", "build.gradle");
             if (!File.Exists(gradlePath))
@@ -163,24 +176,17 @@ namespace BidscubeSDK.Editor.Android
                 foreach (var line in customLines.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
                     sb.AppendLine("    " + line.Trim());
             }
-            else if (featureSet == BidscubeAndroidFeatureSet.LiteNoVideo)
+            else if (useBundledLiteAar)
             {
-                if (useMavenLiteCore)
-                    sb.AppendLine($"    implementation 'com.bidscube:bidscube-sdk:{ver}@aar'");
-                else
-                    sb.AppendLine($"    implementation files('libs/{AdapterPackageInfo.NativeAndroidBundledCoreAarLiteFileName}')");
+                sb.AppendLine($"    implementation files('libs/{AdapterPackageInfo.NativeAndroidBundledCoreAarLiteFileName}')");
             }
-            else if (useMavenFullCore)
+            else if (fullCoreFromMaven)
             {
                 sb.AppendLine($"    implementation 'com.bidscube:bidscube-sdk:{ver}@aar'");
             }
-            else if (!string.IsNullOrEmpty(fullCoreLocalPath))
+            else if (useBundledFullAar)
             {
                 sb.AppendLine($"    implementation files('libs/{AdapterPackageInfo.NativeAndroidBundledCoreAarFullFileName}')");
-            }
-            else
-            {
-                sb.AppendLine($"    implementation 'com.bidscube:bidscube-sdk:{ver}@aar'");
             }
 
             MaybeAppendAppLovinSdkLine(sb, content);

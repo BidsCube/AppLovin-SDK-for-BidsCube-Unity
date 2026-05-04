@@ -5,7 +5,7 @@ namespace BidscubeSDK.Editor
 {
     /// <summary>
     /// Resolution order: (1) first <see cref="BidscubeAndroidExportSettings"/> asset in the project;
-    /// (2) <see cref="BidscubeAndroidFeatureSetStore"/> (EditorPrefs; default <see cref="BidscubeAndroidFeatureSet.FullWithVideo"/>);
+    /// (2) <see cref="BidscubeAndroidFeatureSetStore"/> (EditorPrefs; default <see cref="BidscubeAndroidFeatureSet.LiteNoVideo"/>);
     /// same value is used for the Gradle postprocessor (<c>BidscubeAndroidGradlePostprocessor</c>), <see cref="BidscubeDefineApplicator"/>, and Player builds.
     /// </summary>
     internal static class BidscubeAndroidExportSettingsResolver

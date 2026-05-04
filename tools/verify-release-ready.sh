@@ -84,9 +84,9 @@ fi
 echo "Bundled lite core AAR: $LITE_AAR"
 FULL_AAR="Runtime/Plugins/Android/bidscube-sdk-${NATIVE_VER}.aar"
 if [[ -f "$FULL_AAR" ]]; then
-  echo "Optional full core AAR (offline FullWithVideo): $FULL_AAR"
+  echo "Optional full core AAR (FullWithVideo bundled path): $FULL_AAR"
 else
-  echo "Optional full core AAR not present ($FULL_AAR) — FullWithVideo Gradle uses Maven com.bidscube:bidscube-sdk:${NATIVE_VER}@aar"
+  echo "Full core AAR not in package ($FULL_AAR) — FullWithVideo requires adding this file or MavenBidscubeSdkAar (default export is LiteNoVideo)."
 fi
 
 # Filename on disk must match our declared MAX adapter version.
@@ -143,6 +143,54 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 fi
 
 python3 tools/validate-android-gradle-modes.py
+
+python3 << 'PY' || exit 1
+import os
+from pathlib import Path
+root = Path(".")
+roots = [root / "Editor", root / "Runtime", root / "tools"]
+missing = []
+for base in roots:
+    if not base.is_dir():
+        continue
+    for dirpath, _, files in os.walk(base):
+        for name in files:
+            if name.startswith(".") or name.endswith(".meta"):
+                continue
+            p = Path(dirpath) / name
+            if "WebView.bundle" in p.parts:
+                continue
+            meta = Path(str(p) + ".meta")
+            if not meta.exists():
+                missing.append(str(p))
+extra = root / "RELEASE_CHECKLIST.md"
+if extra.is_file() and not Path(str(extra) + ".meta").exists():
+    missing.append(str(extra))
+if missing:
+    import sys
+    print("ERROR: missing .meta for:", file=sys.stderr)
+    for m in missing:
+        print(f"  {m}", file=sys.stderr)
+    raise SystemExit(1)
+print("Unity .meta pairing OK (Editor, Runtime, tools, RELEASE_CHECKLIST.md)")
+PY
+
+python3 << 'PY' || exit 1
+from pathlib import Path
+stale = []
+for meta in Path(".").rglob("*.meta"):
+    if ".git" in meta.parts:
+        continue
+    asset = Path(str(meta)[:-5])
+    if not asset.exists():
+        stale.append(str(meta))
+if stale:
+    print("ERROR: stale .meta (target missing):", file=__import__("sys").stderr)
+    for s in stale:
+        print(f"  {s}", file=__import__("sys").stderr)
+    raise SystemExit(1)
+print("No stale .meta files")
+PY
 
 echo "Suggested git tag (must match package.json): v$VER"
 echo "  git tag -a \"v$VER\" -m \"com.bidscube.applovin.max $VER\""

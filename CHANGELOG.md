@@ -2,6 +2,25 @@
 
 ---
 
+## [1.0.15] - 2026-05-04
+
+### Fixed
+
+- **Editor:** added missing **`.meta`** files for `Editor` scripts, `RELEASE_CHECKLIST.md`, and `tools` scripts so Unity UPM imports **asmdef** / **Editor** assemblies in immutable package cache.
+- **Android Gradle:** **LiteNoVideo** uses only the bundled **lite** AAR (`files('libs/bidscube-sdk-lite-…')`); no **`com.bidscube:bidscube-sdk`** Maven line, no **Media3**, no **Google IMA**.
+- **FullWithVideo** no longer injects an unresolved **`com.bidscube:bidscube-sdk:1.2.3@aar`** when the full AAR is missing — export **fails in the Editor** with a clear message unless **`bidscube-sdk-1.2.3.aar`** is present or **`MavenBidscubeSdkAar`** is used with a reachable artifact.
+
+### Changed
+
+- **Default Android mode** is **LiteNoVideo** again (bootstrap, EditorPrefs default, new export settings assets).
+- **`AdapterPackageInfo.UpmVersion`** / **`package.json`** → **1.0.15**.
+
+### Validation
+
+- `tools/verify-release-ready.sh` checks **`.meta`** coverage and stale **`.meta`** files; **LiteNoVideo** postprocessor path must not add **`com.bidscube:bidscube-sdk`** or video Maven coordinates.
+
+---
+
 ## [1.0.14] - 2026-05-04
 
 ### Fixed

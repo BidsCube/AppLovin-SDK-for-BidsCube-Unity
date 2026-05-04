@@ -1,10 +1,10 @@
 # AppLovin MAX mediation (Unity)
 
-> **`com.bidscube.applovin.max` 1.0.14+** ships **`BidscubeAndroidGradlePostprocessor`** (Android Build Support) for **FullWithVideo** (default) / **LiteNoVideo** core AAR + optional IMA/Media3 lines; iOS Podfile automation may come from **`com.bidscube.sdk`** or manual **Podfile** edits — see **`ANDROID_BUNDLED_SDK.md`**. C# **`BidscubeSDK`** and **`SDKConfig`** remain in **`com.bidscube.sdk`**.
+> **`com.bidscube.applovin.max` 1.0.15+** ships **`BidscubeAndroidGradlePostprocessor`** (Android Build Support) for **LiteNoVideo** (default) / **FullWithVideo**; iOS Podfile automation may come from **`com.bidscube.sdk`** or manual **Podfile** edits — see **`ANDROID_BUNDLED_SDK.md`**. C# **`BidscubeSDK`** and **`SDKConfig`** remain in **`com.bidscube.sdk`**.
 
 | Component | Version |
 |-----------|--------:|
-| This UPM (`com.bidscube.applovin.max`) | **1.0.14** |
+| This UPM (`com.bidscube.applovin.max`) | **1.0.15** |
 | Core UPM peer (`com.bidscube.sdk`, see `package.json` → `dependencies`) | **1.2.5** |
 | Android MAX adapter AAR + iOS `BidscubeSDKAppLovin` | **1.0.4** |
 | Android core native (`bidscube-sdk` / lite AAR) | **1.2.3** |

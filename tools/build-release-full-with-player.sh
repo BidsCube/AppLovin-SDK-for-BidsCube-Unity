@@ -14,7 +14,7 @@ fi
 POST="Editor/Android/BidscubeAndroidGradlePostprocessor.cs"
 grep -q "interactivemedia" "$POST" || { echo "ERROR: postprocessor must inject Google IMA for FullWithVideo" >&2; exit 1; }
 grep -q "media3-common" "$POST" || { echo "ERROR: postprocessor must inject Media3 for FullWithVideo" >&2; exit 1; }
-grep -q "Including video player dependencies for FullWithVideo" "$POST" || { echo "ERROR: missing FullWithVideo log line" >&2; exit 1; }
+grep -q "Including Media3 and Google IMA dependencies" "$POST" || { echo "ERROR: missing FullWithVideo log line" >&2; exit 1; }
 
 NATIVE_VER="$(sed -n 's/.*public const string NativeAndroidBidscubeSdkVersion = "\([^"]*\)".*/\1/p' Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs | head -n1)"
 FULL_AAR="Runtime/Plugins/Android/bidscube-sdk-${NATIVE_VER}.aar"
@@ -24,8 +24,7 @@ ADAPTER_AAR="Runtime/Plugins/Android/applovin-bidscube-max-adapter-${ADAPTER_VER
 [[ -f "$ADAPTER_AAR" ]] || { echo "ERROR: missing $ADAPTER_AAR" >&2; exit 1; }
 
 if [[ ! -f "$FULL_AAR" ]]; then
-  echo "WARNING: $FULL_AAR not in repo — FullWithVideo still works via Maven com.bidscube:bidscube-sdk:${NATIVE_VER}@aar when repos are available." >&2
-  echo "For an offline / reproducible full ZIP, add the full AAR from the native Android SDK build output." >&2
+  echo "NOTE: $FULL_AAR not in repo — FullWithVideo needs this AAR (or MavenBidscubeSdkAar in project settings). Default export is LiteNoVideo." >&2
 fi
 
 OUT="com.bidscube.applovin.max-${VER}-full-with-player.zip"
