@@ -1,12 +1,12 @@
 # Bundled Bidscube MAX adapter + core Android SDK (Android)
 
-> **UPM `com.bidscube.applovin.max` 1.0.13+** ships **MAX adapter + lite core AARs**, **`AppLovinMaxUnityReflection`**, and **`Editor/Android/BidscubeAndroidGradlePostprocessor`** (copies **exactly one** core variant + conditional Media3/IMA). Resolution order: **`BidscubeAndroidExportSettings`** asset (if present) → **`BidscubeAndroidFeatureSetStore`** (EditorPrefs / bootstrap default **`LiteNoVideo`**).
+> **UPM `com.bidscube.applovin.max` 1.0.14+** ships **MAX adapter + lite core AAR**, **`AppLovinMaxUnityReflection`**, and **`Editor/Android/BidscubeAndroidGradlePostprocessor`** (copies **exactly one** core variant + conditional Media3/IMA). Resolution order: **`BidscubeAndroidExportSettings`** asset (if present) → **`BidscubeAndroidFeatureSetStore`** (EditorPrefs / bootstrap default **`FullWithVideo`**).
 
 ## Version matrix (align with `package.json` and `AdapterPackageInfo`)
 
 | Item | Version | Where it is set |
 |------|--------:|-----------------|
-| UPM **this** package (`com.bidscube.applovin.max`) | **1.0.13** | `package.json` → `version`; `AdapterPackageInfo.UpmVersion` in `Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs` |
+| UPM **this** package (`com.bidscube.applovin.max`) | **1.0.14** | `package.json` → `version`; `AdapterPackageInfo.UpmVersion` in `Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs` |
 | UPM core SDK peer (`com.bidscube.sdk`, Unity) | **1.2.5** | `package.json` → `dependencies` (must match what you install in the host `manifest.json`) |
 | Android **MAX** adapter AAR | **1.0.4** | `applovin-bidscube-max-adapter-1.0.4.aar`; `AdapterPackageInfo.BundledMaxAdapterAarVersion` |
 | Android **lite** core AAR (bundled) | **1.2.3** | `bidscube-sdk-lite-1.2.3.aar`; `AdapterPackageInfo.NativeAndroidBidscubeSdkVersion` |
@@ -24,7 +24,7 @@
 
 On Gradle export, **`BidscubeAndroidGradlePostprocessor`** injects a managed block **`// __BIDSCUBE_ANDROID_MANAGED_START__` … `END__`** into **`unityLibrary/build.gradle`**: **Bidscube core** (single line per mode), **`com.applovin:applovin-sdk:13.+`** if missing, and **conditionally** Media3 + Google IMA only for **`FullWithVideo`**. Other transitive libraries come from the **official MAX Unity plugin**, **EDM**, or your own Gradle templates.
 
-## Feature set: `LiteNoVideo` vs `FullWithVideo`
+## Feature set: `FullWithVideo` vs `LiteNoVideo`
 
 **Before Android export / build:**
 
@@ -36,10 +36,10 @@ On Gradle export, **`BidscubeAndroidGradlePostprocessor`** injects a managed blo
 
 | `BidscubeAndroidFeatureSet` | Core JAR in `unityLibrary/libs/` | Extra Gradle `implementation` lines |
 |-----------------------------|----------------------------------|---------------------------------------|
-| **`LiteNoVideo`** (default) | `bidscube-sdk-lite-1.2.3.aar` (this release) | **Omits** `androidx.media3:media3-common`, `media3-ui`, `com.google.ads.interactivemedia.v3:interactivemedia` |
-| **`FullWithVideo`** | `bidscube-sdk-1.2.3.aar` (obtain full AAR or Maven **1.2.3**) | **Adds** Media3 **1.4.1** + interactivemedia **3.33.0** |
+| **`FullWithVideo`** (default) | `bidscube-sdk-1.2.3.aar` if bundled, else **`implementation 'com.bidscube:bidscube-sdk:1.2.3@aar'`** | **Adds** Media3 **1.4.1** + interactivemedia **3.33.0** |
+| **`LiteNoVideo`** | `bidscube-sdk-lite-1.2.3.aar` (bundled) | **Omits** `androidx.media3`, `com.google.ads.interactivemedia.v3:interactivemedia` |
 
-**Logs (Unity Editor, Gradle export):** `[Bidscube AppLovin] Bidscube AppLovin Android feature set: LiteNoVideo` or `FullWithVideo`, `Copied bundled core AAR: …`, `Skipping video player dependencies for LiteNoVideo` or `Including video player dependencies for FullWithVideo`.
+**Logs (Unity Editor, Gradle export):** `[Bidscube AppLovin] Android feature set: LiteNoVideo` or `FullWithVideo`, `Copied bundled core AAR: …` (when applicable), `Skipping Media3 and Google IMA dependencies` or `Including Media3 and Google IMA dependencies`.
 
 **Player scripting define:** `BidscubeAndroidScriptingDefinesPreprocessor` adds **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** for Android builds when **`FeatureSet == LiteNoVideo`**, so **Direct SDK** `ShowVideoAd` / `GetVideoAdView` log a clear failure without touching banner/native paths.
 

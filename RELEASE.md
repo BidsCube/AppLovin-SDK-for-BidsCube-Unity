@@ -2,12 +2,12 @@
 
 ## Naming conventions (congruence)
 
-| Item | Format | Example (1.0.13) |
+| Item | Format | Example (1.0.14) |
 |------|--------|------------------|
-| **UPM `package.json` → `version`** | **`MAJOR.MINOR.PATCH`** only (Unity rejects `1.0.3.1`-style fourth segment). Optional prerelease: `1.0.13-rc.1`. | `1.0.13` |
-| **Git tag** | `v` + the same version string | `v1.0.13` |
-| **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.13.zip` |
-| **GitHub Release title** (workflow) | `com.bidscube.applovin.max {version}` | `com.bidscube.applovin.max 1.0.13` |
+| **UPM `package.json` → `version`** | **`MAJOR.MINOR.PATCH`** only (Unity rejects `1.0.3.1`-style fourth segment). Optional prerelease: `1.0.14-rc.1`. | `1.0.14` |
+| **Git tag** | `v` + the same version string | `v1.0.14` |
+| **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.14.zip` |
+| **GitHub Release title** (workflow) | `com.bidscube.applovin.max {version}` | `com.bidscube.applovin.max 1.0.14` |
 | **GitHub repository** (recommended) | `AppLovin-SDK-Unity` | `github.com/BidsCube/AppLovin-SDK-Unity` |
 | **`AdapterPackageInfo.UpmVersion`** | Must match UPM `version` | In `Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs` (companion to **`com.bidscube.sdk`**) |
 | **iOS `BidscubeSDKAppLovin` pod** | Optional manual Podfile | Often **1.0.4** while UPM is **1.0.x** until native ships a new adapter |
@@ -39,16 +39,22 @@
 3. Create an annotated tag:
 
 ```bash
-git tag -a "v1.0.13" -m "com.bidscube.applovin.max 1.0.13"
-git push origin "v1.0.13"
+git tag -a "v1.0.14" -m "com.bidscube.applovin.max 1.0.14"
+git push origin "v1.0.14"
 ```
 
-4. The **Release (GitHub)** workflow (`.github/workflows/release.yml`) validates `package.json`, builds a ZIP without `.git`, and creates a GitHub Release with **`Bidscube-SDK-Unity-{version}.zip`** (e.g. **`Bidscube-SDK-Unity-1.0.13.zip`**).
+4. The **Release (GitHub)** workflow (`.github/workflows/release.yml`) validates `package.json`, builds a ZIP without `.git`, and creates a GitHub Release with **`Bidscube-SDK-Unity-{version}.zip`** (e.g. **`Bidscube-SDK-Unity-1.0.14.zip`**).
+
+### Release `v1.0.14` (2026-05-04)
+
+- Bump **`package.json`** / **`AdapterPackageInfo.UpmVersion`** to **1.0.14** and document **[CHANGELOG](CHANGELOG.md)** section **`[1.0.14]`**.
+- Run **`./tools/verify-release-ready.sh`** (checks README / CHANGELOG / Gradle branching).
+- Android **default** export mode is **`FullWithVideo`**; **`LiteNoVideo`** remains opt-in via **Tools → Bidscube SDK → Android Build Features** or **`BidscubeAndroidExportSettings`**.
 
 **UPM consumers:**
 
 ```json
-"com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-Unity.git#v1.0.13"
+"com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.14"
 ```
 
 Add **`com.bidscube.sdk`** separately (see [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity)).
@@ -78,7 +84,7 @@ Workflow files are under **`.github/workflows/`** at the package repository root
 ### Release (UPM ZIP + GitHub Release)
 
 - **`release.yml`**:
-  1. **Via tag:** after `git push origin v1.0.13` (tag `v*`). The value in `package.json` must match the tag without `v`.
+  1. **Via tag:** after `git push origin v1.0.14` (or the current `v*` tag). The value in `package.json` must match the tag without `v`.
   2. **Manual:** **Actions → “Release (GitHub)” → Run workflow** → select a branch (e.g. `main`). Version is read from `package.json`; a GitHub Release with the ZIP is created. If a release for that tag already exists, the step fails.
 
 Quick local check before tagging: `./tools/verify-release-ready.sh`.

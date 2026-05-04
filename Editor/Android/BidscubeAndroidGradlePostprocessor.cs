@@ -25,9 +25,9 @@ namespace BidscubeSDK.Editor.Android
             var customLines = BidscubeAndroidExportSettingsResolver.GetEffectiveCustomGradleLines();
 
             if (featureSet == BidscubeAndroidFeatureSet.LiteNoVideo)
-                UnityEngine.Debug.Log("[Bidscube AppLovin] Bidscube AppLovin Android feature set: LiteNoVideo");
+                UnityEngine.Debug.Log("[Bidscube AppLovin] Android feature set: LiteNoVideo");
             else
-                UnityEngine.Debug.Log("[Bidscube AppLovin] Bidscube AppLovin Android feature set: FullWithVideo");
+                UnityEngine.Debug.Log("[Bidscube AppLovin] Android feature set: FullWithVideo");
 
             var pkgRoot = ResolvePackageRoot();
             if (string.IsNullOrEmpty(pkgRoot))
@@ -186,10 +186,10 @@ namespace BidscubeSDK.Editor.Android
             MaybeAppendAppLovinSdkLine(sb, content);
 
             if (featureSet == BidscubeAndroidFeatureSet.LiteNoVideo)
-                UnityEngine.Debug.Log("[Bidscube AppLovin] Skipping video player dependencies for LiteNoVideo");
+                UnityEngine.Debug.Log("[Bidscube AppLovin] Skipping Media3 and Google IMA dependencies");
             else
             {
-                UnityEngine.Debug.Log("[Bidscube AppLovin] Including video player dependencies for FullWithVideo");
+                UnityEngine.Debug.Log("[Bidscube AppLovin] Including Media3 and Google IMA dependencies");
                 AppendVideoDeps(sb, content);
             }
 

@@ -3,7 +3,11 @@ using UnityEditor;
 
 namespace BidscubeSDK.Editor
 {
-    /// <summary>Resolves <see cref="BidscubeAndroidExportSettings"/> from assets, then EditorPrefs, then default <see cref="BidscubeAndroidFeatureSet.LiteNoVideo"/>.</summary>
+    /// <summary>
+    /// Resolution order: (1) first <see cref="BidscubeAndroidExportSettings"/> asset in the project;
+    /// (2) <see cref="BidscubeAndroidFeatureSetStore"/> (EditorPrefs; default <see cref="BidscubeAndroidFeatureSet.FullWithVideo"/>);
+    /// same value is used for the Gradle postprocessor (<c>BidscubeAndroidGradlePostprocessor</c>), <see cref="BidscubeDefineApplicator"/>, and Player builds.
+    /// </summary>
     internal static class BidscubeAndroidExportSettingsResolver
     {
         internal static BidscubeAndroidExportSettings TryLoadFirstSettingsAsset()

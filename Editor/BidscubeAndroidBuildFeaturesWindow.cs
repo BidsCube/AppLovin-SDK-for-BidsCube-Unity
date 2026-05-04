@@ -29,8 +29,8 @@ namespace BidscubeSDK.Editor
             EditorGUILayout.Space(8);
             EditorGUILayout.LabelField("Android Bidscube core variant", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "Default: LiteNoVideo — lite core AAR, no Media3/IMA, defines BIDSCUBE_ANDROID_LITE_NO_VIDEO on Android.\n" +
-                "FullWithVideo — full core AAR (or Maven), Media3 + Google IMA in Gradle; video/rewarded paths allowed.",
+                "Default: FullWithVideo — full core via Maven or bundled AAR, Media3 + Google IMA; no BIDSCUBE_ANDROID_LITE_NO_VIDEO on Android.\n" +
+                "LiteNoVideo — lite core AAR only, no Media3/IMA; sets BIDSCUBE_ANDROID_LITE_NO_VIDEO for graceful video API failure.",
                 MessageType.Info);
 
             EditorGUI.BeginChangeCheck();

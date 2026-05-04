@@ -2,21 +2,35 @@
 
 Run [`tools/verify-release-ready.sh`](tools/verify-release-ready.sh) before tagging.
 
-- [ ] `package.json` **name** is `com.bidscube.applovin.max` (not `com.bidscube.sdk`).
-- [ ] `package.json` **version** is **1.0.13** and matches `AdapterPackageInfo.UpmVersion` and [`CHANGELOG.md`](CHANGELOG.md).
-- [ ] `package.json` **dependencies** include only **`com.bidscube.sdk` `1.2.5`** (no official AppLovin MAX UPM id).
-- [ ] **Official AppLovin MAX Unity SDK** is documented as **external** to this package.
-- [ ] **Lite** core AAR present: `Runtime/Plugins/Android/bidscube-sdk-lite-1.2.3.aar` (name matches `AdapterPackageInfo.NativeAndroidBidscubeSdkVersion`).
-- [ ] **Full** core AAR: either committed as `bidscube-sdk-1.2.3.aar` **or** document that **FullWithVideo** falls back to Maven `com.bidscube:bidscube-sdk:1.2.3@aar` (offline teams should vendor the full AAR).
-- [ ] **MAX adapter** AAR: `applovin-bidscube-max-adapter-1.0.4.aar` matches `BundledMaxAdapterAarVersion`.
-- [ ] **LiteNoVideo** Gradle: **no** `androidx.media3` and **no** `interactivemedia` in the managed block (validate with release script / CI).
-- [ ] **FullWithVideo** Gradle: **Media3** + **Google IMA** lines present in postprocessor source / generated smoke test.
-- [ ] **Only one** Bidscube core AAR variant is on the Android classpath (no lite + full together).
-- [ ] No **duplicate class** / DEX merge issues from double core lines.
-- [ ] **Unity-Test-App** (or client project) builds **LiteNoVideo** (default).
-- [ ] **Unity-Test-App** builds **FullWithVideo** with video/rewarded paths.
-- [ ] **Mediation Debugger** opens (official MAX plugin present).
-- [ ] **Banner** load/show works.
-- [ ] **Rewarded / video** works only in **FullWithVideo**; **LiteNoVideo** shows the documented error / callback failure, not a crash.
+## Release `v1.0.14`
 
-Artifacts: `tools/build-release-lite-no-player.sh` → `com.bidscube.applovin.max-1.0.13-lite-no-player.zip`, `tools/build-release-full-with-player.sh` → `com.bidscube.applovin.max-1.0.13-full-with-player.zip`.
+- [ ] `package.json` version is **1.0.14**
+- [ ] `AdapterPackageInfo.UpmVersion` is **1.0.14**
+- [ ] README uses **`v1.0.14`** / **`1.0.14`** where applicable
+- [ ] CHANGELOG has **`## [1.0.14]`**
+- [ ] **`FullWithVideo`** is the **default** (bootstrap, EditorPrefs default, new **`BidscubeAndroidExportSettings`** assets)
+- [ ] First Unity import does **not** define **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** on Android (until user selects **LiteNoVideo**)
+- [ ] Selecting **LiteNoVideo** adds **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`**
+- [ ] Selecting **FullWithVideo** removes **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`**
+- [ ] **FullWithVideo** Gradle export contains **Media3**
+- [ ] **FullWithVideo** Gradle export contains **Google IMA** (`interactivemedia`)
+- [ ] **LiteNoVideo** Gradle export does **NOT** contain **Media3**
+- [ ] **LiteNoVideo** Gradle export does **NOT** contain **Google IMA**
+- [ ] Exactly **one** Bidscube core dependency line (lite **`files`** or full **`@aar`** / **`files`**, never both cores)
+- [ ] Official **AppLovin MAX Unity SDK** is still **external** (not in this package / not in `package.json` dependencies except peer **`com.bidscube.sdk`**)
+- [ ] **Unity-Test-App** builds with **FullWithVideo**
+- [ ] **Unity-Test-App** builds with **LiteNoVideo**
+- [ ] MAX **Mediation Debugger** opens (official MAX plugin in host project)
+- [ ] **Banner** flow works
+- [ ] **Rewarded/video** flow works in **FullWithVideo**
+- [ ] Video APIs **fail gracefully** in **LiteNoVideo**
+
+## Git tag (after checks)
+
+```bash
+git add .
+git commit -m "Release AppLovin Unity adapter 1.0.14"
+git tag v1.0.14
+git push origin main
+git push origin v1.0.14
+```

@@ -100,6 +100,50 @@ if [[ ! -f "Runtime/BidscubeSDK/Mediation/AppLovinMaxUnityReflection.cs" ]]; the
   exit 1
 fi
 
+if ! grep -q "v${VER}" README.md; then
+  echo "ERROR: README.md should mention git tag v${VER}" >&2
+  exit 1
+fi
+
+if ! grep -qF "## [${VER}]" CHANGELOG.md; then
+  echo "ERROR: CHANGELOG.md missing section ## [${VER}]" >&2
+  exit 1
+fi
+
+POST="Editor/Android/BidscubeAndroidGradlePostprocessor.cs"
+for need in "Android feature set: FullWithVideo" "Android feature set: LiteNoVideo" \
+  "Skipping Media3 and Google IMA dependencies" "Including Media3 and Google IMA dependencies" \
+  "androidx.media3:media3-common" "interactivemedia"; do
+  if ! grep -qF "$need" "$POST"; then
+    echo "ERROR: $POST must contain: $need" >&2
+    exit 1
+  fi
+done
+
+python3 << 'PY' || exit 1
+from pathlib import Path
+text = Path("Editor/Android/BidscubeAndroidGradlePostprocessor.cs").read_text(encoding="utf-8")
+# Lite path must log skip before AppendVideoDeps definition (call site inside Patch is fine).
+assert text.index("Skipping Media3 and Google IMA dependencies") < text.index("static void AppendVideoDeps")
+# Ensure official MAX UPM package is not a dependency
+import json
+deps = json.load(open("package.json"))["dependencies"]
+assert "com.applovin.mediation.ads" not in deps
+PY
+
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if git ls-files | grep -E '\.(apk|aab|ipa)$' | grep -q .; then
+    echo "ERROR: APK/AAB/IPA files must not be tracked" >&2
+    exit 1
+  fi
+  if git ls-files | grep -qE '^(Library/|Temp/|Obj/|Logs/)'; then
+    echo "ERROR: Unity-generated folders must not be tracked (Library/, Temp/, Obj/, Logs/)" >&2
+    exit 1
+  fi
+fi
+
+python3 tools/validate-android-gradle-modes.py
+
 echo "Suggested git tag (must match package.json): v$VER"
 echo "  git tag -a \"v$VER\" -m \"com.bidscube.applovin.max $VER\""
 echo "  git push origin \"v$VER\""

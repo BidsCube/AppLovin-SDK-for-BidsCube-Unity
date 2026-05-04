@@ -11,7 +11,7 @@ namespace BidscubeSDK.Editor
 
         public static BidscubeAndroidFeatureSet Load()
         {
-            return (BidscubeAndroidFeatureSet)EditorPrefs.GetInt(PrefKey, (int)BidscubeAndroidFeatureSet.LiteNoVideo);
+            return (BidscubeAndroidFeatureSet)EditorPrefs.GetInt(PrefKey, (int)BidscubeAndroidFeatureSet.FullWithVideo);
         }
 
         public static void Save(BidscubeAndroidFeatureSet value)

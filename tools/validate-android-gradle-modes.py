@@ -6,15 +6,15 @@ ROOT = Path(__file__).resolve().parents[1]
 POST = ROOT / "Editor/Android/BidscubeAndroidGradlePostprocessor.cs"
 text = POST.read_text(encoding="utf-8")
 
-# Lite branch: between featureSet == LiteNoVideo for Patch and next major block — heuristic: Skipping log exists
-assert "Skipping video player dependencies for LiteNoVideo" in text
-assert "Including video player dependencies for FullWithVideo" in text
+assert "Skipping Media3 and Google IMA dependencies" in text
+assert "Including Media3 and Google IMA dependencies" in text
+assert "Android feature set: LiteNoVideo" in text
+assert "Android feature set: FullWithVideo" in text
 assert "androidx.media3:media3-common" in text
 assert "interactivemedia" in text
 
-# Ensure AppendVideoDeps is only invoked for FullWithVideo (after lite early-return in OnPostGenerateGradleProject)
-idx_skip = text.index("Skipping video player dependencies")
+idx_skip = text.index("Skipping Media3 and Google IMA dependencies")
 idx_append = text.index("AppendVideoDeps")
-assert idx_skip < idx_append, "Lite log must appear before AppendVideoDeps in source order"
+assert idx_skip < idx_append, "Lite skip log must appear before AppendVideoDeps in source order"
 
 print("Gradle postprocessor structure OK (Lite vs Full video deps)")

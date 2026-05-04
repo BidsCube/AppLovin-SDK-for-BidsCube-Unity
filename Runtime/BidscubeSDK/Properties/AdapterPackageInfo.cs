@@ -3,7 +3,7 @@ namespace BidscubeSDK.Mediation
     /// <summary>Version metadata for <c>com.bidscube.applovin.max</c>; must stay aligned with <c>package.json</c> and release tooling.</summary>
     public static class AdapterPackageInfo
     {
-        public const string UpmVersion = "1.0.13";
+        public const string UpmVersion = "1.0.14";
 
         /// <summary>Native Bidscube Android SDK semver bundled / Maven pin (may trail Unity UPM <c>com.bidscube.sdk</c> patch).</summary>
         public const string NativeAndroidBidscubeSdkVersion = "1.2.3";

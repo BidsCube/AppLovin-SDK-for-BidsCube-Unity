@@ -2,6 +2,29 @@
 
 ---
 
+## [1.0.14] - 2026-05-04
+
+### Fixed
+
+- Aligned Android build mode logic for **`FullWithVideo`** and **`LiteNoVideo`**.
+- Made **`FullWithVideo`** the default build mode (bootstrap, EditorPrefs default, new **`BidscubeAndroidExportSettings`** assets).
+- Ensured **`LiteNoVideo`** does not inject Media3 / Google IMA dependencies.
+- Ensured **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** matches the selected Android build mode (with **`BidscubeDefineApplicator`** + **`BidscubeAndroidExportSettingsResolver`**).
+- Fixed documentation conflicts between README, **`ANDROID_BUNDLED_SDK.md`**, Editor window, and bootstrap defaults.
+
+### Changed
+
+- Bumped UPM package version to **`1.0.14`**.
+- Updated **`AdapterPackageInfo.UpmVersion`** to **`1.0.14`**.
+- Gradle logs: **`[Bidscube AppLovin] Android feature set: …`**, **`Skipping Media3 and Google IMA dependencies`** / **`Including Media3 and Google IMA dependencies`**.
+
+### Validation
+
+- **FullWithVideo** injects full video dependency graph (Bidscube core **`…@aar`** + Media3 + IMA when no duplicate exists).
+- **LiteNoVideo** builds without Media3 / Google IMA in the managed Gradle block.
+
+---
+
 ## [1.0.13] - 2026-04-30
 
 ### Added
@@ -12,7 +35,7 @@
 ### Changed
 
 - **Package identity:** UPM id is **`com.bidscube.applovin.max`** (not the core SDK); peer dependency **`com.bidscube.sdk`** **1.2.5**; repository / changelog / docs URLs point to **`https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity`**.
-- **Android modes:** **`BidscubeAndroidFeatureSet.LiteNoVideo`** (default) vs **`FullWithVideo`** — **`BidscubeAndroidExportSettings`** asset, **`BidscubeAndroidExportSettingsResolver`**, **`BidscubeAndroidGradlePostprocessor`** (exactly **one** bundled core AAR into **`unityLibrary/libs/`**), Android define **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** only in **LiteNoVideo**, **Media3 + Google IMA** only in **FullWithVideo**.
+- **Android modes:** **`BidscubeAndroidFeatureSet.LiteNoVideo`** vs **`FullWithVideo`** — **`BidscubeAndroidExportSettings`** asset, **`BidscubeAndroidExportSettingsResolver`**, **`BidscubeAndroidGradlePostprocessor`** (exactly **one** bundled core AAR into **`unityLibrary/libs/`** when using lite/files mode), Android define **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** only in **LiteNoVideo**, **Media3 + Google IMA** only in **FullWithVideo**. (**Default mode corrected to FullWithVideo in 1.0.14.**)
 - **Bundled lite core AAR:** PluginImporter **Android disabled** so Unity does not merge the same artifact twice; adapter AAR remains enabled for Android.
 - **Samples:** video paths use **`#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO`** / **`#if BIDSCUBE_ANDROID_LITE_NO_VIDEO`** with clear lite messaging.
 

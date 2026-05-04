@@ -11,8 +11,8 @@ namespace BidscubeSDK.Editor
             if (BidscubeAndroidFeatureSetStore.HasInitializedDefaults())
                 return;
             BidscubeAndroidFeatureSetStore.MarkInitializedDefaults();
-            BidscubeAndroidFeatureSetStore.Save(BidscubeAndroidFeatureSet.LiteNoVideo);
-            BidscubeDefineApplicator.Apply(BidscubeAndroidFeatureSet.LiteNoVideo);
+            BidscubeAndroidFeatureSetStore.Save(BidscubeAndroidFeatureSet.FullWithVideo);
+            BidscubeDefineApplicator.Apply(BidscubeAndroidFeatureSet.FullWithVideo);
         }
     }
 }
