@@ -1,4 +1,4 @@
-using BidscubeSDK;
+using BidscubeSDK.Android;
 using UnityEditor;
 
 namespace BidscubeSDK.Editor
@@ -8,11 +8,11 @@ namespace BidscubeSDK.Editor
     {
         static BidscubeVideoDefineBootstrap()
         {
-            if (BidscubeFeatureSetStore.HasInitializedDefaults())
+            if (BidscubeAndroidFeatureSetStore.HasInitializedDefaults())
                 return;
-            BidscubeFeatureSetStore.MarkInitializedDefaults();
-            BidscubeFeatureSetStore.Save(BidscubeFeatureSet.FullWithVideo);
-            BidscubeDefineApplicator.Apply(BidscubeFeatureSet.FullWithVideo);
+            BidscubeAndroidFeatureSetStore.MarkInitializedDefaults();
+            BidscubeAndroidFeatureSetStore.Save(BidscubeAndroidFeatureSet.LiteNoVideo);
+            BidscubeDefineApplicator.Apply(BidscubeAndroidFeatureSet.LiteNoVideo);
         }
     }
 }

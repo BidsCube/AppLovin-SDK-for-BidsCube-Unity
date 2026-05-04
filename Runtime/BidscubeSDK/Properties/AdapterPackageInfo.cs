@@ -4,7 +4,19 @@ namespace BidscubeSDK.Mediation
     public static class AdapterPackageInfo
     {
         public const string UpmVersion = "1.0.13";
+
+        /// <summary>Native Bidscube Android SDK semver bundled / Maven pin (may trail Unity UPM <c>com.bidscube.sdk</c> patch).</summary>
         public const string NativeAndroidBidscubeSdkVersion = "1.2.3";
+
         public const string BundledMaxAdapterAarVersion = "1.0.4";
+
+        /// <summary>iOS CocoaPods <c>BidscubeSDKAppLovin</c> pin (align with native releases).</summary>
+        public const string IosBidscubeAppLovinPodVersion = "1.0.4";
+
+        public static string NativeAndroidBundledCoreAarLiteFileName =>
+            $"bidscube-sdk-lite-{NativeAndroidBidscubeSdkVersion}.aar";
+
+        public static string NativeAndroidBundledCoreAarFullFileName =>
+            $"bidscube-sdk-{NativeAndroidBidscubeSdkVersion}.aar";
     }
 }

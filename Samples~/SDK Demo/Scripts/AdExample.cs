@@ -38,7 +38,7 @@ namespace BidscubeSDK.Samples
             if (_imageAdButton != null)
                 _imageAdButton.onClick.AddListener(ShowImageAd);
 
-#if BIDSCUBE_ENABLE_VIDEO
+#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO
             if (_videoAdButton != null)
                 _videoAdButton.onClick.AddListener(ShowVideoAd);
 #else
@@ -85,7 +85,7 @@ namespace BidscubeSDK.Samples
             UpdateStatus("Loading image ad...");
         }
 
-#if BIDSCUBE_ENABLE_VIDEO
+#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO
         private void ShowVideoAd()
         {
             if (!BidscubeSDK.IsInitialized())

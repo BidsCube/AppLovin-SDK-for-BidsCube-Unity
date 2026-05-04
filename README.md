@@ -12,25 +12,25 @@
 
 Докладніше про порядок ініціалізації (**Android:** `BidscubeSDK.Initialize` перед `MaxSdk.InitializeSdk`): [`Documentation~/APPLOVIN_MAX.md`](Documentation~/APPLOVIN_MAX.md).
 
-## Android video vs lite (`FullWithVideo` / `LiteNoVideo`)
+## Android modes (`LiteNoVideo` / `FullWithVideo`)
 
-By default this package configures Unity for **full video** support (**`BidscubeFeatureSet.FullWithVideo`**): scripting define **`BIDSCUBE_ENABLE_VIDEO`** is **on**, Gradle injects **Media3 + Google IMA** only in that mode, and the exported **`unityLibrary`** uses the **full** Bidscube core (`bidscube-sdk-1.2.3.aar` when you add it under `Runtime/Plugins/Android/`, otherwise **`com.bidscube:bidscube-sdk:1.2.3@aar`** from Maven). **Lite** mode copies only **`bidscube-sdk-lite-1.2.3.aar`** and **does not** add IMA/Media3 lines.
+**Default:** **`BidscubeAndroidFeatureSet.LiteNoVideo`** — smaller dependency graph, **no** Bidscube native video player stack: Gradle injects **no** AndroidX Media3 and **no** Google IMA; only **`bidscube-sdk-lite-1.2.3.aar`** is copied into **`unityLibrary/libs/`** (PluginImporter keeps the bundled lite AAR **out** of Unity’s automatic Android merge; the postprocessor owns the copy). The Android Player define **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** is set so direct video APIs in **`com.bidscube.sdk`** can fail fast with a clear log; **banner / native / image** flows are unchanged.
 
-**`com.bidscube.sdk`** should guard **`ShowVideoAd`**, **`GetVideoAdView`**, **`VideoAdView`**, etc. with **`#if BIDSCUBE_ENABLE_VIDEO`** so video code is stripped when the define is off; this package supplies the define and Gradle wiring.
+**`FullWithVideo`:** use when you need **Bidscube** video / **IMA** (and AppLovin **rewarded / video** that depends on that stack). The postprocessor copies **`bidscube-sdk-1.2.3.aar`** if you add it under **`Runtime/Plugins/Android/`**, otherwise it uses **`com.bidscube:bidscube-sdk:1.2.3@aar`** from your Gradle repositories, and injects **Media3** + **Google IMA**. **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** is **not** defined on Android.
 
-### How to disable video support
+**`com.bidscube.sdk`** should use **`#if BIDSCUBE_ANDROID_LITE_NO_VIDEO`** (or runtime checks) for **`ShowVideoAd`**, **`GetVideoAdView`**, etc., matching this package’s define and Gradle wiring.
 
-1. Open Unity.
-2. Go to **Tools → Bidscube SDK → Android Build Features**.
-3. Turn off **Enable video ads and video player** (switches to **`LiteNoVideo`**).
-4. Re-export / rebuild Android — **`BIDSCUBE_ENABLE_VIDEO`** is removed from Player scripting defines and **`IPostGenerateGradleAndroidProject`** applies lite core + no video Gradle deps.
+### How to change mode in the Editor
+
+1. **Assets → Create → Bidscube → Android Export Settings** (ScriptableObject) and set **`featureSet`**, **or** open **Tools → Bidscube SDK → Android Build Features** and choose **Lite (no video)** vs **Full (with video)**.
+2. Re-export / rebuild Android — defines and **`IPostGenerateGradleAndroidProject`** follow the selected mode.
 
 ### What’s new in **1.0.13**
 
 | Topic | Summary |
 |--------|---------|
 | **Release** | UPM / tag **1.0.13** — [CHANGELOG](CHANGELOG.md). |
-| **Android Full / Lite** | **`BidscubeFeatureSet`**, **`BIDSCUBE_ENABLE_VIDEO`**, **Tools → Bidscube SDK → Android Build Features**, **`BidscubeAndroidGradlePostprocessor`** (AAR + conditional IMA/Media3). |
+| **Android Full / Lite** | **`BidscubeAndroidFeatureSet`**, **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`**, **Tools** menu + **`BidscubeAndroidExportSettings`**, **`BidscubeAndroidGradlePostprocessor`** (one core AAR + conditional IMA/Media3). |
 
 ### What’s new in **1.0.12**
 
@@ -108,7 +108,7 @@ Add to the Unity project **`Packages/manifest.json`** the **core SDK** (`com.bid
 
 **Окремо** установіть **офіційний AppLovin MAX Unity SDK** за інструкцією AppLovin (UPM або `.unitypackage`). Без нього в рантаймі не зʼявиться **`MaxSdk`**, і `AppLovinMaxUnityReflection` лишиться «порожнім».
 
-**Unity UI dependencies:** `com.unity.ugui` and `com.unity.textmeshpro` are peers of [`package.json`](package.json).
+**Unity UI** (for **Samples** or your UI): add **`com.unity.ugui`** / **`com.unity.textmeshpro`** in the **host** project if needed — this adapter **`package.json`** only declares **`com.bidscube.sdk`**.
 
 **Local development** alias for adapter-only line:
 
@@ -263,13 +263,13 @@ Implement **`IAdCallback`** (or your project’s callback type) for load / fail 
 
 | Path | Role |
 |------|------|
-| `Runtime/BidscubeSDK/Core/` | **`BidscubeFeatureSet`**, **`VideoBuildDefines`** / **`VideoBuildInfo`** (`BIDSCUBE_ENABLE_VIDEO`) |
+| `Runtime/BidscubeSDK/Android/` | **`BidscubeAndroidFeatureSet`**, **`BidscubeAndroidExportSettings`**, **`BidscubeLiteVideoGuard`**, **`AndroidBuildDefines`** (`BIDSCUBE_ANDROID_LITE_NO_VIDEO`) |
 | `Runtime/BidscubeSDK/Mediation/` | **`AppLovinMaxUnityReflection`** (MAX via reflection) |
 | `Runtime/BidscubeSDK/Properties/` | **`AdapterPackageInfo`** (UPM + native version strings for checks) |
 | `Runtime/Plugins/Android/` | **`applovin-bidscube-max-adapter-1.0.4.aar`**, **`bidscube-sdk-lite-1.2.3.aar`**; optional **`bidscube-sdk-1.2.3.aar`** for offline **FullWithVideo** |
 | `Editor/` | Scripting defines sync, **Tools** menu, **`BidscubeAndroidGradlePostprocessor`** |
 | `Documentation~/` | Markdown (MAX + Android layout; C# API lives with **`com.bidscube.sdk`**) |
-| `Samples~/SDK Demo/` | Demo scenes (require **`com.bidscube.sdk`**) — import via **Samples**; video UI gated by **`BIDSCUBE_ENABLE_VIDEO`** |
+| `Samples~/SDK Demo/` | Demo scenes (require **`com.bidscube.sdk`**) — import via **Samples**; video UI gated by **`#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO`** |
 
 ---
 

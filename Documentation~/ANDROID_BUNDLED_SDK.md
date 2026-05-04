@@ -1,6 +1,6 @@
 # Bundled Bidscube MAX adapter + core Android SDK (Android)
 
-> **UPM `com.bidscube.applovin.max` 1.0.13+** ships **AARs**, **`AppLovinMaxUnityReflection`**, and **`Editor/Android/BidscubeAndroidGradlePostprocessor`** (Full/Lite core copy + conditional Media3/IMA). Older paragraphs below about **`BidscubeAndroidExportSettings`** / monolithic **`BidscubeAndroidFeatureSet`** asset APIs remain **reference** if you still use them via **`com.bidscube.sdk`** or legacy projects.
+> **UPM `com.bidscube.applovin.max` 1.0.13+** ships **MAX adapter + lite core AARs**, **`AppLovinMaxUnityReflection`**, and **`Editor/Android/BidscubeAndroidGradlePostprocessor`** (copies **exactly one** core variant + conditional Media3/IMA). Resolution order: **`BidscubeAndroidExportSettings`** asset (if present) → **`BidscubeAndroidFeatureSetStore`** (EditorPrefs / bootstrap default **`LiteNoVideo`**).
 
 ## Version matrix (align with `package.json` and `AdapterPackageInfo`)
 
@@ -22,30 +22,24 @@
 
 **Primary path (default):** **`BidscubeAndroidCoreDependencyMode.BundledUnityLibraryLibsAar`** — exactly **one** `implementation files('libs/…')` line for the core, **offline-friendly** (no Maven repo required for the core AAR). Optional **`MavenBidscubeSdkAar`** / **`CustomGradleLines`** / **`SkipInjectionIntegratorOwnsCore`** unchanged.
 
-On Gradle export, **`BidscubeAndroidGradlePostprocessor`** injects **`// __BIDSCUBE_SDK_GRADLE_DEPS__`** with AppLovin **13.+**, UMP, ads-identifier, CardView, Material, Glide, and **conditionally** Media3 + Google IMA (see **Feature set** below). **Launcher** **`coreLibraryDesugaring`** stays on by default (**`NoDesugarMode`**).
+On Gradle export, **`BidscubeAndroidGradlePostprocessor`** injects a managed block **`// __BIDSCUBE_ANDROID_MANAGED_START__` … `END__`** into **`unityLibrary/build.gradle`**: **Bidscube core** (single line per mode), **`com.applovin:applovin-sdk:13.+`** if missing, and **conditionally** Media3 + Google IMA only for **`FullWithVideo`**. Other transitive libraries come from the **official MAX Unity plugin**, **EDM**, or your own Gradle templates.
 
 ## Feature set: `LiteNoVideo` vs `FullWithVideo`
 
-**Static (set before Android export / build, e.g. `[InitializeOnLoad]` Editor script):**
+**Before Android export / build:**
 
-**Option A — asset (best for Git):** create **`BidscubeAndroidExportSettings`** via the **Create** menu and commit it.
+**Option A — asset (best for Git / CI):** **Assets → Create → Bidscube → Android Export Settings**, set **`featureSet`** and **`coreDependencyMode`**, commit the **`.asset`**.
 
-**Option B — code fallback** (no asset in project):
+**Option B — Editor window:** **Tools → Bidscube SDK → Android Build Features** — persists **`BidscubeAndroidFeatureSet`** via **`BidscubeAndroidFeatureSetStore`** (EditorPrefs).
 
-```csharp
-using BidscubeSDK.Editor.Android;
-
-BidscubeAndroidGradlePostprocessor.FeatureSet = BidscubeAndroidFeatureSet.LiteNoVideo; // default
-// or
-BidscubeAndroidGradlePostprocessor.FeatureSet = BidscubeAndroidFeatureSet.FullWithVideo;
-```
+**Option C — scripting:** call **`BidscubeAndroidFeatureSetStore.Save(BidscubeAndroidFeatureSet.FullWithVideo)`** (or **`LiteNoVideo`**) from your **`[InitializeOnLoad]`** Editor bootstrap if you cannot use an asset (not recommended for teams).
 
 | `BidscubeAndroidFeatureSet` | Core JAR in `unityLibrary/libs/` | Extra Gradle `implementation` lines |
 |-----------------------------|----------------------------------|---------------------------------------|
 | **`LiteNoVideo`** (default) | `bidscube-sdk-lite-1.2.3.aar` (this release) | **Omits** `androidx.media3:media3-common`, `media3-ui`, `com.google.ads.interactivemedia.v3:interactivemedia` |
 | **`FullWithVideo`** | `bidscube-sdk-1.2.3.aar` (obtain full AAR or Maven **1.2.3**) | **Adds** Media3 **1.4.1** + interactivemedia **3.33.0** |
 
-**Logs (Unity Editor, Gradle export):** `Using Bidscube Android feature set: …`, `Copied bundled core AAR: …`, `Skipping Media3 / Google IMA…` or `Including Media3 and Google IMA…`.
+**Logs (Unity Editor, Gradle export):** `[Bidscube AppLovin] Bidscube AppLovin Android feature set: LiteNoVideo` or `FullWithVideo`, `Copied bundled core AAR: …`, `Skipping video player dependencies for LiteNoVideo` or `Including video player dependencies for FullWithVideo`.
 
 **Player scripting define:** `BidscubeAndroidScriptingDefinesPreprocessor` adds **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** for Android builds when **`FeatureSet == LiteNoVideo`**, so **Direct SDK** `ShowVideoAd` / `GetVideoAdView` log a clear failure without touching banner/native paths.
 
@@ -58,7 +52,7 @@ BidscubeAndroidGradlePostprocessor.FeatureSet = BidscubeAndroidFeatureSet.FullWi
 1. In the **game** repository (not the UPM package), create **`Assets → Create → Bidscube → Android Export Settings`**.
 2. Set **`featureSet`** to **`LiteNoVideo`** or **`FullWithVideo`** and **commit the `.asset`** so every developer and headless CI run the same Gradle graph without custom `[InitializeOnLoad]` scripts.
 3. Keep **at most one** such asset in the project (the resolver uses the first match from `AssetDatabase.FindAssets`).
-4. **`BidscubeAndroidGradlePostprocessor.FeatureSet`** remains the **fallback** when no asset exists (e.g. quick local tests, or minimal samples).
+4. When **no** **`BidscubeAndroidExportSettings`** asset exists, **`BidscubeAndroidFeatureSetStore`** (Editor window / prefs) supplies the feature set.
 
 This layout keeps the **MAX adapter** self-contained while **one** core SDK variant sits on the classpath.
 
@@ -122,29 +116,23 @@ After a bump, update **`AdapterPackageInfo`**, **AAR filenames**, and **`package
 
 ## Gradle post-processor
 
-**`BidscubeAndroidGradlePostprocessor`** runs after Gradle is generated and:
+**`BidscubeAndroidGradlePostprocessor`** implements **`IPostGenerateGradleAndroidProject`** and patches **`unityLibrary/build.gradle`**:
 
-- Injects the dependency block (marker `// __BIDSCUBE_SDK_GRADLE_DEPS__`) including the **core** line per **`CoreDependencyMode`** and **`FeatureSet`** (default: **`files('libs/bidscube-sdk-lite-….aar')`** + lite copy). Legacy exports with a plain Maven coordinate (no **`@aar`**) are rewritten on the next export when mode is **`MavenBidscubeSdkAar`**.
-- Ensures **`compileSdk` / `compileSdkVersion`** ≥ **34** and **`minSdk` / `minSdkVersion`** ≥ **26** in **`unityLibrary`** and **`launcher`**.
-- When **`NoDesugarMode`** is **`false`** (default), appends **launcher** **`coreLibraryDesugaringEnabled true`** and **`coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:<DesugarJdkLibsVersion>'`** (see `BidscubeAndroidGradlePostprocessor.DesugarJdkLibsVersion`, **2.1.4**) using markers `// __BIDSCUBE_CORE_LIBRARY_DESUGARING__` — skipped if already present or if **`NoDesugarMode`** is **`true`**. Validate Android with a **clean** Gradle cache, **`./gradlew --refresh-dependencies`**, **`assembleDebug`/`assembleRelease`**, and a **lower-API** smoke test.
+- Wraps or replaces a block between **`// __BIDSCUBE_ANDROID_MANAGED_START__`** and **`// __BIDSCUBE_ANDROID_MANAGED_END__`**.
+- Injects **exactly one** Bidscube **core** line per **`BidscubeAndroidCoreDependencyMode`** and **`BidscubeAndroidFeatureSet`** (lite **`files('libs/bidscube-sdk-lite-….aar')`** after copy, full **`files('libs/bidscube-sdk-….aar')`** or Maven **`com.bidscube:bidscube-sdk:…@aar`**).
+- Adds **`com.applovin:applovin-sdk:13.+`** only if that coordinate is **missing** from the file (does not duplicate lines already added by the official MAX plugin).
+- Adds **`androidx.media3:media3-common`**, **`media3-ui`**, and **`com.google.ads.interactivemedia.v3:interactivemedia`** **only** when **`FullWithVideo`** is selected.
 
-## Host-provided core library desugaring (optional)
+**Optional ScriptableObject fields** (**`forceCompileSdk`**, **`forceMinSdk`**, **`enableDesugaring`**) are reserved for future Gradle hooks — manage **`compileSdk`**, **`minSdk`**, and **desugaring** in your **launcher** / **main template** if the core AAR or Unity version requires it.
 
-If you use **Custom Launcher Gradle** and already declare desugaring, set **`BidscubeAndroidGradlePostprocessor.NoDesugarMode = true`** in an Editor script so the plugin does **not** append duplicate lines. If you still need a reference snippet (e.g. for **`unityLibrary`** in a custom template), use:
+## Troubleshooting
 
-```gradle
-compileOptions {
-    coreLibraryDesugaringEnabled true
-}
-```
-
-and in **`dependencies { }`**:
-
-```gradle
-coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
-```
-
-Exact file layout depends on your Unity / AGP version; mirror Android Studio / [Android Java 8+ support](https://developer.android.com/studio/write/java8-support) guidance.
+| Symptom | Likely cause | Fix |
+|--------|----------------|-----|
+| **`Duplicate class com.bidscube…`** | Two core implementations (Maven + **`files`**, or Unity-imported AAR **and** **`libs/`** copy) | Ensure **PluginImporter → Android** is **disabled** on bundled **`bidscube-sdk-*.aar`** files (this package ships them that way); keep **one** core line from the postprocessor or your own Gradle. |
+| **`ClassNotFoundException`** for IMA / Media3 in **FullWithVideo** | Feature set is **LiteNoVideo** or repos blocked | Switch export settings to **`FullWithVideo`**; confirm Gradle can resolve **Maven Central** / your mirror. |
+| Video APIs log **`Bidscube video playback is disabled in LiteNoVideo`** | Expected in **LiteNoVideo** | Use **`FullWithVideo`** for rewarded / native video paths that need the Bidscube player stack. |
+| Headless / CI build ignores EditorPrefs | No shared **`BidscubeAndroidExportSettings`** asset | Commit **`BidscubeAndroidExportSettings`** with the intended **`featureSet`** so batchmode uses the same mode as developers. |
 
 ## Publisher checklist
 

@@ -56,12 +56,12 @@ When your pinned **`bidscube-sdk-*.aar`** documents a **`VideoPlayerProvider`** 
 
 ### Android export: `LiteNoVideo` vs `FullWithVideo` (Gradle)
 
-**Resolution order:** `BidscubeAndroidExportSettings` asset in the project (if any) → else `BidscubeAndroidGradlePostprocessor.FeatureSet` (`BidscubeAndroidFeatureSet`). Prefer committing an export settings asset for GitHub / CI parity.
+**Resolution order:** **`BidscubeAndroidExportSettings`** asset (if any) → else **`BidscubeAndroidFeatureSetStore`** (Editor window / EditorPrefs; default **`LiteNoVideo`**). Prefer committing an export settings asset for GitHub / CI parity.
 
-| `FeatureSet` | Core AAR copied to `unityLibrary/libs/` | Injected Maven (besides AppLovin / UMP / Glide / Material / …) |
-|----------------|----------------------------------------|------------------------------------------------------------------|
-| **`LiteNoVideo`** (default) | `bidscube-sdk-lite-<version>.aar` | **No** `androidx.media3:*`, **no** `com.google.ads.interactivemedia.v3:interactivemedia` |
-| **`FullWithVideo`** | `bidscube-sdk-<version>.aar` | **Yes** Media3 **1.4.1** + Google IMA **3.33.0** |
+| `BidscubeAndroidFeatureSet` | Core on classpath (`unityLibrary/build.gradle`) | Video-specific Gradle lines |
+|-----------------------------|-----------------------------------------------|-----------------------------|
+| **`LiteNoVideo`** (default) | **`implementation files('libs/bidscube-sdk-lite-<ver>.aar')`** (postprocessor copy) | **None** — **no** `androidx.media3:*`, **no** `com.google.ads.interactivemedia.v3:interactivemedia` |
+| **`FullWithVideo`** | **`files('libs/bidscube-sdk-<ver>.aar')`** if the full AAR is bundled, else **`implementation 'com.bidscube:bidscube-sdk:<ver>@aar'`** | **Media3** + **Google IMA** (see postprocessor) |
 
 Default **core** resolution remains **`BundledUnityLibraryLibsAar`** (`implementation files('libs/…')`) — **no Maven Central required for the core artifact.**  
 Android player builds set **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** when `FeatureSet == LiteNoVideo` so **Direct SDK** C# APIs `ShowVideoAd` / `GetVideoAdView` fail fast with a clear log (banner / native / image flows unchanged).

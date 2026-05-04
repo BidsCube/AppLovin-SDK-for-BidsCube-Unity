@@ -6,12 +6,20 @@
 
 ### Added
 
-- **Android `FullWithVideo` / `LiteNoVideo`:** `BidscubeFeatureSet`, Player define **`BIDSCUBE_ENABLE_VIDEO`** (on by default), **Tools → Bidscube SDK → Android Build Features**, and **`BidscubeAndroidGradlePostprocessor`** — copies **`bidscube-sdk-lite-*.aar`** or full core (local **`bidscube-sdk-*.aar`** or Maven **`com.bidscube:bidscube-sdk:…@aar`**) and adds **Media3 + IMA** Gradle lines only in **FullWithVideo**.
-- **Samples:** video buttons / `ShowVideoAd` / `GetVideoAdView` paths wrapped in **`#if BIDSCUBE_ENABLE_VIDEO`**.
+- **Release tooling:** `tools/build-release-lite-no-player.sh` and `tools/build-release-full-with-player.sh` — validate AAR layout and emit named ZIP artifacts for the same UPM tree.
+- **CI:** package identity checks, forbidden binaries / Unity cache folders, Gradle postprocessor smoke validation.
 
 ### Changed
 
-- **`AdapterPackageInfo.UpmVersion`** / **`package.json`** → **1.0.13**.
+- **Package identity:** UPM id is **`com.bidscube.applovin.max`** (not the core SDK); peer dependency **`com.bidscube.sdk`** **1.2.5**; repository / changelog / docs URLs point to **`https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity`**.
+- **Android modes:** **`BidscubeAndroidFeatureSet.LiteNoVideo`** (default) vs **`FullWithVideo`** — **`BidscubeAndroidExportSettings`** asset, **`BidscubeAndroidExportSettingsResolver`**, **`BidscubeAndroidGradlePostprocessor`** (exactly **one** bundled core AAR into **`unityLibrary/libs/`**), Android define **`BIDSCUBE_ANDROID_LITE_NO_VIDEO`** only in **LiteNoVideo**, **Media3 + Google IMA** only in **FullWithVideo**.
+- **Bundled lite core AAR:** PluginImporter **Android disabled** so Unity does not merge the same artifact twice; adapter AAR remains enabled for Android.
+- **Samples:** video paths use **`#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO`** / **`#if BIDSCUBE_ANDROID_LITE_NO_VIDEO`** with clear lite messaging.
+
+### Notes
+
+- **Native Android core** remains **1.2.3** while Unity **`com.bidscube.sdk`** is **1.2.5** — see **`README`** / **`ANDROID_BUNDLED_SDK.md`** (native release cadence may trail Unity patch).
+- **Official AppLovin MAX Unity SDK** is **not** bundled; add it in the host project.
 
 ---
 

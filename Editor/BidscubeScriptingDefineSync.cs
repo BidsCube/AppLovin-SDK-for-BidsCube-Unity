@@ -9,7 +9,7 @@ namespace BidscubeSDK.Editor
 
         public void OnPreprocessBuild(BuildReport report)
         {
-            BidscubeDefineApplicator.ApplyFromStoredFeatureSet();
+            BidscubeDefineApplicator.ApplyFromEffectiveSettings();
         }
     }
 }

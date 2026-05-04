@@ -70,7 +70,7 @@ namespace BidscubeSDK.Controllers
             // Ad type buttons
             if (_imageAdButton != null)
                 _imageAdButton.onClick.AddListener(() => ShowAd(AdType.Image));
-#if BIDSCUBE_ENABLE_VIDEO
+#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO
             if (_videoAdButton != null)
                 _videoAdButton.onClick.AddListener(() => ShowAd(AdType.Video));
 #else
@@ -207,10 +207,10 @@ namespace BidscubeSDK.Controllers
                 return;
             }
 
-#if !BIDSCUBE_ENABLE_VIDEO
+#if BIDSCUBE_ANDROID_LITE_NO_VIDEO
             if (adType == AdType.Video)
             {
-                LogMessage("Video ads disabled (LiteNoVideo build — no BIDSCUBE_ENABLE_VIDEO).");
+                LogMessage("Video ads disabled in LiteNoVideo build (BIDSCUBE_ANDROID_LITE_NO_VIDEO). Use FullWithVideo for video.");
                 return;
             }
 #endif

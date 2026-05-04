@@ -29,6 +29,10 @@ jobs:
               print(f"Invalid semver in package.json: {v!r}", file=sys.stderr)
               sys.exit(1)
           print("package.json version:", v)
+          cl = open("CHANGELOG.md", encoding="utf-8").read()
+          if f"## [{v}]" not in cl:
+              print(f"ERROR: CHANGELOG.md missing section ## [{v}]", file=sys.stderr)
+              sys.exit(1)
           PY
 
       - name: Name congruence (UPM id)
@@ -42,3 +46,33 @@ jobs:
 
       - name: Release sanity (AdapterPackageInfo + semver)
         run: bash tools/verify-release-ready.sh
+
+      - name: No accidental core SDK package identity
+        run: |
+          if grep -R "\"name\": \"com.bidscube.sdk\"" --include='*.json' . 2>/dev/null | grep -v node_modules; then
+            echo "ERROR: this repo must not declare package name com.bidscube.sdk" >&2
+            exit 1
+          fi
+
+      - name: Forbidden binaries / Unity junk in repo
+        run: |
+          set -e
+          if find . \( -name '*.apk' -o -name '*.aab' -o -name '*.ipa' \) | grep -q .; then
+            echo "ERROR: APK/AAB/IPA must not be committed" >&2
+            exit 1
+          fi
+          for d in Library Temp Obj Logs; do
+            if [[ -d "$d" ]]; then echo "ERROR: Unity folder $d must not be committed" >&2; exit 1; fi
+          done
+
+      - name: Gradle postprocessor Android modes (static)
+        run: python3 tools/validate-android-gradle-modes.py
+
+      - name: Lite core AAR PluginImporter (no duplicate merge)
+        run: |
+          META="Runtime/Plugins/Android/bidscube-sdk-lite-"*.aar.meta
+          if ! grep -q "Android: Android" $META; then echo "missing Android stanza in lite .meta" >&2; exit 1; fi
+          if grep -A3 "Android: Android" $META | grep -q "enabled: 1"; then
+            echo "lite core AAR must have Android disabled in PluginImporter" >&2
+            exit 1
+          fi

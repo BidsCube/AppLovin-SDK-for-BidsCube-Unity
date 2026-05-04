@@ -91,7 +91,7 @@ namespace BidscubeSDK.Controllers
             if (_imageAdButton != null)
                 _imageAdButton.onClick.AddListener(ShowImageAd);
 
-#if BIDSCUBE_ENABLE_VIDEO
+#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO
             if (_videoAdButton != null)
                 _videoAdButton.onClick.AddListener(ShowVideoAd);
 #else
@@ -539,7 +539,7 @@ namespace BidscubeSDK.Controllers
                 if (b != null) b.interactable = value;
             }
             Set(_imageAdButton);
-#if BIDSCUBE_ENABLE_VIDEO
+#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO
             Set(_videoAdButton);
 #endif
             Set(_nativeAdButton);
@@ -564,7 +564,7 @@ namespace BidscubeSDK.Controllers
             adViewController.Initialize(_placementId, AdType.Image, this);
         }
 
-#if BIDSCUBE_ENABLE_VIDEO
+#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO
         private void ShowVideoAd()
         {
             if (!BidscubeSDK.IsInitialized())
@@ -579,7 +579,7 @@ namespace BidscubeSDK.Controllers
 #else
         private void ShowVideoAd()
         {
-            LogMessage("Video ads are disabled (LiteNoVideo build — no BIDSCUBE_ENABLE_VIDEO).");
+            LogMessage("Video ads are disabled in LiteNoVideo build. Switch export settings to FullWithVideo for video.");
         }
 #endif
 

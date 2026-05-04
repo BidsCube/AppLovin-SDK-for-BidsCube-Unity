@@ -31,7 +31,7 @@ Single documented path — native **Bidscube SDK** APIs invoked by the **AppLovi
 |--------|------------|------------|
 | **Banner** | `getImageAdView` → `View` | Passed into MAX; **AdDisplayManager** / **BannerViewFactory** host **WebView** with rendered ADM. |
 | **Interstitial** | `showImageAd` | Full-screen image overlay from rendered ADM. |
-| **Video / rewarded** | `showVideoAd` | **IMA** + fullscreen container (requires **full** core AAR + IMA/Media3 on Gradle — **`BidscubeAndroidExportSettings`** with **FullWithVideo** or **`BidscubeAndroidGradlePostprocessor.FeatureSet`**; see **`ANDROID_BUNDLED_SDK.md`**). |
+| **Video / rewarded** | `showVideoAd` | **IMA** + fullscreen container (requires **full** core + IMA/Media3 on Gradle — **`BidscubeAndroidExportSettings.featureSet = FullWithVideo`** or **Tools → Bidscube SDK → Android Build Features**; see **`ANDROID_BUNDLED_SDK.md`**). |
 | **Native** | `getNativeAdView` → payload | Adapter builds **MaxNativeAd** (assets); **do not** pass the Bidscube SDK view as the MAX creative. |
 
 ### Video playback: Direct vs MAX

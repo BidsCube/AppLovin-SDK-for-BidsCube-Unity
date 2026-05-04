@@ -83,7 +83,7 @@ namespace BidscubeSDK.Controllers
             // Ad testing buttons
             if (_showImageAdButton != null)
                 _showImageAdButton.onClick.AddListener(() => ShowAdIfConsent(AdType.Image));
-#if BIDSCUBE_ENABLE_VIDEO
+#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO
             if (_showVideoAdButton != null)
                 _showVideoAdButton.onClick.AddListener(() => ShowAdIfConsent(AdType.Video));
 #else
@@ -279,7 +279,7 @@ namespace BidscubeSDK.Controllers
                     adViewController.Initialize(placementId, AdType.Image, this);
                     break;
                 case AdType.Video:
-#if BIDSCUBE_ENABLE_VIDEO
+#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO
                     BidscubeSDK.ShowVideoAd(placementId, this);
 #else
                     LogMessage("Video ads disabled (LiteNoVideo build).");

@@ -1,5 +1,5 @@
 using System;
-using BidscubeSDK;
+using BidscubeSDK.Android;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,47 +15,49 @@ namespace BidscubeSDK.Editor
             GetWindow<BidscubeAndroidBuildFeaturesWindow>(true, "Bidscube Android Build Features");
         }
 
-        BidscubeFeatureSet _featureSet;
-        bool _enableVideo;
+        BidscubeAndroidFeatureSet _featureSet;
+        bool _fullWithVideo;
 
         void OnEnable()
         {
-            _featureSet = BidscubeFeatureSetStore.Load();
-            _enableVideo = _featureSet == BidscubeFeatureSet.FullWithVideo;
+            _featureSet = BidscubeAndroidFeatureSetStore.Load();
+            _fullWithVideo = _featureSet == BidscubeAndroidFeatureSet.FullWithVideo;
         }
 
         void OnGUI()
         {
             EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("Android native SDK capacity", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Android Bidscube core variant", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "Enabled: FullWithVideo — video ads, IMA/Media3 Gradle lines, full core AAR (or Maven @aar).\n" +
-                "Disabled: LiteNoVideo — lite core AAR only; no IMA/Media3 lines in Gradle.",
+                "Default: LiteNoVideo — lite core AAR, no Media3/IMA, defines BIDSCUBE_ANDROID_LITE_NO_VIDEO on Android.\n" +
+                "FullWithVideo — full core AAR (or Maven), Media3 + Google IMA in Gradle; video/rewarded paths allowed.",
                 MessageType.Info);
 
             EditorGUI.BeginChangeCheck();
-            _enableVideo = EditorGUILayout.ToggleLeft("Enable video ads and video player (FullWithVideo)", _enableVideo);
+            _fullWithVideo = EditorGUILayout.ToggleLeft("FullWithVideo (video player + IMA/Media3)", _fullWithVideo);
             if (EditorGUI.EndChangeCheck())
             {
-                _featureSet = _enableVideo ? BidscubeFeatureSet.FullWithVideo : BidscubeFeatureSet.LiteNoVideo;
-                BidscubeFeatureSetStore.Save(_featureSet);
+                _featureSet = _fullWithVideo
+                    ? BidscubeAndroidFeatureSet.FullWithVideo
+                    : BidscubeAndroidFeatureSet.LiteNoVideo;
+                BidscubeAndroidFeatureSetStore.Save(_featureSet);
                 BidscubeDefineApplicator.Apply(_featureSet);
-                Debug.Log(_enableVideo
-                    ? "[Bidscube] FullWithVideo: BIDSCUBE_ENABLE_VIDEO set on Player scripting define symbols."
-                    : "[Bidscube] LiteNoVideo: BIDSCUBE_ENABLE_VIDEO removed — re-export Android.");
+                Debug.Log(_fullWithVideo
+                    ? "[Bidscube AppLovin] EditorPrefs → FullWithVideo (Android define BIDSCUBE_ANDROID_LITE_NO_VIDEO removed)."
+                    : "[Bidscube AppLovin] EditorPrefs → LiteNoVideo (Android define BIDSCUBE_ANDROID_LITE_NO_VIDEO set).");
             }
 
             EditorGUILayout.Space(12);
-            EditorGUILayout.LabelField("Player scripting define (Android)", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Android scripting define", EditorStyles.boldLabel);
             var androidDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Android);
-            var hasSym = androidDefines.IndexOf(VideoBuildDefines.EnableVideoSymbol, StringComparison.Ordinal) >= 0;
-            EditorGUILayout.LabelField(VideoBuildDefines.EnableVideoSymbol,
-                hasSym ? "Present — video code path compiles for Android player" : "Absent — lite / no video path");
+            var hasLite = androidDefines.IndexOf(AndroidBuildDefines.LiteNoVideoSymbol, StringComparison.Ordinal) >= 0;
+            EditorGUILayout.LabelField(AndroidBuildDefines.LiteNoVideoSymbol,
+                hasLite ? "Present — LiteNoVideo active for Android player" : "Absent — FullWithVideo for Android player");
 
             EditorGUILayout.Space(8);
             EditorGUILayout.HelpBox(
-                "com.bidscube.sdk must guard video APIs with #if BIDSCUBE_ENABLE_VIDEO for IL stripping to match Gradle.\n" +
-                "Samples in this package hide video UI when the define is off.",
+                "Prefer a committed BidscubeAndroidExportSettings asset (Assets → Create → Bidscube → Android Export Settings) for CI parity.\n" +
+                "com.bidscube.sdk should guard video APIs with #if BIDSCUBE_ANDROID_LITE_NO_VIDEO (fail) / #else (video).",
                 MessageType.None);
         }
     }

@@ -75,7 +75,7 @@ namespace BidscubeSDK.Controllers
             // Ad creation buttons
             if (_createImageAdButton != null)
                 _createImageAdButton.onClick.AddListener(CreateImageAd);
-#if BIDSCUBE_ENABLE_VIDEO
+#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO
             if (_createVideoAdButton != null)
                 _createVideoAdButton.onClick.AddListener(CreateVideoAd);
 #else
@@ -178,7 +178,7 @@ namespace BidscubeSDK.Controllers
             LoadImageAdContent();
         }
 
-#if BIDSCUBE_ENABLE_VIDEO
+#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO
         private void CreateVideoAd()
         {
             if (!_isSDKInitialized)
@@ -224,7 +224,7 @@ namespace BidscubeSDK.Controllers
             DisplayAdView(adView);
         }
 
-#if BIDSCUBE_ENABLE_VIDEO
+#if !BIDSCUBE_ANDROID_LITE_NO_VIDEO
         private void LoadVideoAdContent()
         {
             if (!BidscubeSDK.IsInitialized())

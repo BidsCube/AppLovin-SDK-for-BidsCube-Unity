@@ -2,10 +2,10 @@
   "name": "com.bidscube.applovin.max",
   "version": "1.0.13",
   "displayName": "Bidscube AppLovin MAX Adapter",
-  "description": "Bidscube ↔ AppLovin MAX adapter for Unity (com.bidscube.sdk companion). Ships Bidscube native mediation AARs and C# helpers (e.g. AppLovinMaxUnityReflection). Does NOT include AppLovin's proprietary MAX Unity SDK: add the official AppLovin MAX Unity plugin separately so MaxSdk appears at runtime.",
+  "description": "Bidscube adapter for AppLovin MAX mediation. Supports Android Lite/No Player and Full/With Player build modes.",
   "unity": "2020.3",
-  "changelogUrl": "https://github.com/BidsCube/AppLovin-SDK-Unity/blob/main/CHANGELOG.md",
-  "documentationUrl": "https://github.com/BidsCube/AppLovin-SDK-Unity/blob/main/README.md",
+  "changelogUrl": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity/blob/main/CHANGELOG.md",
+  "documentationUrl": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity/blob/main/README.md",
   "keywords": [
     "advertising",
     "ads",
@@ -19,17 +19,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/BidsCube/AppLovin-SDK-Unity.git"
+    "url": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git"
   },
   "dependencies": {
-    "com.bidscube.sdk": "1.2.5",
-    "com.unity.ugui": "2.0.0",
-    "com.unity.textmeshpro": "3.0.6"
+    "com.bidscube.sdk": "1.2.5"
   },
   "samples": [
     {
       "displayName": "SDK Demo",
-      "description": "Example scenes and scripts demonstrating the Bidscube Unity SDK.",
+      "description": "Example scenes and scripts demonstrating the Bidscube Unity SDK (requires com.bidscube.sdk and Unity UI packages in the host project).",
       "path": "Samples~/SDK Demo"
     }
   ]
