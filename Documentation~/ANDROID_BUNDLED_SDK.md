@@ -1,13 +1,13 @@
 # Bundled Bidscube MAX adapter + core Android SDK (Android)
 
-> **UPM `com.bidscube.applovin.max` 1.0.16+** ships **MAX adapter + lite core AAR**, **`AppLovinMaxUnityReflection`**, and **`Editor/Android/BidscubeAndroidGradlePostprocessor`** (copies **exactly one** core variant + conditional Media3/IMA). Resolution order: **`BidscubeAndroidExportSettings`** asset (if present) → **`BidscubeAndroidFeatureSetStore`** (EditorPrefs / bootstrap default **`LiteNoVideo`**).
+> **UPM `com.bidscube.applovin.max` 1.0.17+** ships **MAX adapter + lite core AAR**, **`AppLovinMaxUnityReflection`**, and **`Editor/Android/BidscubeAndroidGradlePostprocessor`** (copies **exactly one** core variant + conditional Media3/IMA). Resolution order: **`BidscubeAndroidExportSettings`** asset (if present) → **`BidscubeAndroidFeatureSetStore`** (EditorPrefs / bootstrap default **`LiteNoVideo`**).
 
 ## Version matrix (align with `package.json` and `AdapterPackageInfo`)
 
 | Item | Version | Where it is set |
 |------|--------:|-----------------|
-| UPM **this** package (`com.bidscube.applovin.max`) | **1.0.16** | `package.json` → `version`; `AdapterPackageInfo.UpmVersion` in `Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs` |
-| UPM core SDK peer (`com.bidscube.sdk`, Unity) | **1.2.6** | `package.json` → `dependencies` (must match what you install in the host `manifest.json`) |
+| UPM **this** package (`com.bidscube.applovin.max`) | **1.0.17** | `package.json` → `version`; `AdapterPackageInfo.UpmVersion` in `Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs` |
+| UPM core SDK peer (`com.bidscube.sdk`, Unity) | **1.2.7** | `package.json` → `dependencies` (must match what you install in the host `manifest.json`) |
 | Android **MAX** adapter AAR | **1.0.4** | `applovin-bidscube-max-adapter-1.0.4.aar`; `AdapterPackageInfo.BundledMaxAdapterAarVersion` |
 | Android **lite** core AAR (bundled) | **1.2.3** | `bidscube-sdk-lite-1.2.3.aar`; `AdapterPackageInfo.NativeAndroidBidscubeSdkVersion` |
 | Android **full** core (IMA / video) | **1.2.3** | Not bundled in this UPM: use Maven `com.bidscube:bidscube-sdk:1.2.3@aar` and/or your own `bidscube-sdk-1.2.3.aar` in `unityLibrary/libs/` — same **semver** as lite |
@@ -88,7 +88,7 @@ BidscubeAndroidGradlePostprocessor.CustomCoreImplementationGradleLines =
 ## Version sync
 
 - **`com.bidscube.applovin.max`:** `AdapterPackageInfo.UpmVersion` = `package.json` `version`. **`NativeAndroidBidscubeSdkVersion`** and **`BundledMaxAdapterAarVersion`** must match the **filenames** of the bundled AARs on disk.
-- **`com.bidscube.sdk`:** the Unity peer version is **`package.json` → `dependencies` → `com.bidscube.sdk` (currently 1.2.6)** — use the same in the host project’s **`Packages/manifest.json`**.
+- **`com.bidscube.sdk`:** the Unity peer version is **`package.json` → `dependencies` → `com.bidscube.sdk` (currently 1.2.7)** — use the same in the host project’s **`Packages/manifest.json`**.
 - **Gradle / Maven:** pin **`com.bidscube:bidscube-sdk`** to the same **1.2.3** as the lite AAR when you need a consistent native stack.
 
 ## Updating the adapter AAR

@@ -16,7 +16,7 @@
 
 ## Version sources
 
-1. **`package.json`** — UPM package version; must equal the tag **without** `v` (`com.bidscube.applovin.max`). **`dependencies` → `com.bidscube.sdk`** (e.g. **1.2.6**) is the **declared** core peer — update README / `INTEGRATION.md` examples when you bump it; keep it aligned with what you ship in **bidscube-sdk-unity**.
+1. **`package.json`** — UPM package version; must equal the tag **without** `v` (`com.bidscube.applovin.max`). **`dependencies` → `com.bidscube.sdk`** (e.g. **1.2.7**) is the **declared** core peer — update README / `INTEGRATION.md` examples when you bump it; keep it aligned with what you ship in **bidscube-sdk-unity**.
 2. **`AdapterPackageInfo.UpmVersion`** — must match **`package.json`**. **`NativeAndroidBidscubeSdkVersion`** / **`BundledMaxAdapterAarVersion`** must match the bundled AAR **filenames** on disk. See also **`Documentation~/ANDROID_BUNDLED_SDK.md`** — **Version matrix**.
 
 ## Pre-release check

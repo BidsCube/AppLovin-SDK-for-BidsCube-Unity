@@ -26,16 +26,16 @@ python3 << 'PY' || exit 1
 import json
 pkg = json.load(open("package.json"))
 deps = pkg.get("dependencies") or {}
-if deps.get("com.bidscube.sdk") != "1.2.6":
+if deps.get("com.bidscube.sdk") != "1.2.7":
     raise SystemExit(
-        "ERROR: package.json must depend on com.bidscube.sdk 1.2.6 exactly "
+        "ERROR: package.json must depend on com.bidscube.sdk 1.2.7 exactly "
         f"(got {deps.get('com.bidscube.sdk')!r})"
     )
 for k in deps:
     if k == "com.bidscube.sdk":
         continue
     raise SystemExit(f"ERROR: unexpected package.json dependency {k!r} — keep only com.bidscube.sdk for this adapter")
-print("package.json peer dependency OK: com.bidscube.sdk 1.2.6 only")
+print("package.json peer dependency OK: com.bidscube.sdk 1.2.7 only")
 PY
 
 if ! grep -q "public const string UpmVersion" Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs; then

@@ -2,6 +2,14 @@
 
 ---
 
+## [1.0.17] - 2026-05-06
+
+### Changed
+
+- **Package / adapter UPM version** **1.0.17** — `package.json`, `AdapterPackageInfo.UpmVersion`, docs and demo manifests aligned with peer **`com.bidscube.sdk` 1.2.7** (no native AAR or MAX adapter binary change in this release).
+
+---
+
 ## [1.0.16] - 2026-05-06
 
 ### Added
@@ -11,7 +19,7 @@
 
 ### Changed
 
-- **Peer dependency:** **`com.bidscube.sdk` 1.2.6** (align with core Unity SDK release).
+- **Peer dependency:** **`com.bidscube.sdk` 1.2.7** (align with core Unity SDK release).
 - **`AdapterPackageInfo.UpmVersion`** / **`package.json`** → **1.0.16**.
 
 ---

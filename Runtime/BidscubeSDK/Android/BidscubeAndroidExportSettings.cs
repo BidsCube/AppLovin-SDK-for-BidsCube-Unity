@@ -8,7 +8,7 @@ namespace BidscubeSDK.Android
     [CreateAssetMenu(fileName = "BidscubeAndroidExportSettings", menuName = "Bidscube/Android Export Settings", order = 10)]
     public sealed class BidscubeAndroidExportSettings : ScriptableObject
     {
-        [Tooltip("Default for new assets (1.0.16+): LiteNoVideo — bundled lite AAR, no Media3/IMA. FullWithVideo — requires bidscube-sdk-*.aar or Maven mode + Media3/IMA.")]
+        [Tooltip("Default for new assets (1.0.17+): LiteNoVideo — bundled lite AAR, no Media3/IMA. FullWithVideo — requires bidscube-sdk-*.aar or Maven mode + Media3/IMA.")]
         public BidscubeAndroidFeatureSet featureSet = BidscubeAndroidFeatureSet.LiteNoVideo;
 
         public BidscubeAndroidCoreDependencyMode coreDependencyMode = BidscubeAndroidCoreDependencyMode.BundledUnityLibraryLibsAar;
