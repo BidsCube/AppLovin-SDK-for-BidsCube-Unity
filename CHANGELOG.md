@@ -2,6 +2,21 @@
 
 ---
 
+## [1.0.18] - 2026-05-06
+
+### Added
+
+- **Android:** Bundled core AARs renamed to **`bidscube-sdk-lite-no-video-1.2.4.aar`** and **`bidscube-sdk-full-video-1.2.4.aar`**, matching native Maven **`com.bidscube:sdk-lite-no-video`** / **`com.bidscube:sdk-full-video`** at **1.2.4**.
+- **Gradle:** **LiteNoVideo** strips **`coreLibraryDesugaring`** / **`coreLibraryDesugaringEnabled`** from generated **launcher** and **unityLibrary** `build.gradle`. **FullWithVideo** ensures **`coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'`** and **`coreLibraryDesugaringEnabled true`** in the launcher when missing.
+- **Shared editor/runtime:** Android export settings, scripting defines, and **`BidscubeAndroidGradleProjectPatcher`** live in **`com.bidscube.sdk` 1.2.8** (`BidscubeSDK.Android.Editor`).
+
+### Changed
+
+- **Peer dependency:** **`com.bidscube.sdk` 1.2.8**.
+- **Maven full core** line is **`com.bidscube:sdk-full-video:{ver}@aar`** (replaces **`bidscube-sdk`**).
+
+---
+
 ## [1.0.17] - 2026-05-06
 
 ### Changed

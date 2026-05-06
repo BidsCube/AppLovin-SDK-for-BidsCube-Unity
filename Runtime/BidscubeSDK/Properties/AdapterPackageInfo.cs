@@ -3,10 +3,10 @@ namespace BidscubeSDK.Mediation
     /// <summary>Version metadata for <c>com.bidscube.applovin.max</c>; must stay aligned with <c>package.json</c> and release tooling.</summary>
     public static class AdapterPackageInfo
     {
-        public const string UpmVersion = "1.0.17";
+        public const string UpmVersion = "1.0.18";
 
         /// <summary>Native Bidscube Android SDK semver bundled / Maven pin (may trail Unity UPM <c>com.bidscube.sdk</c> patch).</summary>
-        public const string NativeAndroidBidscubeSdkVersion = "1.2.3";
+        public const string NativeAndroidBidscubeSdkVersion = "1.2.4";
 
         public const string BundledMaxAdapterAarVersion = "1.0.4";
 
@@ -14,9 +14,9 @@ namespace BidscubeSDK.Mediation
         public const string IosBidscubeAppLovinPodVersion = "1.0.4";
 
         public static string NativeAndroidBundledCoreAarLiteFileName =>
-            $"bidscube-sdk-lite-{NativeAndroidBidscubeSdkVersion}.aar";
+            $"bidscube-sdk-lite-no-video-{NativeAndroidBidscubeSdkVersion}.aar";
 
         public static string NativeAndroidBundledCoreAarFullFileName =>
-            $"bidscube-sdk-{NativeAndroidBidscubeSdkVersion}.aar";
+            $"bidscube-sdk-full-video-{NativeAndroidBidscubeSdkVersion}.aar";
     }
 }

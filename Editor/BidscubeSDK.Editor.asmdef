@@ -2,7 +2,8 @@
     "name": "BidscubeSDK.AppLovinMax.Editor",
     "rootNamespace": "BidscubeSDK.Editor",
     "references": [
-        "BidscubeSDK.AppLovinMax"
+        "BidscubeSDK.AppLovinMax",
+        "BidscubeSDK.Android.Editor"
     ],
     "includePlatforms": [
         "Editor"

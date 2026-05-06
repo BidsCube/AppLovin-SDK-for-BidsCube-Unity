@@ -26,16 +26,16 @@ python3 << 'PY' || exit 1
 import json
 pkg = json.load(open("package.json"))
 deps = pkg.get("dependencies") or {}
-if deps.get("com.bidscube.sdk") != "1.2.7":
+if deps.get("com.bidscube.sdk") != "1.2.8":
     raise SystemExit(
-        "ERROR: package.json must depend on com.bidscube.sdk 1.2.7 exactly "
+        "ERROR: package.json must depend on com.bidscube.sdk 1.2.8 exactly "
         f"(got {deps.get('com.bidscube.sdk')!r})"
     )
 for k in deps:
     if k == "com.bidscube.sdk":
         continue
     raise SystemExit(f"ERROR: unexpected package.json dependency {k!r} — keep only com.bidscube.sdk for this adapter")
-print("package.json peer dependency OK: com.bidscube.sdk 1.2.7 only")
+print("package.json peer dependency OK: com.bidscube.sdk 1.2.8 only")
 PY
 
 if ! grep -q "public const string UpmVersion" Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs; then
@@ -76,13 +76,13 @@ if ((${#BIDSCUBE_ADAPTER_AARS[@]} == 0)); then
 fi
 echo "Bundled MAX adapter AAR: ${BIDSCUBE_ADAPTER_AARS[*]}"
 
-LITE_AAR="Runtime/Plugins/Android/bidscube-sdk-lite-${NATIVE_VER}.aar"
+LITE_AAR="Runtime/Plugins/Android/bidscube-sdk-lite-no-video-${NATIVE_VER}.aar"
 if [[ ! -f "$LITE_AAR" ]]; then
   echo "ERROR: expected bundled lite core AAR at $LITE_AAR" >&2
   exit 1
 fi
 echo "Bundled lite core AAR: $LITE_AAR"
-FULL_AAR="Runtime/Plugins/Android/bidscube-sdk-${NATIVE_VER}.aar"
+FULL_AAR="Runtime/Plugins/Android/bidscube-sdk-full-video-${NATIVE_VER}.aar"
 if [[ -f "$FULL_AAR" ]]; then
   echo "Optional full core AAR (FullWithVideo bundled path): $FULL_AAR"
 else
@@ -111,25 +111,23 @@ if ! grep -qF "## [${VER}]" CHANGELOG.md; then
 fi
 
 POST="Editor/Android/BidscubeAndroidGradlePostprocessor.cs"
-for need in "Android feature set: FullWithVideo" "Android feature set: LiteNoVideo" \
-  "Skipping Media3 and Google IMA dependencies" "Including Media3 and Google IMA dependencies" \
-  "androidx.media3:media3-common" "interactivemedia"; do
-  if ! grep -qF "$need" "$POST"; then
-    echo "ERROR: $POST must contain: $need" >&2
-    exit 1
-  fi
-done
+grep -q "BidscubeAndroidGradleProjectPatcher" "$POST" || { echo "ERROR: $POST must delegate to BidscubeAndroidGradleProjectPatcher" >&2; exit 1; }
+PATCHER="$ROOT/../bidscube-sdk-unity/Editor/Android/BidscubeAndroidGradleProjectPatcher.cs"
+if [[ -f "$PATCHER" ]]; then
+  for need in "Android feature set: FullWithVideo" "Android feature set: LiteNoVideo" \
+    "Skipping Media3 and Google IMA dependencies" "Including Media3 and Google IMA dependencies" \
+    "androidx.media3:media3-common" "interactivemedia" "sdk-full-video" "ApplyDesugaringPolicyLite"; do
+    if ! grep -qF "$need" "$PATCHER"; then
+      echo "ERROR: $PATCHER must contain: $need" >&2
+      exit 1
+    fi
+  done
+  python3 -c "from pathlib import Path; t=Path(r'$PATCHER').read_text(encoding='utf-8'); assert t.index('Skipping Media3 and Google IMA dependencies') < t.index('static void AppendVideoDeps')"
+else
+  echo "WARN: sibling bidscube-sdk-unity not found at $PATCHER — skipping deep Gradle patcher string checks"
+fi
 
-python3 << 'PY' || exit 1
-from pathlib import Path
-text = Path("Editor/Android/BidscubeAndroidGradlePostprocessor.cs").read_text(encoding="utf-8")
-# Lite path must log skip before AppendVideoDeps definition (call site inside Patch is fine).
-assert text.index("Skipping Media3 and Google IMA dependencies") < text.index("static void AppendVideoDeps")
-# Ensure official MAX UPM package is not a dependency
-import json
-deps = json.load(open("package.json"))["dependencies"]
-assert "com.applovin.mediation.ads" not in deps
-PY
+python3 -c 'import json; d=json.load(open("package.json"))["dependencies"]; assert "com.applovin.mediation.ads" not in d, "package.json must not list com.applovin.mediation.ads"'
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   if git ls-files | grep -E '\.(apk|aab|ipa)$' | grep -q .; then

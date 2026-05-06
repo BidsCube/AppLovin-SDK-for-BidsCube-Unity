@@ -29,8 +29,8 @@ namespace BidscubeSDK.Editor
             EditorGUILayout.Space(8);
             EditorGUILayout.LabelField("Android Bidscube core variant", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "Default: LiteNoVideo — bundled lite core AAR, no Media3/IMA, BIDSCUBE_ANDROID_LITE_NO_VIDEO on Android.\n" +
-                "FullWithVideo — requires bidscube-sdk-1.2.3.aar under Plugins/Android (or MavenBidscubeSdkAar + repos); adds Media3 + Google IMA.",
+                "Default: LiteNoVideo — bundled bidscube-sdk-lite-no-video AAR, no Media3/IMA, no core library desugaring in Gradle, BIDSCUBE_ANDROID_LITE_NO_VIDEO on Android.\n" +
+                "FullWithVideo — requires bidscube-sdk-full-video AAR under Plugins/Android (or Maven sdk-full-video); adds Media3 + Google IMA + desugar_jdk_libs in the launcher.",
                 MessageType.Info);
 
             EditorGUI.BeginChangeCheck();
@@ -57,7 +57,7 @@ namespace BidscubeSDK.Editor
             EditorGUILayout.Space(8);
             EditorGUILayout.HelpBox(
                 "Prefer a committed BidscubeAndroidExportSettings asset (Assets → Create → Bidscube → Android Export Settings) for CI parity.\n" +
-                "Keep Enable Desugaring on for bundled lite/full core (AAR metadata); uncheck only if your core does not require desugaring — post-processor strips coreLibraryDesugaring when off.\n" +
+                "LiteNoVideo + sdk-lite-no-video should build without coreLibraryDesugaringEnabled. FullWithVideo may require desugaring for AAR metadata.\n" +
                 "com.bidscube.sdk should guard video APIs with #if BIDSCUBE_ANDROID_LITE_NO_VIDEO (fail) / #else (video).",
                 MessageType.None);
         }

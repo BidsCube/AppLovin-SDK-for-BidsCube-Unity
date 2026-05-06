@@ -1,7 +1,9 @@
 {
     "name": "BidscubeSDK.AppLovinMax",
     "rootNamespace": "BidscubeSDK",
-    "references": [],
+    "references": [
+        "BidscubeSDK"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
