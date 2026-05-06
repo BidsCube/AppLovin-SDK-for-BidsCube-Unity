@@ -2,62 +2,68 @@
 
 ## 1. Пакети Unity (UPM)
 
-У **`Packages/manifest.json`** додай **core** і **адаптер** (теги мають відповідати релізам на GitHub):
+У **`Packages/manifest.json`** додайте **ядро** та **адаптер** (версії збігайте з релізними тегами на GitHub):
 
 ```json
 {
   "dependencies": {
     "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.8",
-    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.18"
+    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.19"
   }
 }
 ```
 
-Або через **Package Manager** → **Add package from git URL** — спочатку core, потім адаптер.
+Або **Package Manager** → **+** → **Add package from git URL** — спочатку core, потім адаптер.
 
-## 2. AppLovin MAX Unity SDK (обов’язково окремо)
+Пакет адаптера оголошує залежність лише на **`com.bidscube.sdk`**. **Офіційний MAX** (`com.applovin.mediation.ads` тощо) додаєте **ви** у свій проєкт — див. документацію AppLovin.
 
-Цей UPM-пакет **не** містить плагін з класом **`MaxSdk`**. Встанови **офіційний AppLovin MAX Unity SDK** з дистрибутива AppLovin. Інакше **`AppLovinMaxUnityReflection.IsMaxSdkAvailable`** залишиться `false`.
+## 2. AppLovin MAX Unity SDK (обов’язково)
 
-## 3. Android: core AAR і режим
+Цей UPM-пакет **не** містить клас **`MaxSdk`**. Підключіть **офіційний** AppLovin MAX Unity Plugin (UPM або `.unitypackage`). Інакше **`AppLovinMaxUnityReflection`** не зможе ініціалізувати MAX.
 
-- За замовчуванням (**LiteNoVideo**): у проєкт копіюється **`bidscube-sdk-lite-no-video-1.2.4.aar`**, без Media3/IMA і без примусового desugaring у launcher. Підходить для банерів / нативу / image; нативне відео через Bidscube в lite обмежене.
-- **FullWithVideo**: потрібен **`bidscube-sdk-full-video-1.2.4.aar`** у пакеті (або Maven **`com.bidscube:sdk-full-video`** у налаштуваннях експорту). Gradle додасть Media3/IMA і за потреби desugaring.
+## 3. Android
 
-Змінити режим: **Tools → Bidscube SDK → Android Build Features** або ScriptableObject **Assets → Create → Bidscube → Android Export Settings** (`featureSet`). Після зміни — знову збери Android.
+- **Мінімум:** API **26+** для зібраних AAR; узгодьте **compileSdk** / Gradle з шаблоном Unity.
+- **Режим за замовчуванням — LiteNoVideo:** у проєкт копіюється **`bidscube-sdk-lite-no-video-1.2.4.aar`**, без Media3/Google IMA і без примусового **coreLibraryDesugaring** у launcher.
+- **FullWithVideo** (нативне VAST/IMA): потрібен **`bidscube-sdk-full-video-1.2.4.aar`** у пакеті (або Maven **`com.bidscube:sdk-full-video`** за налаштуваннями постпроцесора). У редакторі: **Tools → Bidscube SDK → Android Build Features** або asset **Bidscube → Android Export Settings** → **FullWithVideo**.
+- **Дублікат AAR:** у Inspector для **`bidscube-sdk-*.aar`** зазвичай вимикають **Android** plugin import, якщо постпроцесор сам кладе AAR у **`unityLibrary/libs/`** — щоб не злити двічі.
 
-**Мінімум:** Android **minSdk ≥ 26** (узгодь зі своїм шаблоном). У **Inspector** для **`bidscube-sdk-*.aar`** часто вимикають **Android** (щоб Unity не мерджив двічі) — копію в **`unityLibrary/libs/`** робить postprocessor.
+## 4. iOS (MAX)
 
-## 4. iOS (MAX mediation)
-
-У **Podfile** додай залежності під свій процес (версії узгодь з **`AdapterPackageInfo`** у коді адаптера), зокрема **`BidscubeSDKAppLovin`** та **`AppLovinSDK`** — як у релізних нотатках нативного iOS-адаптера.
+У **Podfile** потрібні **`AppLovinSDK`** (13.x) та **`BidscubeSDKAppLovin`** (**1.0.4** — як у релізах native). Налаштування під ваш CI / post-build.
 
 ## 5. Ініціалізація (порядок)
 
-- **Android:** якщо задаєш **`AdRequestAuthority`** / конфіг через C# **`BidscubeSDK.Initialize`**, викликай **до** **`MaxSdk.InitializeSdk`**, щоб нативний шар бачив той самий SSP host.
-- **Режим MAX mediation:** у **`SDKConfig.Builder`** вкажи **`IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)`**, потім ініціалізуй MAX. У цьому режимі **не** використовуй C# API на кшталт **`GetBannerAdView` / `ShowVideoAd`** — лише завантаження/показ через MAX.
+- **Android:** якщо задаєте **`AdRequestAuthority` / SSP** через C# **`BidscubeSDK.Initialize`**, викликайте **`BidscubeSDK.Initialize`** **до** **`MaxSdk.InitializeSdk`**, щоб нативна конфігурація збігалася з адаптером.
+- **Режим медіації:** у **`SDKConfig.Builder`** вкажіть **`IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)`**, потім ініціалізація MAX. У цьому режимі **не** використовуйте C# API показу креативів ядра (`GetBannerAdView`, `ShowVideoAd`, …) — лише MAX.
 
-Приклад напряму SDK (не MAX) дивись у **`com.bidscube.sdk`** (README / приклади пакета).
+Приклад мінімальної C# ініціалізації під MAX:
 
-## 6. AppLovin MAX dashboard (мінімум)
+```csharp
+var config = new SDKConfig.Builder()
+    .IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)
+    .AdRequestAuthority("your-ssp-host.example.com")
+    .Build();
+BidscubeSDK.BidscubeSDK.Initialize(config);
+// далі MaxSdk.InitializeSdk(...) за документацією AppLovin
+```
 
-1. Зареєструй додаток, додай **SDK key** у MAX Unity plugin.
-2. У **Mediation → Networks** додай **Bidscube** як **custom SDK network** на потрібних ad units.
-3. **Android:** клас адаптера **`com.applovin.mediation.adapters.BidscubeMediationAdapter`** (йде в bundled AAR).
-4. **iOS:** клас згідно з документацією нативного адаптера (на кшталт **`ALBidscubeMediationAdapter`**).
-5. Поле **App ID** у налаштуванні мережі в MAX — це **Bidscube placement ID**. За потреби **server parameters:** **`request_authority`** або **`ssp_host`**.
+Деталі API ядра (банери, колбеки, тестовий режим) — у репозиторії **`com.bidscube.sdk`**.
 
-## 7. Семпли
+## 6. Кабінет AppLovin MAX (мінімум)
 
-У **Package Manager** → **`com.bidscube.applovin.max`** → **Samples** → імпорт **SDK Demo** (потребує **`com.bidscube.sdk`**).
+1. Додайте **Bidscube** як **custom SDK network** у медіації.
+2. **Android:** клас адаптера **`com.applovin.mediation.adapters.BidscubeMediationAdapter`** (йде в bundled AAR).
+3. **iOS:** **`ALBidscubeMediationAdapter`** (точна назва згідно з вашим iOS адаптером).
+4. Поле **App ID** у налаштуваннях мережі для Bidscube — це **placement ID** Bidscube. За потреби server parameters: **`request_authority`** / **`ssp_host`**.
 
-## 8. Типові проблеми
+## 7. Типові проблеми
 
 | Симптом | Дія |
 |--------|-----|
-| Немає **`MaxSdk`** | Встанови офіційний **AppLovin MAX Unity** plugin. |
-| **`ClassNotFoundException` `com.bidscube.sdk.BidscubeSDK`** | Переконайся, що в згенерованому **`unityLibrary/build.gradle`** одна лінія core (`files('libs/bidscube-sdk-…')` або Maven **`@aar`**). |
-| Дублікат класів Bidscube | Прибери другу залежність core; для AAR у Plugins вимкни Android merge, якщо postprocessor копіює в **`libs/`**. |
-| Помилки Gradle / desugaring | **LiteNoVideo** + lite AAR зазвичай без desugaring; **FullWithVideo** може вимагати desugaring — перемкни режим або додай full AAR / Maven. |
+| Немає **`MaxSdk`** | Встановіть офіційний MAX Unity SDK. |
+| **`ClassNotFoundException` `com.bidscube.sdk.BidscubeSDK`** | Перевірте **`unityLibrary/build.gradle`**: одна залежність на core (файл з **`libs/`** або Maven **`@aar`**). |
+| **Duplicate class / DEX** | Приберіть дубль core; не імпортуйте той самий AAR і через Unity Plugin, і через `unityLibrary/libs/`. |
+| **Gradle / desugaring** | **LiteNoVideo** зазвичай без desugaring; **FullWithVideo** може потребувати **desugar_jdk_libs** на launcher — див. згенерований Gradle після експорту. |
 
-Деталі версій AAR і рядків Gradle див. **`Runtime/.../AdapterPackageInfo.cs`** та **`package.json`**.
+SSP-хост задається в коді через **`SDKConfig.Builder.AdRequestAuthority(...)`** (деталі реалізації — у пакеті **`com.bidscube.sdk`**).

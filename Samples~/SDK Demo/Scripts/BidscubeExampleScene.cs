@@ -20,7 +20,7 @@ namespace BidscubeSDK.Controllers
         [SerializeField] private bool _enableDebugMode = true;
         [SerializeField] private bool _enableLogging = true;
         [SerializeField] private bool _enableTestMode = false;
-        [Tooltip("Direct SDK: use sample ad buttons. AppLovin MAX: init only — see Documentation~/APPLOVIN_MAX.md")]
+        [Tooltip("Direct SDK: use sample ad buttons. AppLovin MAX: init only — see Documentation~/INSTALL.md")]
         [SerializeField] private BidscubeIntegrationMode _integrationMode = BidscubeIntegrationMode.DirectSdk;
         [SerializeField] private bool _loadIntegrationModeFromPlayerPrefs = false;
         [SerializeField] private string _integrationModePlayerPrefsKey = "bidscube_integration_mode";
@@ -309,7 +309,7 @@ namespace BidscubeSDK.Controllers
                 LogMessage($"   - Integration mode: {config.IntegrationMode.ToWireString()}");
                 if (config.IntegrationMode.IsMediationMode())
                 {
-                    LogMessage(" AppLovin MAX mode: do not use C# creative APIs here; load/show via MAX. See Documentation~/APPLOVIN_MAX.md");
+                    LogMessage(" AppLovin MAX mode: do not use C# creative APIs here; load/show via MAX. See Documentation~/INSTALL.md");
                     SetDirectSdkDemoButtonsInteractable(false);
                     StartCoroutine(InitializeMaxSdkAfterBidscubeCoroutine());
                 }
@@ -329,7 +329,7 @@ namespace BidscubeSDK.Controllers
         {
             if (!AppLovinMaxUnityReflection.IsMaxSdkAvailable)
             {
-                LogMessage("[MAX] AppLovin MAX Unity plugin not found. Add the official MAX plugin (MaxSdk) to this project — see Documentation~/APPLOVIN_MAX.md.");
+                LogMessage("[MAX] AppLovin MAX Unity plugin not found. Add the official MAX plugin (MaxSdk) to this project — see Documentation~/INSTALL.md.");
                 yield break;
             }
 

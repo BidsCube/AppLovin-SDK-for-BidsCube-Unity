@@ -1,6 +1,6 @@
 {
   "name": "com.bidscube.applovin.max",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "displayName": "Bidscube AppLovin MAX Adapter",
   "description": "Bidscube adapter for AppLovin MAX mediation. Supports Android Lite/No Player and Full/With Player build modes.",
   "unity": "2020.3",

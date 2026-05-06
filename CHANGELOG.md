@@ -2,6 +2,14 @@
 
 ---
 
+## [1.0.19] - 2026-05-06
+
+### Changed
+
+- **UPM / tag:** **1.0.19** — `package.json`, `AdapterPackageInfo.UpmVersion`, **README**, **Documentation~/INSTALL.md** (peer **`com.bidscube.sdk` 1.2.8** без змін).
+
+---
+
 ## [1.0.18] - 2026-05-06
 
 ### Added
@@ -14,6 +22,7 @@
 
 - **Peer dependency:** **`com.bidscube.sdk` 1.2.8**.
 - **Maven full core** line is **`com.bidscube:sdk-full-video:{ver}@aar`** (replaces **`bidscube-sdk`**).
+- **Docs:** **`README.md`** скорочено до встановлення; єдиний гайд — **`Documentation~/INSTALL.md`** (старі окремі файли в `Documentation~/` прибрані).
 
 ---
 

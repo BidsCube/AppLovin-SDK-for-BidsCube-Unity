@@ -92,7 +92,7 @@ jobs:
 
             Asset **`${{ env.ZIP_NAME }}`** = `Bidscube-SDK-Unity-{version}.zip` (repo snapshot without `.git`). Naming table: [`RELEASE.md`](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/RELEASE.md).
 
-            Documentation: [README](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/README.md), [AppLovin MAX](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/Documentation~/APPLOVIN_MAX.md).
+            Documentation: [README](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/README.md), [Installation](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/Documentation~/INSTALL.md).
 
       - name: GitHub Release (manual — workflow_dispatch)
         if: github.event_name == 'workflow_dispatch'

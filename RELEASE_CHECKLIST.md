@@ -1,25 +1,22 @@
 # Release checklist — `com.bidscube.applovin.max`
 
-## Release `v1.0.17`
+Повний процес: [`RELEASE.md`](RELEASE.md).
 
-- [ ] `package.json` version is **1.0.17**
-- [ ] `AdapterPackageInfo.UpmVersion` is **1.0.17**
-- [ ] README / docs mention **`v1.0.17`** where applicable (git URL examples)
-- [ ] CHANGELOG has **`## [1.0.17]`**
-- [ ] `dependencies` → **`com.bidscube.sdk`** is **1.2.7**
-- [ ] Run **`bash tools/verify-release-ready.sh`** from repo root (exit 0)
+## Перед тегом
 
-## Tag and push
+- [ ] `package.json` / `AdapterPackageInfo.UpmVersion` = поточна UPM-версія (зараз **1.0.19**)
+- [ ] `README.md` та **`Documentation~/INSTALL.md`** — приклади **`#v…`** збігаються з тегами
+- [ ] `CHANGELOG.md` — секція **`## [версія]`**
+- [ ] `bash tools/verify-release-ready.sh` — exit **0**
+
+## Тег і push
 
 ```bash
-cd AppLovin-SDK-Unity
 bash tools/verify-release-ready.sh
 git add -A && git status
-git commit -m "Release com.bidscube.applovin.max 1.0.17"
-git tag v1.0.17
-git push origin main && git push origin v1.0.17
+git commit -m "Release com.bidscube.applovin.max <версія>"
+git tag -a "v<версія>" -m "com.bidscube.applovin.max <версія>"
+git push origin main && git push origin "v<версія>"
 ```
 
-Create a **GitHub Release** from **`v1.0.17`**; paste **`CHANGELOG`** section **`[1.0.17]`** into release notes.
-
-**Order:** release **`com.bidscube.sdk` `v1.2.7`** first (this package declares a hard peer on **1.2.7**).
+Спочатку реліз **`com.bidscube.sdk`**, якщо змінився peer у `package.json`.
