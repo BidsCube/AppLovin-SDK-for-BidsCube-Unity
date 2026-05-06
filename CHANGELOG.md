@@ -2,6 +2,18 @@
 
 ---
 
+## [1.0.20] - 2026-05-06
+
+### Changed
+
+- **Peer dependency:** **`com.bidscube.sdk` 1.2.9** (assembly **`BidscubeSDK.Android`**; Gradle patcher / Editor compile fixes).
+
+### Fixed
+
+- **Editor:** **`BidscubeAndroidBuildFeaturesWindow`** no longer imports **`BidscubeSDK.Android`** — uses the same **`EditorPrefs`** key as core and **`BidscubeDefineApplicator.ApplyFromStoredFeatureSet()`**, so the adapter compiles when the core **`BidscubeSDK`** runtime assembly is resolved without pulling Android types transitively.
+
+---
+
 ## [1.0.19] - 2026-05-06
 
 ### Changed

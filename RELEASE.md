@@ -2,12 +2,12 @@
 
 ## Naming conventions (congruence)
 
-| Item | Format | Example (1.0.19) |
+| Item | Format | Example (1.0.20) |
 |------|--------|------------------|
-| **UPM `package.json` → `version`** | **`MAJOR.MINOR.PATCH`** only (Unity rejects `1.0.3.1`-style fourth segment). Optional prerelease: `1.0.19-rc.1`. | `1.0.19` |
-| **Git tag** | `v` + the same version string | `v1.0.19` |
-| **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.19.zip` |
-| **GitHub Release title** (workflow) | `com.bidscube.applovin.max {version}` | `com.bidscube.applovin.max 1.0.19` |
+| **UPM `package.json` → `version`** | **`MAJOR.MINOR.PATCH`** only (Unity rejects `1.0.3.1`-style fourth segment). Optional prerelease: `1.0.20-rc.1`. | `1.0.20` |
+| **Git tag** | `v` + the same version string | `v1.0.20` |
+| **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.20.zip` |
+| **GitHub Release title** (workflow) | `com.bidscube.applovin.max {version}` | `com.bidscube.applovin.max 1.0.20` |
 | **GitHub repository** (recommended) | `AppLovin-SDK-Unity` | `github.com/BidsCube/AppLovin-SDK-Unity` |
 | **`AdapterPackageInfo.UpmVersion`** | Must match UPM `version` | In `Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs` (companion to **`com.bidscube.sdk`**) |
 | **iOS `BidscubeSDKAppLovin` pod** | Optional manual Podfile | Often **1.0.4** while UPM is **1.0.x** until native ships a new adapter |
@@ -16,7 +16,7 @@
 
 ## Version sources
 
-1. **`package.json`** — UPM package version; must equal the tag **without** `v` (`com.bidscube.applovin.max`). **`dependencies` → `com.bidscube.sdk`** (e.g. **1.2.8**) is the **declared** core peer — update **`README.md`** / **`Documentation~/INSTALL.md`** git URL examples when you bump it; keep aligned with **bidscube-sdk-unity**.
+1. **`package.json`** — UPM package version; must equal the tag **without** `v` (`com.bidscube.applovin.max`). **`dependencies` → `com.bidscube.sdk`** (e.g. **1.2.9**) is the **declared** core peer — update **`README.md`** / **`Documentation~/INSTALL.md`** git URL examples when you bump it; keep aligned with **bidscube-sdk-unity**.
 2. **`AdapterPackageInfo.UpmVersion`** — must match **`package.json`**. **`NativeAndroidBidscubeSdkVersion`** / **`BundledMaxAdapterAarVersion`** must match the bundled AAR **filenames** on disk (see **`README`** / **`INSTALL.md`**).
 
 ## Pre-release check
@@ -39,22 +39,22 @@
 3. Create an annotated tag:
 
 ```bash
-git tag -a "v1.0.19" -m "com.bidscube.applovin.max 1.0.19"
-git push origin "v1.0.19"
+git tag -a "v1.0.20" -m "com.bidscube.applovin.max 1.0.20"
+git push origin "v1.0.20"
 ```
 
-4. The **Release (GitHub)** workflow (`.github/workflows/release.yml`) validates `package.json`, builds a ZIP without `.git`, and creates a GitHub Release with **`Bidscube-SDK-Unity-{version}.zip`** (e.g. **`Bidscube-SDK-Unity-1.0.19.zip`**).
+4. The **Release (GitHub)** workflow (`.github/workflows/release.yml`) validates `package.json`, builds a ZIP without `.git`, and creates a GitHub Release with **`Bidscube-SDK-Unity-{version}.zip`** (e.g. **`Bidscube-SDK-Unity-1.0.20.zip`**).
 
-### Release `v1.0.19` (2026-05-06)
+### Release `v1.0.20` (2026-05-06)
 
-- Bump **`package.json`** / **`AdapterPackageInfo.UpmVersion`** to **1.0.19** and document **[CHANGELOG](CHANGELOG.md)** section **`[1.0.19]`**.
+- Bump **`package.json`** / **`AdapterPackageInfo.UpmVersion`** to **1.0.20** and document **[CHANGELOG](CHANGELOG.md)** section **`[1.0.20]`** (peer **`com.bidscube.sdk` 1.2.9**; Editor window decoupled from **`BidscubeSDK.Android`** imports).
 - Run **`./tools/verify-release-ready.sh`** (checks README / CHANGELOG / Gradle branching).
 - Android **default** export mode is **`LiteNoVideo`** (bundled **`bidscube-sdk-lite-no-video-1.2.4.aar`**; no forced launcher desugaring). Use **`FullWithVideo`** when you need native VAST/IMA (**`bidscube-sdk-full-video-1.2.4.aar`** or Maven **`sdk-full-video`**) — see **`Documentation~/INSTALL.md`**.
 
 **UPM consumers:**
 
 ```json
-"com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.19"
+"com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.20"
 ```
 
 Add **`com.bidscube.sdk`** separately (see [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity)).
@@ -84,7 +84,7 @@ Workflow files are under **`.github/workflows/`** at the package repository root
 ### Release (UPM ZIP + GitHub Release)
 
 - **`release.yml`**:
-  1. **Via tag:** after `git push origin v1.0.19` (or the current `v*` tag). The value in `package.json` must match the tag without `v`.
+  1. **Via tag:** after `git push origin v1.0.20` (or the current `v*` tag). The value in `package.json` must match the tag without `v`.
   2. **Manual:** **Actions → “Release (GitHub)” → Run workflow** → select a branch (e.g. `main`). Version is read from `package.json`; a GitHub Release with the ZIP is created. If a release for that tag already exists, the step fails.
 
 Quick local check before tagging: `./tools/verify-release-ready.sh`.

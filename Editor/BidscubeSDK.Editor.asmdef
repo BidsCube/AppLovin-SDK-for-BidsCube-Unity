@@ -2,6 +2,7 @@
     "name": "BidscubeSDK.AppLovinMax.Editor",
     "rootNamespace": "BidscubeSDK.Editor",
     "references": [
+        "BidscubeSDK",
         "BidscubeSDK.AppLovinMax",
         "BidscubeSDK.Android.Editor"
     ],

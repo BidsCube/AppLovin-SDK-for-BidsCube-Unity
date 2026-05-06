@@ -1,6 +1,6 @@
 # Bidscube AppLovin MAX adapter (`com.bidscube.applovin.max`)
 
-**Версія UPM:** **1.0.19** · тег **`v1.0.19`** · peer **`com.bidscube.sdk` [1.2.8](https://github.com/BidsCube/bidscube-sdk-unity)**.
+**Версія UPM:** **1.0.20** · тег **`v1.0.20`** · peer **`com.bidscube.sdk` [1.2.9](https://github.com/BidsCube/bidscube-sdk-unity)**.
 
 Це **додатковий** пакет до ядра Bidscube: MAX-адаптер (AAR), lite/full core AAR для Android і міст до **`MaxSdk`**. Ядро C# — у **`com.bidscube.sdk`**.
 
@@ -13,8 +13,8 @@
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.8",
-    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.19"
+    "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.9",
+    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.20"
   }
 }
 ```

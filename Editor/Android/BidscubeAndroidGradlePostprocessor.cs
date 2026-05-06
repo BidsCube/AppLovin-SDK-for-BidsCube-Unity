@@ -1,12 +1,9 @@
 using BidscubeSDK.Mediation;
 using UnityEditor;
-#if UNITY_ANDROID
 using UnityEditor.Android;
-#endif
 
 namespace BidscubeSDK.Editor.Android
 {
-#if UNITY_ANDROID
     internal sealed class BidscubeAndroidGradlePostprocessor : IPostGenerateGradleAndroidProject
     {
         public int callbackOrder => 50;
@@ -24,5 +21,4 @@ namespace BidscubeSDK.Editor.Android
                     AdapterPackageInfo.NativeAndroidBundledCoreAarFullFileName));
         }
     }
-#endif
 }

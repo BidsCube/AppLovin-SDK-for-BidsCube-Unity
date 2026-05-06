@@ -4,7 +4,7 @@
 
 ## Перед тегом
 
-- [ ] `package.json` / `AdapterPackageInfo.UpmVersion` = поточна UPM-версія (зараз **1.0.19**)
+- [ ] `package.json` / `AdapterPackageInfo.UpmVersion` = поточна UPM-версія (зараз **1.0.20**)
 - [ ] `README.md` та **`Documentation~/INSTALL.md`** — приклади **`#v…`** збігаються з тегами
 - [ ] `CHANGELOG.md` — секція **`## [версія]`**
 - [ ] `bash tools/verify-release-ready.sh` — exit **0**
