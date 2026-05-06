@@ -49,7 +49,7 @@ namespace BidscubeSDK.Editor
 
             EditorGUILayout.Space(12);
             EditorGUILayout.LabelField("Android scripting define", EditorStyles.boldLabel);
-            var androidDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Android);
+            var androidDefines = BidscubeDefineApplicator.GetScriptingDefineSymbols(BuildTargetGroup.Android);
             var hasLite = androidDefines.IndexOf(AndroidBuildDefines.LiteNoVideoSymbol, StringComparison.Ordinal) >= 0;
             EditorGUILayout.LabelField(AndroidBuildDefines.LiteNoVideoSymbol,
                 hasLite ? "Present — LiteNoVideo active for Android player" : "Absent — FullWithVideo for Android player");
@@ -57,6 +57,7 @@ namespace BidscubeSDK.Editor
             EditorGUILayout.Space(8);
             EditorGUILayout.HelpBox(
                 "Prefer a committed BidscubeAndroidExportSettings asset (Assets → Create → Bidscube → Android Export Settings) for CI parity.\n" +
+                "Keep Enable Desugaring on for bundled lite/full core (AAR metadata); uncheck only if your core does not require desugaring — post-processor strips coreLibraryDesugaring when off.\n" +
                 "com.bidscube.sdk should guard video APIs with #if BIDSCUBE_ANDROID_LITE_NO_VIDEO (fail) / #else (video).",
                 MessageType.None);
         }

@@ -2,6 +2,20 @@
 
 ---
 
+## [1.0.16] - 2026-05-06
+
+### Added
+
+- **Android:** **`BidscubeAndroidExportSettings.enableDesugaring`** — when **unchecked** (settings asset required), **`BidscubeAndroidGradlePostprocessor`** strips **`coreLibraryDesugaring`** and sets **`coreLibraryDesugaringEnabled false`** in generated **`launcher`** and **`unityLibrary`** `build.gradle`. **Note:** bundled **`bidscube-sdk-lite` / `bidscube-sdk`** AAR metadata usually **requires** desugaring on **`:launcher`** — builds fail **`checkReleaseAarMetadata`** unless desugaring stays enabled or the core dependency does not declare the requirement. Editor logs a **warning** when stripping is requested.
+- **Docs:** **`Documentation~/APPLOVIN_MEDIATION_STEPS.md`** — short MAX + Bidscube checklist; links from **README**, **INTEGRATION**, **APPLOVIN_MAX**; expanded guidance to **keep desugaring enabled** for bundled AARs.
+
+### Changed
+
+- **Peer dependency:** **`com.bidscube.sdk` 1.2.6** (align with core Unity SDK release).
+- **`AdapterPackageInfo.UpmVersion`** / **`package.json`** → **1.0.16**.
+
+---
+
 ## [1.0.15] - 2026-05-04
 
 ### Fixed

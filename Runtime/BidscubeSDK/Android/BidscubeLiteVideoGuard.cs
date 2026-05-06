@@ -10,7 +10,7 @@ namespace BidscubeSDK.Android
     public static class BidscubeLiteVideoGuard
     {
         public const string LiteModeMessage =
-            "Bidscube video playback is disabled in LiteNoVideo build. Switch to FullWithVideo to use video/rewarded ads.";
+            "Bidscube video is disabled in LiteNoVideo Android builds. Use FullWithVideo or AppLovin MAX for video.";
 
 #if BIDSCUBE_ANDROID_LITE_NO_VIDEO
         public static bool IsVideoBlocked => true;

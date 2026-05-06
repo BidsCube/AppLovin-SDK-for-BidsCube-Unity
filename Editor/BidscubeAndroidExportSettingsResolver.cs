@@ -42,5 +42,17 @@ namespace BidscubeSDK.Editor
             var asset = TryLoadFirstSettingsAsset();
             return asset != null ? asset.customCoreImplementationGradleLines ?? "" : "";
         }
+
+        /// <summary>
+        /// When no <see cref="BidscubeAndroidExportSettings"/> asset exists, returns <c>true</c> (do not alter host Gradle desugaring).
+        /// When an asset exists, returns <see cref="BidscubeAndroidExportSettings.enableDesugaring"/>.
+        /// </summary>
+        internal static bool GetEffectiveEnableDesugaring()
+        {
+            var asset = TryLoadFirstSettingsAsset();
+            if (asset == null)
+                return true;
+            return asset.enableDesugaring;
+        }
     }
 }

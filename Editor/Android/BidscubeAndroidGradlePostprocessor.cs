@@ -6,7 +6,6 @@ using BidscubeSDK.Android;
 using BidscubeSDK.Editor;
 using BidscubeSDK.Mediation;
 using UnityEditor;
-using UnityEditor.PackageManager;
 #if UNITY_ANDROID
 using UnityEditor.Android;
 #endif
@@ -20,95 +19,223 @@ namespace BidscubeSDK.Editor.Android
 
         public void OnPostGenerateGradleAndroidProject(string path)
         {
-            var featureSet = BidscubeAndroidExportSettingsResolver.GetEffectiveFeatureSet();
-            var coreMode = BidscubeAndroidExportSettingsResolver.GetEffectiveCoreDependencyMode();
-            var customLines = BidscubeAndroidExportSettingsResolver.GetEffectiveCustomGradleLines();
-
-            if (featureSet == BidscubeAndroidFeatureSet.LiteNoVideo)
-                UnityEngine.Debug.Log("[Bidscube AppLovin] Android feature set: LiteNoVideo");
-            else
-                UnityEngine.Debug.Log("[Bidscube AppLovin] Android feature set: FullWithVideo");
-
-            var pkgRoot = ResolvePackageRoot();
-            if (string.IsNullOrEmpty(pkgRoot))
+            try
             {
-                UnityEngine.Debug.LogWarning("[Bidscube AppLovin] Could not resolve UPM package root; skipping Gradle/AAR integration.");
-                return;
-            }
+                var featureSet = BidscubeAndroidExportSettingsResolver.GetEffectiveFeatureSet();
+                var coreMode = BidscubeAndroidExportSettingsResolver.GetEffectiveCoreDependencyMode();
+                var customLines = BidscubeAndroidExportSettingsResolver.GetEffectiveCustomGradleLines();
 
-            var plugins = Path.Combine(pkgRoot, "Runtime", "Plugins", "Android");
-            var ver = AdapterPackageInfo.NativeAndroidBidscubeSdkVersion;
-            var liteName = AdapterPackageInfo.NativeAndroidBundledCoreAarLiteFileName;
-            var fullName = AdapterPackageInfo.NativeAndroidBundledCoreAarFullFileName;
-            var liteSrc = Path.Combine(plugins, liteName);
-            var fullSrc = Path.Combine(plugins, fullName);
-            var libsDir = Path.Combine(path, "unityLibrary", "libs");
-            Directory.CreateDirectory(libsDir);
-            var liteDst = Path.Combine(libsDir, liteName);
-            var fullDst = Path.Combine(libsDir, fullName);
+                if (featureSet == BidscubeAndroidFeatureSet.LiteNoVideo)
+                    UnityEngine.Debug.Log("[Bidscube AppLovin] Android feature set: LiteNoVideo");
+                else
+                    UnityEngine.Debug.Log("[Bidscube AppLovin] Android feature set: FullWithVideo");
 
-            if (coreMode == BidscubeAndroidCoreDependencyMode.SkipInjectionIntegratorOwnsCore)
-            {
-                UnityEngine.Debug.LogWarning("[Bidscube AppLovin] CoreDependencyMode SkipInjectionIntegratorOwnsCore — not injecting Bidscube core lines.");
-                RemoveManagedBlock(path);
-                return;
-            }
+                if (!TryGetUnityLibraryGradleInfo(path, out _, out var unityLibraryBuildGradle, out var libsDir))
+                {
+                    UnityEngine.Debug.LogWarning(
+                        "[Bidscube AppLovin] Could not locate unityLibrary/build.gradle from Gradle path: " + path +
+                        ". Expected either <root>/unityLibrary/build.gradle or <unityLibraryModule>/build.gradle (Unity 6+).");
+                    return;
+                }
 
-            if (coreMode == BidscubeAndroidCoreDependencyMode.CustomGradleLines)
-            {
-                if (string.IsNullOrWhiteSpace(customLines))
+                var pkgRoot = ResolvePackageRoot();
+                if (string.IsNullOrEmpty(pkgRoot))
+                {
+                    UnityEngine.Debug.LogWarning("[Bidscube AppLovin] Could not resolve UPM package root; skipping Gradle/AAR integration.");
+                    return;
+                }
+
+                var plugins = Path.Combine(pkgRoot, "Runtime", "Plugins", "Android");
+                var ver = AdapterPackageInfo.NativeAndroidBidscubeSdkVersion;
+                var liteName = AdapterPackageInfo.NativeAndroidBundledCoreAarLiteFileName;
+                var fullName = AdapterPackageInfo.NativeAndroidBundledCoreAarFullFileName;
+                var liteSrc = Path.Combine(plugins, liteName);
+                var fullSrc = Path.Combine(plugins, fullName);
+                Directory.CreateDirectory(libsDir);
+                var liteDst = Path.Combine(libsDir, liteName);
+                var fullDst = Path.Combine(libsDir, fullName);
+
+                if (coreMode == BidscubeAndroidCoreDependencyMode.SkipInjectionIntegratorOwnsCore)
+                {
+                    UnityEngine.Debug.LogWarning("[Bidscube AppLovin] CoreDependencyMode SkipInjectionIntegratorOwnsCore — not injecting Bidscube core lines.");
+                    RemoveManagedBlock(unityLibraryBuildGradle);
+                    return;
+                }
+
+                if (coreMode == BidscubeAndroidCoreDependencyMode.CustomGradleLines)
+                {
+                    if (string.IsNullOrWhiteSpace(customLines))
+                    {
+                        UnityEngine.Debug.LogError(
+                            "[Bidscube AppLovin] CoreDependencyMode is CustomGradleLines but customCoreImplementationGradleLines is empty. Set lines on BidscubeAndroidExportSettings or use another coreDependencyMode.");
+                        return;
+                    }
+
+                    TryCopySelectedAarForReference(featureSet, liteSrc, fullSrc, liteDst, fullDst);
+                    PatchUnityLibraryGradle(unityLibraryBuildGradle, featureSet, coreMode, customLines, ver, fullCoreFromMaven: false,
+                        useBundledFullAar: false, useBundledLiteAar: false);
+                    return;
+                }
+
+                if (featureSet == BidscubeAndroidFeatureSet.LiteNoVideo)
+                {
+                    TryDelete(fullDst);
+                    if (!File.Exists(liteSrc))
+                    {
+                        UnityEngine.Debug.LogError($"[Bidscube AppLovin] LiteNoVideo: missing lite AAR at {liteSrc}");
+                        return;
+                    }
+
+                    File.Copy(liteSrc, liteDst, true);
+                    UnityEngine.Debug.Log($"[Bidscube AppLovin] Copied bundled core AAR: {liteDst}");
+                    PatchUnityLibraryGradle(unityLibraryBuildGradle, featureSet, coreMode, "", ver, fullCoreFromMaven: false,
+                        useBundledFullAar: false, useBundledLiteAar: true);
+                    return;
+                }
+
+                // FullWithVideo
+                TryDelete(liteDst);
+                if (coreMode == BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar)
+                {
+                    TryDelete(fullDst);
+                    PatchUnityLibraryGradle(unityLibraryBuildGradle, featureSet, coreMode, "", ver, fullCoreFromMaven: true,
+                        useBundledFullAar: false, useBundledLiteAar: false);
+                    return;
+                }
+
+                if (!File.Exists(fullSrc))
                 {
                     UnityEngine.Debug.LogError(
-                        "[Bidscube AppLovin] CoreDependencyMode is CustomGradleLines but customCoreImplementationGradleLines is empty. Set lines on BidscubeAndroidExportSettings or use another coreDependencyMode.");
+                        "[Bidscube AppLovin] FullWithVideo requires Runtime/Plugins/Android/bidscube-sdk-" + ver +
+                        ".aar, or set coreDependencyMode to MavenBidscubeSdkAar with a reachable Maven artifact com.bidscube:bidscube-sdk:" +
+                        ver + "@aar. Switch to LiteNoVideo for publisher demo / CI without the full AAR.");
+                    RemoveManagedBlock(unityLibraryBuildGradle);
                     return;
                 }
 
-                TryCopySelectedAarForReference(featureSet, liteSrc, fullSrc, liteDst, fullDst);
-                PatchUnityLibraryGradle(path, featureSet, coreMode, customLines, ver, fullCoreFromMaven: false,
-                    useBundledFullAar: false, useBundledLiteAar: false);
-                return;
+                File.Copy(fullSrc, fullDst, true);
+                UnityEngine.Debug.Log($"[Bidscube AppLovin] Copied bundled core AAR: {fullDst}");
+                PatchUnityLibraryGradle(unityLibraryBuildGradle, featureSet, coreMode, "", ver, fullCoreFromMaven: false,
+                    useBundledFullAar: true, useBundledLiteAar: false);
             }
-
-            if (featureSet == BidscubeAndroidFeatureSet.LiteNoVideo)
+            finally
             {
-                TryDelete(fullDst);
-                if (!File.Exists(liteSrc))
-                {
-                    UnityEngine.Debug.LogError($"[Bidscube AppLovin] LiteNoVideo: missing lite AAR at {liteSrc}");
-                    return;
-                }
-
-                File.Copy(liteSrc, liteDst, true);
-                UnityEngine.Debug.Log($"[Bidscube AppLovin] Copied bundled core AAR: {liteDst}");
-                PatchUnityLibraryGradle(path, featureSet, coreMode, "", ver, fullCoreFromMaven: false,
-                    useBundledFullAar: false, useBundledLiteAar: true);
-                return;
+                TryStripCoreLibraryDesugaringFromGeneratedGradle(path);
             }
+        }
 
-            // FullWithVideo
-            TryDelete(liteDst);
-            if (coreMode == BidscubeAndroidCoreDependencyMode.MavenBidscubeSdkAar)
+        /// <summary>
+        /// When <see cref="BidscubeAndroidExportSettings.enableDesugaring"/> is false (asset required), strips
+        /// <c>coreLibraryDesugaring</c> dependencies and sets <c>coreLibraryDesugaringEnabled</c> to false in generated
+        /// <c>launcher</c> and <c>unityLibrary</c> Gradle files. Bundled Bidscube core AARs often declare desugaring
+        /// required in AAR metadata, so this can fail <c>:launcher:checkReleaseAarMetadata</c> — keep desugaring on unless your core does not require it.
+        /// </summary>
+        static void TryStripCoreLibraryDesugaringFromGeneratedGradle(string pathFromUnity)
+        {
+            if (BidscubeAndroidExportSettingsResolver.GetEffectiveEnableDesugaring())
+                return;
+
+            UnityEngine.Debug.LogWarning(
+                "[Bidscube AppLovin] enableDesugaring=false: will strip coreLibraryDesugaring from generated Gradle. " +
+                "Bundled bidscube-sdk-lite / bidscube-sdk AAR metadata usually requires launcher desugaring — " +
+                ":launcher:checkReleaseAarMetadata may fail. Re-enable Enable Desugaring on BidscubeAndroidExportSettings unless your core dependency does not require it.");
+
+            if (!TryResolveGradleProjectRoot(pathFromUnity, out var root))
+                return;
+
+            var touched = false;
+            var launcher = Path.Combine(root, "launcher", "build.gradle");
+            if (File.Exists(launcher) && StripCoreLibraryDesugaringFromGradleFileIfNeeded(launcher))
+                touched = true;
+
+            var unityLib = Path.Combine(root, "unityLibrary", "build.gradle");
+            if (File.Exists(unityLib) && StripCoreLibraryDesugaringFromGradleFileIfNeeded(unityLib))
+                touched = true;
+
+            if (touched)
             {
-                TryDelete(fullDst);
-                PatchUnityLibraryGradle(path, featureSet, coreMode, "", ver, fullCoreFromMaven: true,
-                    useBundledFullAar: false, useBundledLiteAar: false);
-                return;
+                UnityEngine.Debug.Log(
+                    "[Bidscube AppLovin] BidscubeAndroidExportSettings: enableDesugaring=false — stripped coreLibraryDesugaring and set coreLibraryDesugaringEnabled false in generated Gradle.");
             }
+        }
 
-            if (!File.Exists(fullSrc))
+        static bool TryResolveGradleProjectRoot(string pathFromUnity, out string gradleRoot)
+        {
+            gradleRoot = null;
+            if (string.IsNullOrEmpty(pathFromUnity))
+                return false;
+
+            var p = pathFromUnity.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            if (File.Exists(Path.Combine(p, "launcher", "build.gradle")))
             {
-                UnityEngine.Debug.LogError(
-                    "[Bidscube AppLovin] FullWithVideo requires Runtime/Plugins/Android/bidscube-sdk-" + ver +
-                    ".aar, or set coreDependencyMode to MavenBidscubeSdkAar with a reachable Maven artifact com.bidscube:bidscube-sdk:" +
-                    ver + "@aar. Switch to LiteNoVideo for publisher demo / CI without the full AAR.");
-                RemoveManagedBlock(path);
-                return;
+                gradleRoot = p;
+                return true;
             }
 
-            File.Copy(fullSrc, fullDst, true);
-            UnityEngine.Debug.Log($"[Bidscube AppLovin] Copied bundled core AAR: {fullDst}");
-            PatchUnityLibraryGradle(path, featureSet, coreMode, "", ver, fullCoreFromMaven: false,
-                useBundledFullAar: true, useBundledLiteAar: false);
+            var directGradle = Path.Combine(p, "build.gradle");
+            if (!File.Exists(directGradle))
+                return false;
+
+            try
+            {
+                var head = File.ReadAllText(directGradle);
+                if (head.IndexOf("com.android.library", StringComparison.Ordinal) < 0)
+                    return false;
+                var parent = Directory.GetParent(p)?.FullName;
+                if (string.IsNullOrEmpty(parent))
+                    return false;
+                if (!File.Exists(Path.Combine(parent, "launcher", "build.gradle")))
+                    return false;
+                gradleRoot = parent;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        static bool StripCoreLibraryDesugaringFromGradleFileIfNeeded(string gradlePath)
+        {
+            string content;
+            try
+            {
+                content = File.ReadAllText(gradlePath);
+            }
+            catch
+            {
+                return false;
+            }
+
+            var updated = StripCoreLibraryDesugaringFromGradleText(content);
+            if (updated == content)
+                return false;
+            try
+            {
+                File.WriteAllText(gradlePath, updated);
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        static string StripCoreLibraryDesugaringFromGradleText(string content)
+        {
+            content = Regex.Replace(
+                content,
+                @"^\s*coreLibraryDesugaring\s+['""][^'""]+['""]\s*\r?\n",
+                "",
+                RegexOptions.Multiline);
+            content = Regex.Replace(
+                content,
+                @"(\bcoreLibraryDesugaringEnabled\s+)true\b",
+                "${1}false",
+                RegexOptions.Multiline);
+            return content;
         }
 
         static void TryCopySelectedAarForReference(BidscubeAndroidFeatureSet fs, string liteSrc, string fullSrc,
@@ -140,9 +267,52 @@ namespace BidscubeSDK.Editor.Android
             }
         }
 
-        static void RemoveManagedBlock(string gradleProjectRoot)
+        /// <summary>
+        /// Unity passes either the Gradle project root (contains unityLibrary/build.gradle) or,
+        /// on newer exporters, the unityLibrary module folder itself (contains build.gradle).
+        /// </summary>
+        static bool TryGetUnityLibraryGradleInfo(string basePath, out string unityLibraryModuleRoot,
+            out string buildGradlePath, out string libsDir)
         {
-            var gradlePath = Path.Combine(gradleProjectRoot, "unityLibrary", "build.gradle");
+            unityLibraryModuleRoot = null;
+            buildGradlePath = null;
+            libsDir = null;
+            if (string.IsNullOrEmpty(basePath))
+                return false;
+
+            var nested = Path.Combine(basePath, "unityLibrary", "build.gradle");
+            if (File.Exists(nested))
+            {
+                unityLibraryModuleRoot = Path.Combine(basePath, "unityLibrary");
+                buildGradlePath = nested;
+                libsDir = Path.Combine(unityLibraryModuleRoot, "libs");
+                return true;
+            }
+
+            var direct = Path.Combine(basePath, "build.gradle");
+            if (!File.Exists(direct))
+                return false;
+
+            try
+            {
+                var head = File.ReadAllText(direct);
+                if (head.IndexOf("com.android.library", StringComparison.Ordinal) < 0)
+                    return false;
+            }
+            catch
+            {
+                return false;
+            }
+
+            unityLibraryModuleRoot = basePath;
+            buildGradlePath = direct;
+            libsDir = Path.Combine(unityLibraryModuleRoot, "libs");
+            return true;
+        }
+
+        static void RemoveManagedBlock(string unityLibraryBuildGradlePath)
+        {
+            var gradlePath = unityLibraryBuildGradlePath;
             if (!File.Exists(gradlePath))
                 return;
             var content = File.ReadAllText(gradlePath);
@@ -155,18 +325,24 @@ namespace BidscubeSDK.Editor.Android
             File.WriteAllText(gradlePath, content);
         }
 
-        static void PatchUnityLibraryGradle(string gradleProjectRoot, BidscubeAndroidFeatureSet featureSet,
+        static void PatchUnityLibraryGradle(string unityLibraryBuildGradlePath, BidscubeAndroidFeatureSet featureSet,
             BidscubeAndroidCoreDependencyMode coreMode, string customLines, string ver, bool fullCoreFromMaven,
             bool useBundledFullAar, bool useBundledLiteAar)
         {
-            var gradlePath = Path.Combine(gradleProjectRoot, "unityLibrary", "build.gradle");
+            var gradlePath = unityLibraryBuildGradlePath;
             if (!File.Exists(gradlePath))
             {
-                UnityEngine.Debug.LogWarning($"[Bidscube AppLovin] unityLibrary/build.gradle not found at {gradlePath}");
+                UnityEngine.Debug.LogWarning($"[Bidscube AppLovin] unityLibrary build.gradle not found at {gradlePath}");
                 return;
             }
 
             var content = File.ReadAllText(gradlePath);
+
+            // mainTemplate.gradle (and similar) may add com.bidscube:bidscube-sdk — not on public Maven;
+            // we inject the canonical line (files(...) or Maven) in the managed block below.
+            if (useBundledLiteAar || useBundledFullAar || fullCoreFromMaven)
+                content = StripHostTemplateBidscubeSdkMavenLines(content);
+
             var sb = new StringBuilder();
             sb.AppendLine("// __BIDSCUBE_ANDROID_MANAGED_START__");
 
@@ -215,6 +391,15 @@ namespace BidscubeSDK.Editor.Android
             File.WriteAllText(gradlePath, content);
         }
 
+        static string StripHostTemplateBidscubeSdkMavenLines(string gradle)
+        {
+            return Regex.Replace(
+                gradle,
+                @"^\s*implementation\s+['""]com\.bidscube:bidscube-sdk:[^'""]+['""]\s*\r?\n",
+                "",
+                RegexOptions.Multiline);
+        }
+
         static void MaybeAppendAppLovinSdkLine(StringBuilder sb, string existingGradle)
         {
             if (existingGradle.IndexOf("com.applovin:applovin-sdk", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -259,7 +444,7 @@ namespace BidscubeSDK.Editor.Android
             try
             {
                 var asm = typeof(AdapterPackageInfo).Assembly;
-                var info = PackageInfo.FindForAssembly(asm);
+                var info = global::UnityEditor.PackageManager.PackageInfo.FindForAssembly(asm);
                 if (info != null && !string.IsNullOrEmpty(info.resolvedPath))
                     return info.resolvedPath;
             }

@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using BidscubeSDK.Android;
 using UnityEditor;
+#if UNITY_2022_1_OR_NEWER
+using UnityEditor.Build;
+#endif
 
 namespace BidscubeSDK.Editor
 {
@@ -61,9 +65,29 @@ namespace BidscubeSDK.Editor
             }
         }
 
+        /// <summary>
+        /// Unity returns define order inconsistently; comparing canonically avoids pointless Set calls
+        /// that trigger script recompile / domain reload every editor load.
+        /// </summary>
+        static bool DefineSymbolSetsEqual(string a, string b)
+        {
+            return string.Equals(CanonicalDefineKey(a), CanonicalDefineKey(b), StringComparison.Ordinal);
+        }
+
+        static string CanonicalDefineKey(string defines)
+        {
+            if (string.IsNullOrEmpty(defines))
+                return "";
+            var parts = defines
+                .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(s => s, StringComparer.Ordinal);
+            return string.Join(";", parts);
+        }
+
         static void ApplySymbolForGroup(BuildTargetGroup group, string symbol, bool add)
         {
-            var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+            var defines = GetScriptingDefineSymbols(group);
             var list = new List<string>();
             foreach (var p in defines.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
             {
@@ -73,12 +97,18 @@ namespace BidscubeSDK.Editor
 
             if (add)
                 list.Add(symbol);
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(group, string.Join(";", list));
+            var next = string.Join(";", list);
+            if (DefineSymbolSetsEqual(next, defines))
+                return;
+            SetScriptingDefineSymbols(group, next);
         }
 
         static void RemoveSymbolFromGroup(BuildTargetGroup group, string symbol)
         {
-            var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+            var defines = GetScriptingDefineSymbols(group);
+            var tokens = defines.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            if (Array.IndexOf(tokens, symbol) < 0)
+                return;
             var list = new List<string>();
             foreach (var p in defines.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
             {
@@ -86,7 +116,28 @@ namespace BidscubeSDK.Editor
                     list.Add(p);
             }
 
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(group, string.Join(";", list));
+            var next = string.Join(";", list);
+            if (DefineSymbolSetsEqual(next, defines))
+                return;
+            SetScriptingDefineSymbols(group, next);
+        }
+
+        internal static string GetScriptingDefineSymbols(BuildTargetGroup group)
+        {
+#if UNITY_2022_1_OR_NEWER
+            return PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.FromBuildTargetGroup(group));
+#else
+            return PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+#endif
+        }
+
+        internal static void SetScriptingDefineSymbols(BuildTargetGroup group, string defines)
+        {
+#if UNITY_2022_1_OR_NEWER
+            PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.FromBuildTargetGroup(group), defines);
+#else
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(group, defines);
+#endif
         }
     }
 }

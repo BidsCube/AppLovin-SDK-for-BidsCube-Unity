@@ -1,13 +1,13 @@
 # Bundled Bidscube MAX adapter + core Android SDK (Android)
 
-> **UPM `com.bidscube.applovin.max` 1.0.15+** ships **MAX adapter + lite core AAR**, **`AppLovinMaxUnityReflection`**, and **`Editor/Android/BidscubeAndroidGradlePostprocessor`** (copies **exactly one** core variant + conditional Media3/IMA). Resolution order: **`BidscubeAndroidExportSettings`** asset (if present) → **`BidscubeAndroidFeatureSetStore`** (EditorPrefs / bootstrap default **`LiteNoVideo`**).
+> **UPM `com.bidscube.applovin.max` 1.0.16+** ships **MAX adapter + lite core AAR**, **`AppLovinMaxUnityReflection`**, and **`Editor/Android/BidscubeAndroidGradlePostprocessor`** (copies **exactly one** core variant + conditional Media3/IMA). Resolution order: **`BidscubeAndroidExportSettings`** asset (if present) → **`BidscubeAndroidFeatureSetStore`** (EditorPrefs / bootstrap default **`LiteNoVideo`**).
 
 ## Version matrix (align with `package.json` and `AdapterPackageInfo`)
 
 | Item | Version | Where it is set |
 |------|--------:|-----------------|
-| UPM **this** package (`com.bidscube.applovin.max`) | **1.0.15** | `package.json` → `version`; `AdapterPackageInfo.UpmVersion` in `Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs` |
-| UPM core SDK peer (`com.bidscube.sdk`, Unity) | **1.2.5** | `package.json` → `dependencies` (must match what you install in the host `manifest.json`) |
+| UPM **this** package (`com.bidscube.applovin.max`) | **1.0.16** | `package.json` → `version`; `AdapterPackageInfo.UpmVersion` in `Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs` |
+| UPM core SDK peer (`com.bidscube.sdk`, Unity) | **1.2.6** | `package.json` → `dependencies` (must match what you install in the host `manifest.json`) |
 | Android **MAX** adapter AAR | **1.0.4** | `applovin-bidscube-max-adapter-1.0.4.aar`; `AdapterPackageInfo.BundledMaxAdapterAarVersion` |
 | Android **lite** core AAR (bundled) | **1.2.3** | `bidscube-sdk-lite-1.2.3.aar`; `AdapterPackageInfo.NativeAndroidBidscubeSdkVersion` |
 | Android **full** core (IMA / video) | **1.2.3** | Not bundled in this UPM: use Maven `com.bidscube:bidscube-sdk:1.2.3@aar` and/or your own `bidscube-sdk-1.2.3.aar` in `unityLibrary/libs/` — same **semver** as lite |
@@ -88,7 +88,7 @@ BidscubeAndroidGradlePostprocessor.CustomCoreImplementationGradleLines =
 ## Version sync
 
 - **`com.bidscube.applovin.max`:** `AdapterPackageInfo.UpmVersion` = `package.json` `version`. **`NativeAndroidBidscubeSdkVersion`** and **`BundledMaxAdapterAarVersion`** must match the **filenames** of the bundled AARs on disk.
-- **`com.bidscube.sdk`:** the Unity peer version is **`package.json` → `dependencies` → `com.bidscube.sdk` (currently 1.2.5)** — use the same in the host project’s **`Packages/manifest.json`**.
+- **`com.bidscube.sdk`:** the Unity peer version is **`package.json` → `dependencies` → `com.bidscube.sdk` (currently 1.2.6)** — use the same in the host project’s **`Packages/manifest.json`**.
 - **Gradle / Maven:** pin **`com.bidscube:bidscube-sdk`** to the same **1.2.3** as the lite AAR when you need a consistent native stack.
 
 ## Updating the adapter AAR
@@ -122,8 +122,9 @@ After a bump, update **`AdapterPackageInfo`**, **AAR filenames**, and **`package
 - Injects **exactly one** Bidscube **core** line per **`BidscubeAndroidCoreDependencyMode`** and **`BidscubeAndroidFeatureSet`** (lite **`files('libs/bidscube-sdk-lite-….aar')`** after copy, full **`files('libs/bidscube-sdk-….aar')`** or Maven **`com.bidscube:bidscube-sdk:…@aar`**).
 - Adds **`com.applovin:applovin-sdk:13.+`** only if that coordinate is **missing** from the file (does not duplicate lines already added by the official MAX plugin).
 - Adds **`androidx.media3:media3-common`**, **`media3-ui`**, and **`com.google.ads.interactivemedia.v3:interactivemedia`** **only** when **`FullWithVideo`** is selected.
+- After patching **`unityLibrary`**, if a **`BidscubeAndroidExportSettings`** asset exists and **`enableDesugaring`** is **unchecked**, removes **`coreLibraryDesugaring '…'`** lines and sets **`coreLibraryDesugaringEnabled false`** in the generated **`launcher/build.gradle`** and **`unityLibrary/build.gradle`**. Bundled **`bidscube-sdk-lite` / `bidscube-sdk`** AARs usually declare desugaring **required** in AAR metadata, so **disabling** often fails **`:launcher:checkReleaseAarMetadata`**. If **no** settings asset exists, desugaring is **not** modified (your Custom Launcher / Main Template values stay as Unity exported them).
 
-**Optional ScriptableObject fields** (**`forceCompileSdk`**, **`forceMinSdk`**, **`enableDesugaring`**) are reserved for future Gradle hooks — manage **`compileSdk`**, **`minSdk`**, and **desugaring** in your **launcher** / **main template** if the core AAR or Unity version requires it.
+**`BidscubeAndroidExportSettings`:** **`forceCompileSdk`** / **`forceMinSdk`** are reserved for future hooks — set **`compileSdk`** / **`minSdk`** in your Gradle templates or **Player Settings** as needed.
 
 ## Troubleshooting
 
@@ -133,6 +134,7 @@ After a bump, update **`AdapterPackageInfo`**, **AAR filenames**, and **`package
 | **`ClassNotFoundException`** for IMA / Media3 in **FullWithVideo** | Feature set is **LiteNoVideo** or repos blocked | Switch export settings to **`FullWithVideo`**; confirm Gradle can resolve **Maven Central** / your mirror. |
 | Video APIs log **`Bidscube video playback is disabled in LiteNoVideo`** | Expected in **LiteNoVideo** | Use **`FullWithVideo`** for rewarded / native video paths that need the Bidscube player stack. |
 | Headless / CI build ignores EditorPrefs | No shared **`BidscubeAndroidExportSettings`** asset | Commit **`BidscubeAndroidExportSettings`** with the intended **`featureSet`** so batchmode uses the same mode as developers. |
+| **`:launcher:checkReleaseAarMetadata`** — *requires core library desugaring* | **`enableDesugaring`** was unchecked while using bundled Bidscube core | Re-enable **Enable Desugaring** on **`BidscubeAndroidExportSettings`**, or use a core artifact that does not require desugaring in AAR metadata. |
 
 ## Publisher checklist
 
