@@ -1,34 +1,49 @@
 # Bidscube AppLovin MAX adapter (`com.bidscube.applovin.max`)
 
-**Версія UPM:** **1.0.20** · тег **`v1.0.20`** · peer **`com.bidscube.sdk` [1.2.9](https://github.com/BidsCube/bidscube-sdk-unity)**.
+UPM package **1.0.20** (Git tag **`v1.0.20`**) — adds the Bidscube **AppLovin MAX** Android/iOS bridge, bundled native AARs, and reflection hooks to **`MaxSdk`**. **Requires** the core Unity SDK **`com.bidscube.sdk`** (declared as **1.2.9** in this package’s `package.json`).
 
-Це **додатковий** пакет до ядра Bidscube: MAX-адаптер (AAR), lite/full core AAR для Android і міст до **`MaxSdk`**. Ядро C# — у **`com.bidscube.sdk`**.
+Full install, manifest snippets, dashboard, and troubleshooting: **[Documentation~/INSTALL.md](Documentation~/INSTALL.md)**.
 
-## Встановлення
+## AppLovin MAX Setup
 
-Повна покрокова інструкція (manifest, AppLovin MAX SDK, Android/iOS, MAX dashboard): **[`Documentation~/INSTALL.md`](Documentation~/INSTALL.md)**.
+1. Add this package to the Unity project.
+2. Add or verify **`com.bidscube.sdk`** (see `package.json`; host app usually pins [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) **#v1.2.9**) and the **official AppLovin MAX Unity SDK** — this adapter does **not** ship **`MaxSdk`**.
+3. Open the sample scene (**Package Manager → Samples → SDK Demo**) or your integration scene.
+4. Enter the AppLovin MAX **SDK key**.
+5. Enter AppLovin **ad unit IDs**.
+6. Run **External Dependency Manager → Android Resolver → Force Resolve**.
+7. Build an **Android APK** (**File → Build Settings → Android**).
 
-Коротко — додайте в **`Packages/manifest.json`**:
+## Android modes
 
-```json
-{
-  "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.9",
-    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.20"
-  }
-}
+**Lite / No Video:**
+
+- uses `bidscube-sdk-lite-no-video`
+- does not include video dependencies
+- does not require core library desugaring
+
+**Full / Video:**
+
+- uses `bidscube-sdk-full-video`
+- enables video support
+- may enable core library desugaring if video dependencies require it
+
+Toggle in Unity: **Tools → Bidscube SDK → Android Build Features**, or use a **Bidscube Android Export Settings** asset (see INSTALL).
+
+**Lite / No Video** should build without `coreLibraryDesugaringEnabled`. **Full / Video** may inject:
+
+```gradle
+coreLibraryDesugaringEnabled true
+coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
 ```
 
-Окремо встановіть **офіційний AppLovin MAX Unity SDK** (UPM або `.unitypackage` з сайту AppLovin) — без нього **`MaxSdk`** недоступний.
+## Bundled Android AARs
 
-## Після встановлення
+- `bidscube-sdk-lite-no-video-1.2.4.aar`
+- `bidscube-sdk-full-video-1.2.4.aar`
 
-- **Android:** за замовчуванням **LiteNoVideo** (без Media3/IMA у Gradle). Режим **FullWithVideo** — **Tools → Bidscube SDK → Android Build Features** або ScriptableObject **Android Export Settings** (деталі в `INSTALL.md`).
-- **Медіація MAX:** у режимі **`BidscubeIntegrationMode.AppLovinMaxMediation`** рекламу вантажте лише через MAX, не через C# `ShowVideoAd` / банерні API ядра — див. `INSTALL.md`.
+## More
 
-## Інше
-
-- Зміни по версіях: [`CHANGELOG.md`](CHANGELOG.md)  
-- Реліз для мейнтейнерів: [`RELEASE.md`](RELEASE.md)  
-- Ліцензія: [`LICENSE.md`](LICENSE.md)  
-- Демо: у **Package Manager** → **Samples** → **SDK Demo** (потребує **`com.bidscube.sdk`** та за потреби **UGUI** / **TMP** у хості).
+- [CHANGELOG.md](CHANGELOG.md)  
+- [LICENSE.md](LICENSE.md)  
+- Maintainers: [RELEASE.md](RELEASE.md), [docs/internal/README.md](docs/internal/README.md)

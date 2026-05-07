@@ -1,22 +1,20 @@
-# Release checklist — `com.bidscube.applovin.max`
+# Release checklist
 
-Повний процес: [`RELEASE.md`](RELEASE.md).
+Full process: [RELEASE.md](RELEASE.md).
 
-## Перед тегом
+## Before tagging
 
-- [ ] `package.json` / `AdapterPackageInfo.UpmVersion` = поточна UPM-версія (зараз **1.0.20**)
-- [ ] `README.md` та **`Documentation~/INSTALL.md`** — приклади **`#v…`** збігаються з тегами
-- [ ] `CHANGELOG.md` — секція **`## [версія]`**
-- [ ] `bash tools/verify-release-ready.sh` — exit **0**
+- [ ] Run **`bash tools/verify-release-ready.sh`** (exit **0**)
+- [ ] `package.json` and `AdapterPackageInfo.UpmVersion` match the UPM version you are releasing (currently **1.0.20**)
+- [ ] `README.md` and **`Documentation~/INSTALL.md`** — `#v…` examples match published tags
+- [ ] `CHANGELOG.md` has a **`## [version]`** section for this release
 
-## Тег і push
+## Tag and push
 
 ```bash
-bash tools/verify-release-ready.sh
-git add -A && git status
-git commit -m "Release com.bidscube.applovin.max <версія>"
-git tag -a "v<версія>" -m "com.bidscube.applovin.max <версія>"
-git push origin main && git push origin "v<версія>"
+git commit -m "Release com.bidscube.applovin.max <version>"
+git tag -a "v<version>" -m "com.bidscube.applovin.max <version>"
+git push origin main && git push origin "v<version>"
 ```
 
-Спочатку реліз **`com.bidscube.sdk`**, якщо змінився peer у `package.json`.
+Release **`com.bidscube.sdk`** first if you bump the peer in `package.json`.
