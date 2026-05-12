@@ -26,16 +26,16 @@ python3 << 'PY' || exit 1
 import json
 pkg = json.load(open("package.json"))
 deps = pkg.get("dependencies") or {}
-if deps.get("com.bidscube.sdk") != "1.2.9":
+if deps.get("com.bidscube.sdk") != "1.2.11":
     raise SystemExit(
-        "ERROR: package.json must depend on com.bidscube.sdk 1.2.9 exactly "
+        "ERROR: package.json must depend on com.bidscube.sdk 1.2.11 exactly "
         f"(got {deps.get('com.bidscube.sdk')!r})"
     )
 for k in deps:
     if k == "com.bidscube.sdk":
         continue
     raise SystemExit(f"ERROR: unexpected package.json dependency {k!r} — keep only com.bidscube.sdk for this adapter")
-print("package.json peer dependency OK: com.bidscube.sdk 1.2.9 only")
+print("package.json peer dependency OK: com.bidscube.sdk 1.2.11 only")
 PY
 
 if ! grep -q "public const string UpmVersion" Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs; then
@@ -64,7 +64,7 @@ if [[ -z "$MAXA_VER" ]]; then
 fi
 
 echo "AdapterPackageInfo.UpmVersion: $INFO_VER (matches package.json)"
-echo "NativeAndroidBidscubeSdkVersion: $NATIVE_VER (bundled lite AAR filename)"
+echo "NativeAndroidBidscubeSdkVersion: $NATIVE_VER (bundled core AAR filenames)"
 echo "BundledMaxAdapterAarVersion: $MAXA_VER"
 echo ""
 
@@ -82,12 +82,24 @@ if [[ ! -f "$LITE_AAR" ]]; then
   exit 1
 fi
 echo "Bundled lite core AAR: $LITE_AAR"
-FULL_AAR="Runtime/Plugins/Android/bidscube-sdk-full-video-${NATIVE_VER}.aar"
-if [[ -f "$FULL_AAR" ]]; then
-  echo "Optional full core AAR (FullWithVideo bundled path): $FULL_AAR"
-else
-  echo "Full core AAR not in package ($FULL_AAR) — FullWithVideo requires adding this file or MavenBidscubeSdkAar (default export is LiteNoVideo)."
+WEBVIEW_AAR="Runtime/Plugins/Android/bidscube-sdk-webview-video-${NATIVE_VER}.aar"
+if [[ ! -f "$WEBVIEW_AAR" ]]; then
+  echo "ERROR: expected bundled webview-video core AAR at $WEBVIEW_AAR" >&2
+  exit 1
 fi
+echo "Bundled webview-video core AAR: $WEBVIEW_AAR"
+LEGACY_AAR="Runtime/Plugins/Android/bidscube-sdk-legacy-media-video-${NATIVE_VER}.aar"
+if [[ ! -f "$LEGACY_AAR" ]]; then
+  echo "ERROR: expected bundled legacy-media-video core AAR at $LEGACY_AAR" >&2
+  exit 1
+fi
+echo "Bundled legacy-media-video core AAR: $LEGACY_AAR"
+FULL_AAR="Runtime/Plugins/Android/bidscube-sdk-full-video-${NATIVE_VER}.aar"
+if [[ ! -f "$FULL_AAR" ]]; then
+  echo "ERROR: expected bundled full-video core AAR at $FULL_AAR" >&2
+  exit 1
+fi
+echo "Bundled full-video core AAR: $FULL_AAR"
 
 # Filename on disk must match our declared MAX adapter version.
 if [[ ! -f "Runtime/Plugins/Android/applovin-bidscube-max-adapter-${MAXA_VER}.aar" ]]; then
@@ -114,9 +126,11 @@ POST="Editor/Android/BidscubeAndroidGradlePostprocessor.cs"
 grep -q "BidscubeAndroidGradleProjectPatcher" "$POST" || { echo "ERROR: $POST must delegate to BidscubeAndroidGradleProjectPatcher" >&2; exit 1; }
 PATCHER="$ROOT/../bidscube-sdk-unity/Editor/Android/BidscubeAndroidGradleProjectPatcher.cs"
 if [[ -f "$PATCHER" ]]; then
-  for need in "Android feature set: FullWithVideo" "Android feature set: LiteNoVideo" \
+  for need in "DescribeFeatureSet" "\"FullWithVideo\"" "\"LiteNoVideo\"" \
+    "\"WebViewVideoNoDesugar\"" "\"LegacyMediaVideoNoDesugar\"" \
     "Skipping Media3 and Google IMA dependencies" "Including Media3 and Google IMA dependencies" \
-    "androidx.media3:media3-common" "interactivemedia" "sdk-full-video" "ApplyDesugaringPolicyLite"; do
+    "androidx.media3:media3-common" "interactivemedia" "sdk-webview-video" \
+    "sdk-legacy-media-video" "sdk-full-video" "ApplyDesugaringPolicyLite"; do
     if ! grep -qF "$need" "$PATCHER"; then
       echo "ERROR: $PATCHER must contain: $need" >&2
       exit 1

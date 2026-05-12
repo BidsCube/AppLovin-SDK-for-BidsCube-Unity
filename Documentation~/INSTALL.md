@@ -7,8 +7,8 @@ In **`Packages/manifest.json`** add the core SDK and this adapter (use the Git t
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.9",
-    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.20"
+    "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.11",
+    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.21"
   }
 }
 ```
@@ -24,8 +24,10 @@ This package does **not** contain **`MaxSdk`**. Install the official AppLovin MA
 ## 3. Android
 
 - **Minimum:** API **26+** for the bundled AARs; align **compileSdk** / Gradle with your Unity template.
-- **Lite / No Video (default):** uses **`bidscube-sdk-lite-no-video-1.2.4.aar`** — no Media3 / Google IMA, no forced **`coreLibraryDesugaring`** on the launcher.
-- **Full / Video:** uses **`bidscube-sdk-full-video-1.2.4.aar`** (or Maven **`com.bidscube:sdk-full-video`** per postprocessor). Editor: **Tools → Bidscube SDK → Android Build Features** or **Bidscube → Android Export Settings** → **FullWithVideo**.
+- **LiteNoVideo (default):** uses **`bidscube-sdk-lite-no-video-1.2.5.aar`** — no rewarded/video support, no Media3 / Google IMA, no forced **`coreLibraryDesugaring`** on the launcher.
+- **WebViewVideoNoDesugar:** uses **`bidscube-sdk-webview-video-1.2.5.aar`** — HTML5 video in Android WebView, no Media3 / Google IMA, no forced **`coreLibraryDesugaring`**.
+- **LegacyMediaVideoNoDesugar:** uses **`bidscube-sdk-legacy-media-video-1.2.5.aar`** — `VideoView` / `MediaPlayer` video, no Media3 / Google IMA, no forced **`coreLibraryDesugaring`**.
+- **FullWithVideo:** uses **`bidscube-sdk-full-video-1.2.5.aar`** (or Maven **`com.bidscube:sdk-full-video`** per postprocessor). Editor: **Tools → Bidscube SDK → Android Build Features** or **Bidscube → Android Export Settings** → **FullWithVideo**.
 - **Duplicate AAR:** if the postprocessor copies AARs into **`unityLibrary/libs/`**, disable **Android** import on the duplicate **`bidscube-sdk-*.aar`** in the Inspector so Gradle does not merge the same binary twice.
 
 ## 4. iOS (MAX)
@@ -62,6 +64,6 @@ Core API details: **`com.bidscube.sdk`** repo.
 | No **`MaxSdk`** | Install official MAX Unity SDK. |
 | **`ClassNotFoundException` `com.bidscube.sdk.BidscubeSDK`** | One core dependency in **`unityLibrary/build.gradle`** (`libs/` file or Maven **`@aar`**). |
 | **Duplicate class / DEX** | Remove duplicate core; do not import the same AAR via Unity **and** `unityLibrary/libs/`. |
-| **Gradle / desugaring** | **LiteNoVideo** usually has no desugaring; **FullWithVideo** may need **`desugar_jdk_libs`** on the launcher — inspect exported Gradle. |
+| **Gradle / desugaring** | **LiteNoVideo**, **WebViewVideoNoDesugar**, and **LegacyMediaVideoNoDesugar** should not need desugaring; **FullWithVideo** may need **`desugar_jdk_libs`** on the launcher. |
 
 SSP host: **`SDKConfig.Builder.AdRequestAuthority(...)`** (see **`com.bidscube.sdk`**).

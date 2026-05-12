@@ -3,6 +3,7 @@
     "rootNamespace": "BidscubeSDK.Editor",
     "references": [
         "BidscubeSDK",
+        "BidscubeSDK.Android",
         "BidscubeSDK.AppLovinMax",
         "BidscubeSDK.Android.Editor"
     ],

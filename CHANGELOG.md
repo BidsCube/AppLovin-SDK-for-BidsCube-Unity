@@ -2,15 +2,30 @@
 
 ---
 
+## [1.0.21] - 2026-05-12
+
+### Changed
+
+- **UPM / peer:** bumped **`com.bidscube.applovin.max`** to **1.0.21** and aligned the declared peer dependency to **`com.bidscube.sdk` 1.2.11**.
+- **Android packaging:** bundled four-mode Bidscube core AAR filenames now target native SDK **1.2.5**; bundled MAX adapter AAR metadata now targets **1.2.5**.
+
+### Fixed
+
+- **Rewarded video / Android modes:** release metadata, install docs, verification scripts, and release notes now match the four-mode Android export flow that was validated for Lite, WebView, Legacy Media, and Full video builds.
+
+---
+
 ## [1.0.20] - 2026-05-06
 
 ### Changed
 
-- **Peer dependency:** **`com.bidscube.sdk` 1.2.9** (assembly **`BidscubeSDK.Android`**; Gradle patcher / Editor compile fixes).
+- **Peer dependency:** **`com.bidscube.sdk` 1.2.10**.
+- **Android modes:** AppLovin adapter now tracks four Android core modes — **LiteNoVideo**, **WebViewVideoNoDesugar**, **LegacyMediaVideoNoDesugar**, **FullWithVideo**.
 
 ### Fixed
 
 - **Editor:** **`BidscubeAndroidBuildFeaturesWindow`** no longer imports **`BidscubeSDK.Android`** — uses the same **`EditorPrefs`** key as core and **`BidscubeDefineApplicator.ApplyFromStoredFeatureSet()`**, so the adapter compiles when the core **`BidscubeSDK`** runtime assembly is resolved without pulling Android types transitively.
+- **Gradle export:** bundled AAR metadata and validation scripts now cover **lite**, **webview video**, **legacy media video**, and **full video** Android artifacts.
 
 ---
 

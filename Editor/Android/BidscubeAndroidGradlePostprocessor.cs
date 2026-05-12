@@ -18,6 +18,8 @@ namespace BidscubeSDK.Editor.Android
                 new BidscubeAndroidBundledCoreAarNames(
                     AdapterPackageInfo.NativeAndroidBidscubeSdkVersion,
                     AdapterPackageInfo.NativeAndroidBundledCoreAarLiteFileName,
+                    AdapterPackageInfo.NativeAndroidBundledCoreAarWebViewVideoFileName,
+                    AdapterPackageInfo.NativeAndroidBundledCoreAarLegacyMediaVideoFileName,
                     AdapterPackageInfo.NativeAndroidBundledCoreAarFullFileName));
         }
     }
