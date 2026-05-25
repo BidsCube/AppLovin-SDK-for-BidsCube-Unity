@@ -1,6 +1,6 @@
 {
   "name": "com.bidscube.applovin.max",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "displayName": "Bidscube AppLovin MAX Adapter",
   "description": "Bidscube adapter for AppLovin MAX mediation. Supports Android LiteNoVideo, WebViewVideoNoDesugar, LegacyMediaVideoNoDesugar, and FullWithVideo build modes.",
   "unity": "2020.3",
@@ -22,7 +22,7 @@
     "url": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git"
   },
   "dependencies": {
-    "com.bidscube.sdk": "1.2.11"
+    "com.bidscube.sdk": "1.2.12"
   },
   "samples": [
     {

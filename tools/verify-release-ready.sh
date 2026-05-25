@@ -26,16 +26,16 @@ python3 << 'PY' || exit 1
 import json
 pkg = json.load(open("package.json"))
 deps = pkg.get("dependencies") or {}
-if deps.get("com.bidscube.sdk") != "1.2.11":
+if deps.get("com.bidscube.sdk") != "1.2.12":
     raise SystemExit(
-        "ERROR: package.json must depend on com.bidscube.sdk 1.2.11 exactly "
+        "ERROR: package.json must depend on com.bidscube.sdk 1.2.12 exactly "
         f"(got {deps.get('com.bidscube.sdk')!r})"
     )
 for k in deps:
     if k == "com.bidscube.sdk":
         continue
     raise SystemExit(f"ERROR: unexpected package.json dependency {k!r} — keep only com.bidscube.sdk for this adapter")
-print("package.json peer dependency OK: com.bidscube.sdk 1.2.11 only")
+print("package.json peer dependency OK: com.bidscube.sdk 1.2.12 only")
 PY
 
 if ! grep -q "public const string UpmVersion" Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs; then
@@ -100,6 +100,38 @@ if [[ ! -f "$FULL_AAR" ]]; then
   exit 1
 fi
 echo "Bundled full-video core AAR: $FULL_AAR"
+
+python3 << 'PY' || exit 1
+import io
+import zipfile
+from pathlib import Path
+
+native_ver = Path("Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs").read_text(encoding="utf-8")
+import re
+m = re.search(r'NativeAndroidBidscubeSdkVersion = "([^"]+)"', native_ver)
+if not m:
+    raise SystemExit("ERROR: could not parse NativeAndroidBidscubeSdkVersion")
+ver = m.group(1)
+core_aars = [
+    f"Runtime/Plugins/Android/bidscube-sdk-lite-no-video-{ver}.aar",
+    f"Runtime/Plugins/Android/bidscube-sdk-webview-video-{ver}.aar",
+    f"Runtime/Plugins/Android/bidscube-sdk-legacy-media-video-{ver}.aar",
+    f"Runtime/Plugins/Android/bidscube-sdk-full-video-{ver}.aar",
+]
+need = [b"showInterstitialVideoAd", b"showRewardedVideoAd"]
+sdk_class = "com/bidscube/sdk/BidscubeSDK.class"
+for aar_path in core_aars:
+    p = Path(aar_path)
+    if not p.is_file():
+        raise SystemExit(f"ERROR: missing core AAR {aar_path}")
+    with zipfile.ZipFile(p) as outer:
+        inner = zipfile.ZipFile(io.BytesIO(outer.read("classes.jar")))
+        sdk = inner.read(sdk_class)
+    missing = [s.decode() for s in need if s not in sdk]
+    if missing:
+        raise SystemExit(f"ERROR: {aar_path} missing BidscubeSDK methods: {missing}")
+print("All four bundled core AARs expose showInterstitialVideoAd / showRewardedVideoAd")
+PY
 
 # Filename on disk must match our declared MAX adapter version.
 if [[ ! -f "Runtime/Plugins/Android/applovin-bidscube-max-adapter-${MAXA_VER}.aar" ]]; then

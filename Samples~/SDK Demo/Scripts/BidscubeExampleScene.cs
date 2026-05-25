@@ -482,26 +482,23 @@ namespace BidscubeSDK.Controllers
                 return;
             }
 
-            AppLovinMaxUnityReflection.TryLoadRewardedAd(_maxRewardedAdUnitId);
+            AppLovinMaxRewardedBridge.LoadRewarded(_maxRewardedAdUnitId);
             LogMessage("[MAX] LoadRewardedAd(" + _maxRewardedAdUnitId + ")");
         }
 
         private void TryMaxShowRewarded()
         {
-            if (string.IsNullOrWhiteSpace(_maxRewardedAdUnitId))
+            if (string.IsNullOrWhiteSpace(_maxRewardedAdUnitId) && string.IsNullOrWhiteSpace(_placementId))
             {
-                LogMessage("[MAX] Set _maxRewardedAdUnitId.");
+                LogMessage("[MAX] Set _maxRewardedAdUnitId or _placementId (Bidscube fallback).");
                 return;
             }
 
-            if (!AppLovinMaxUnityReflection.TryIsRewardedAdReady(_maxRewardedAdUnitId))
-            {
-                LogMessage("[MAX] Rewarded not ready yet.");
-                return;
-            }
-
-            AppLovinMaxUnityReflection.TryShowRewardedAd(_maxRewardedAdUnitId);
-            LogMessage("[MAX] ShowRewardedAd(" + _maxRewardedAdUnitId + ")");
+            var usedMax = AppLovinMaxRewardedBridge.ShowRewarded(_maxRewardedAdUnitId, _placementId, this);
+            if (usedMax)
+                LogMessage("[MAX] ShowRewardedAd(" + _maxRewardedAdUnitId + ")");
+            else
+                LogMessage("[MAX] Rewarded fallback → Bidscube SDK direct (" + _placementId + ")");
         }
 
         private void TryMaxToggleBanner()

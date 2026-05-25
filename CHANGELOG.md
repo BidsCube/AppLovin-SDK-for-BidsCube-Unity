@@ -2,6 +2,27 @@
 
 ---
 
+## [1.0.22] - 2026-05-25
+
+### Changed
+
+- Updated AppLovin MAX adapter mapping for separated Interstitial Video and Rewarded Video core SDK contracts.
+- MAX Rewarded now maps to Bidscube `showRewardedVideoAd`.
+- MAX Interstitial Video now maps to Bidscube `showInterstitialVideoAd` where video interstitial flow is used.
+- Reward is forwarded to MAX only from Bidscube `onUserRewarded`.
+- **UPM / peer:** bumped **`com.bidscube.applovin.max`** to **1.0.22** and aligned the declared peer dependency to **`com.bidscube.sdk` 1.2.12**.
+- **Android packaging:** bundled MAX adapter AAR updated to **`applovin-bidscube-max-adapter-1.2.6.aar`**; bundled core AARs at **1.2.5** rebuilt with **`showInterstitialVideoAd`** / **`showRewardedVideoAd`** and **`onUserRewarded`** separation for all four Android export modes.
+
+### Fixed
+
+- Rewarded video no longer relies on generic `showVideoAd`.
+- Reward is no longer inferred from close/hidden/skipped events or `onVideoAdCompleted`.
+- Interstitial video never triggers reward.
+- Interstitial/rewarded show failures now use MAX display-failed callbacks instead of load-failed callbacks.
+- **`AppLovinMaxRewardedBridge`:** when MAX rewarded is not ready, optional fallback to Bidscube SDK direct rewarded APIs.
+
+---
+
 ## [1.0.21] - 2026-05-12
 
 ### Changed

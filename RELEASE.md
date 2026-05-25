@@ -2,12 +2,12 @@
 
 ## Naming conventions (congruence)
 
-| Item | Format | Example (1.0.21) |
+| Item | Format | Example (1.0.22) |
 |------|--------|------------------|
-| **UPM `package.json` → `version`** | **`MAJOR.MINOR.PATCH`** only (Unity rejects `1.0.3.1`-style fourth segment). Optional prerelease: `1.0.21-rc.1`. | `1.0.21` |
-| **Git tag** | `v` + the same version string | `v1.0.21` |
-| **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.21.zip` |
-| **GitHub Release title** (workflow) | `com.bidscube.applovin.max {version}` | `com.bidscube.applovin.max 1.0.21` |
+| **UPM `package.json` → `version`** | **`MAJOR.MINOR.PATCH`** only (Unity rejects `1.0.3.1`-style fourth segment). Optional prerelease: `1.0.22-rc.1`. | `1.0.22` |
+| **Git tag** | `v` + the same version string | `v1.0.22` |
+| **GitHub Release asset (ZIP)** | `Bidscube-SDK-Unity-{version}.zip` | `Bidscube-SDK-Unity-1.0.22.zip` |
+| **GitHub Release title** (workflow) | `com.bidscube.applovin.max {version}` | `com.bidscube.applovin.max 1.0.22` |
 | **GitHub repository** (recommended) | `AppLovin-SDK-Unity` | `github.com/BidsCube/AppLovin-SDK-Unity` |
 | **`AdapterPackageInfo.UpmVersion`** | Must match UPM `version` | In `Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs` (companion to **`com.bidscube.sdk`**) |
 | **iOS `BidscubeSDKAppLovin` pod** | Optional manual Podfile | Often **1.0.4** while UPM is **1.0.x** until native ships a new adapter |
@@ -16,8 +16,8 @@
 
 ## Version sources
 
-1. **`package.json`** — UPM package version; must equal the tag **without** `v` (`com.bidscube.applovin.max`). **`dependencies` → `com.bidscube.sdk`** (e.g. **1.2.11**) is the **declared** core peer — update **`README.md`** / **`Documentation~/INSTALL.md`** git URL examples when you bump it; keep aligned with **bidscube-sdk-unity**.
-2. **`AdapterPackageInfo.UpmVersion`** — must match **`package.json`**. **`NativeAndroidBidscubeSdkVersion`** / **`BundledMaxAdapterAarVersion`** must match the bundled AAR **filenames** on disk (see **`README`** / **`INSTALL.md`**).
+1. **`package.json`** — UPM package version; must equal the tag **without** `v` (`com.bidscube.applovin.max`). **`dependencies` → `com.bidscube.sdk`** (e.g. **1.2.12**) is the **declared** core peer — update **`README.md`** / **`Documentation~/INSTALL.md`** git URL examples when you bump it; keep aligned with **bidscube-sdk-unity**.
+2. **`AdapterPackageInfo.UpmVersion`** — must match **`package.json`**. **`NativeAndroidBidscubeSdkVersion`** / **`BundledMaxAdapterAarVersion`** must match the bundled AAR **filenames** on disk (see **`README`** / **`INSTALL.md`**). For **1.0.22**: core AARs remain **1.2.5**; MAX adapter AAR is **`applovin-bidscube-max-adapter-1.2.6.aar`**.
 
 ## Pre-release check
 
@@ -30,7 +30,8 @@
 - [ ] `CHANGELOG.md` includes an entry for this version.
 - [ ] `README.md` / `Documentation~/` — `#vX.Y.Z` examples match `package.json`.
 - [ ] `package.json` → `repository.url` points to the **actual** GitHub repository.
-- [ ] Bundled **`applovin-bidscube-max-adapter-*.aar`**, **`bidscube-sdk-lite-no-video-1.2.5.aar`**, **`bidscube-sdk-webview-video-1.2.5.aar`**, **`bidscube-sdk-legacy-media-video-1.2.5.aar`**, **`bidscube-sdk-full-video-1.2.5.aar`**, **`.meta`** import flags, **`AdapterPackageInfo`**, and **`package.json` → `com.bidscube.sdk`** match the native / UPM releases you intend to support.
+- [ ] Bundled **`applovin-bidscube-max-adapter-1.2.6.aar`**, **`bidscube-sdk-lite-no-video-1.2.5.aar`**, **`bidscube-sdk-webview-video-1.2.5.aar`**, **`bidscube-sdk-legacy-media-video-1.2.5.aar`**, **`bidscube-sdk-full-video-1.2.5.aar`**, **`.meta`** import flags, **`AdapterPackageInfo`**, and **`package.json` → `com.bidscube.sdk`** match the native / UPM releases you intend to support.
+- [ ] No stale **`applovin-bidscube-max-adapter-*.aar`** left in **`Runtime/Plugins/Android/`** (exactly one MAX adapter AAR).
 
 ## Create a release on GitHub
 
@@ -39,11 +40,26 @@
 3. Create an annotated tag:
 
 ```bash
-git tag -a "v1.0.21" -m "com.bidscube.applovin.max 1.0.21"
-git push origin "v1.0.21"
+git tag -a "v1.0.22" -m "com.bidscube.applovin.max 1.0.22"
+git push origin "v1.0.22"
 ```
 
 4. The **Release (GitHub)** workflow (`.github/workflows/release.yml`) validates `package.json`, builds a ZIP without `.git`, and creates a GitHub Release with **`Bidscube-SDK-Unity-{version}.zip`** (e.g. **`Bidscube-SDK-Unity-1.0.21.zip`**).
+
+### Release `v1.0.22` (2026-05-25)
+
+- Bump **`package.json`** / **`AdapterPackageInfo.UpmVersion`** to **1.0.22** and document **[CHANGELOG](CHANGELOG.md)** section **`[1.0.22]`** (peer **`com.bidscube.sdk` 1.2.12**).
+- Rebuild bundled **`applovin-bidscube-max-adapter-1.2.6.aar`** (separated interstitial/rewarded video mapping).
+- Run **`./tools/verify-release-ready.sh`** (checks README / CHANGELOG / Gradle branching / AAR filenames).
+- Android modes are **`LiteNoVideo`**, **`WebViewVideoNoDesugar`**, **`LegacyMediaVideoNoDesugar`**, and **`FullWithVideo`**. Only **`FullWithVideo`** should ship Media3 / IMA / launcher desugaring — see **`Documentation~/INSTALL.md`**.
+
+**UPM consumers:**
+
+```json
+"com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.22"
+```
+
+Add **`com.bidscube.sdk`** separately (see [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity)).
 
 ### Release `v1.0.21` (2026-05-12)
 
