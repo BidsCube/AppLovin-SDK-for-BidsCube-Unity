@@ -60,6 +60,9 @@ jobs:
       - name: Validate package.json JSON
         run: python3 -c "import json; json.load(open('package.json'))"
 
+      - name: Verify release-ready
+        run: bash tools/verify-release-ready.sh
+
       - name: Build package archive (no .git)
         run: |
           set -euo pipefail
@@ -67,6 +70,14 @@ jobs:
           zip -r "$NAME.zip" . -x ".git/*" -x "__MACOSX/*" -x "*.DS_Store" -x "*/._*" -x "._*" -x "$NAME.zip"
           echo "ZIP_NAME=$NAME.zip" >> "$GITHUB_ENV"
           ls -la "$NAME.zip"
+
+      - name: Validate release ZIP hygiene
+        run: |
+          set -euo pipefail
+          unzip -l "$ZIP_NAME" | grep -E '(^|/)(\.git|Library/|Temp/|Obj/|Logs/|Build/|Builds/|__MACOSX|\.DS_Store|/\._)' && {
+            echo "ERROR: release ZIP contains forbidden files"
+            exit 1
+          } || true
 
       - name: GitHub Release (tag push)
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')

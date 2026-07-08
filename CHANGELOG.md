@@ -2,6 +2,49 @@
 
 ---
 
+## [1.0.24] - 2026-07-08
+
+### Fixed
+
+- **Android native compatibility:** bundled core SDK AARs updated from **1.2.5** to **1.2.10** to match **`applovin-bidscube-max-adapter-1.2.10.aar`**. Fixes potential runtime **`NoSuchMethodError`** for `collectSignal`, `clearPreloadCache`, `setMediationAdapterVersion`, preload APIs, and mediation `initialize(...)`.
+
+### Added
+
+- **`tools/verify-release-ready.sh`:** **`javap`** adapter/core method compatibility check (classfile fallback when JDK tools unavailable).
+- **`tools/build-android-max-adapter-into-package.sh`:** fails if staged Android core AAR version does not match **`NativeAndroidBidscubeSdkVersion`**; removes stale core/adapter AARs.
+
+OpenRTB 2.6 support, when available, is provided by the native Bidscube SDKs used by the native AppLovin MAX adapters. The Unity package does not parse OpenRTB responses and does not build or POST OpenRTB bid requests.
+
+OpenRTB 2.6-style response parsing is not implemented yet in the native MAX stack for this release (Option C).
+
+---
+
+## [1.0.23] - 2026-07-08
+
+### Changed
+
+- **Android MAX adapter:** bundled **`applovin-bidscube-max-adapter-1.2.10.aar`** (fixed native adapter from AppLovin-SDK-for-BidsCube-Android; no test signal / dummy Native MAX).
+- **iOS:** **`BidscubeIosPodfilePostprocessor`** injects **`BidscubeSDKAppLovin` 1.1.0** on Xcode export when missing (does not duplicate **`AppLovinSDK`** from the official MAX Unity plugin).
+- **`AppLovinMaxRewardedBridge.EnableDirectSdkFallback`** default is **`false`** — MAX load/show is the primary path; direct SDK fallback is opt-in QA/debug only.
+- **`AppLovinMaxUnityReflection`:** MREC helpers (**`TryCreateMRec`**, **`TryShowMRec`**, **`TryHideMRec`**, **`TryDestroyMRec`**) and clarified helper-only docs (no mediation layer).
+- **Docs:** supported MAX formats (Banner, MREC, Interstitial, Rewarded); Native MAX not advertised; Android four video modes vs single iOS pod; release ZIP hygiene validation.
+- **OpenRTB 2.6 (Option C):** explicit native-only delegation docs; **`AdapterPackageInfo.OpenRtb26*ResponseParsingSupported = false`**; verify script blocks ambiguous OpenRTB claims and checks adapter `openrtb_2_6_response_parsing` signal.
+
+OpenRTB 2.6 support, when available, is provided by the native Bidscube SDKs used by the native AppLovin MAX adapters. The Unity package does not parse OpenRTB responses and does not build or POST OpenRTB bid requests.
+
+OpenRTB 2.6-style response parsing is not implemented yet in the native MAX stack for this release (Option C).
+
+### Added
+
+- **`AdapterPackageInfo`:** **`OpenRtb26AndroidResponseParsingSupported`** / **`OpenRtb26IosResponseParsingSupported`** flags aligned with native **1.2.10** / **`BidscubeSDKAppLovin` 1.1.0**.
+- **AppLovin MAX server parameter matrix** in README/INSTALL (`request_authority` / `ssp_host` active; OpenRTB pod params reserved).
+
+- **`tools/verify-release-ready.sh`:** forbidden-string scan on bundled adapter AAR (**`bidscube_test_signal`**, dummy Native strings, **`MaxNativeAdAdapter`** / **`loadNativeAd`**).
+- **Release workflow:** runs **`verify-release-ready.sh`** and rejects ZIPs containing **`.git`**, **`__MACOSX`**, **`._*`**, Unity **`Library/`** / **`Temp/`** / etc.
+- **Sibling QA project:** **`BidscubeUnityAppLovinTestApp`** (outside this package) for full MAX integration testing.
+
+---
+
 ## [1.0.22] - 2026-05-25
 
 ### Changed

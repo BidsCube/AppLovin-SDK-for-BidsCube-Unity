@@ -139,8 +139,227 @@ if [[ ! -f "Runtime/Plugins/Android/applovin-bidscube-max-adapter-${MAXA_VER}.aa
   exit 1
 fi
 
+python3 << 'PY' || exit 1
+import io
+import re
+import zipfile
+from pathlib import Path
+
+info = Path("Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs").read_text(encoding="utf-8")
+m = re.search(r'BundledMaxAdapterAarVersion = "([^"]+)"', info)
+if not m:
+    raise SystemExit("ERROR: cannot parse BundledMaxAdapterAarVersion")
+
+ver = m.group(1)
+aar_path = Path(f"Runtime/Plugins/Android/applovin-bidscube-max-adapter-{ver}.aar")
+if not aar_path.is_file():
+    raise SystemExit(f"ERROR: missing {aar_path}")
+
+with zipfile.ZipFile(aar_path) as aar:
+    classes_jar = aar.read("classes.jar")
+
+forbidden = [
+    b"bidscube_test_signal",
+    b"Bidscube Native Ad",
+    b"Native ad from Bidscube",
+    b"Learn More",
+]
+
+for item in forbidden:
+    if item in classes_jar:
+        raise SystemExit(f"ERROR: forbidden string found in {aar_path}: {item.decode(errors='ignore')}")
+
+with zipfile.ZipFile(io.BytesIO(classes_jar)) as jar:
+    classes = jar.namelist()
+
+if any("MaxNativeAdAdapter" in c or "loadNativeAd" in c for c in classes):
+    raise SystemExit("ERROR: bundled Android adapter must not expose Native MAX unless real native mapping is implemented.")
+
+print("Android MAX adapter AAR forbidden-string check OK")
+PY
+
+python3 << 'PY' || exit 1
+import io
+import re
+import shutil
+import subprocess
+import tempfile
+import zipfile
+from pathlib import Path
+
+info = Path("Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs").read_text(encoding="utf-8")
+native_ver = re.search(r'NativeAndroidBidscubeSdkVersion = "([^"]+)"', info).group(1)
+adapter_ver = re.search(r'BundledMaxAdapterAarVersion = "([^"]+)"', info).group(1)
+
+core_aar = Path(f"Runtime/Plugins/Android/bidscube-sdk-full-video-{native_ver}.aar")
+adapter_aar = Path(f"Runtime/Plugins/Android/applovin-bidscube-max-adapter-{adapter_ver}.aar")
+if not core_aar.is_file():
+    raise SystemExit(f"ERROR: missing {core_aar}")
+if not adapter_aar.is_file():
+    raise SystemExit(f"ERROR: missing {adapter_aar}")
+
+required = [
+    "public static java.lang.String collectSignal()",
+    "public static void clearPreloadCache()",
+    "public static void setMediationAdapterVersion(java.lang.String)",
+    "public static void initialize(android.content.Context, com.bidscube.sdk.config.SDKConfig, com.bidscube.sdk.interfaces.InitializationCallback)",
+    "public static void preloadImageAd(java.lang.String, com.bidscube.sdk.interfaces.AdCallback)",
+    "public static void preloadInterstitialVideoAd(java.lang.String, com.bidscube.sdk.interfaces.AdCallback)",
+    "public static void preloadRewardedVideoAd(java.lang.String, com.bidscube.sdk.interfaces.AdCallback)",
+    "public static void showInterstitialVideoAd(java.lang.String, com.bidscube.sdk.interfaces.AdCallback)",
+    "public static void showRewardedVideoAd(java.lang.String, com.bidscube.sdk.interfaces.AdCallback)",
+]
+
+with tempfile.TemporaryDirectory() as td:
+    td = Path(td)
+    core_jar = td / "core.jar"
+    with zipfile.ZipFile(core_aar) as z:
+        core_jar.write_bytes(z.read("classes.jar"))
+
+    if shutil.which("javap"):
+        out = subprocess.check_output(
+            ["javap", "-classpath", str(core_jar), "-p", "com.bidscube.sdk.BidscubeSDK"],
+            text=True,
+            stderr=subprocess.STDOUT,
+        )
+        missing = [m for m in required if m not in out]
+        if missing:
+            raise SystemExit(
+                "ERROR: bundled core SDK AAR is not compatible with bundled AppLovin adapter AAR. Missing methods:\n"
+                + "\n".join(" - " + m for m in missing)
+            )
+    else:
+        sdk_class = zipfile.ZipFile(io.BytesIO(core_jar.read_bytes())).read("com/bidscube/sdk/BidscubeSDK.class")
+        need_names = [
+            "collectSignal", "clearPreloadCache", "setMediationAdapterVersion",
+            "preloadImageAd", "preloadInterstitialVideoAd", "preloadRewardedVideoAd",
+            "showInterstitialVideoAd", "showRewardedVideoAd",
+        ]
+        missing = [n for n in need_names if n.encode() not in sdk_class]
+        if missing:
+            raise SystemExit(
+                "ERROR: javap unavailable; classfile fallback missing BidscubeSDK methods: "
+                + ", ".join(missing)
+            )
+
+print("Android adapter/core method compatibility OK")
+PY
+
+python3 << 'PY' || exit 1
+import io
+import re
+import zipfile
+from pathlib import Path
+
+info_text = Path("Runtime/BidscubeSDK/Properties/AdapterPackageInfo.cs").read_text(encoding="utf-8")
+
+def parse_bool(name: str) -> bool:
+    m = re.search(rf"public const bool {name} = (true|false)", info_text)
+    if not m:
+        raise SystemExit(f"ERROR: cannot parse {name} from AdapterPackageInfo.cs")
+    return m.group(1) == "true"
+
+android_supported = parse_bool("OpenRtb26AndroidResponseParsingSupported")
+ios_supported = parse_bool("OpenRtb26IosResponseParsingSupported")
+
+m = re.search(r'BundledMaxAdapterAarVersion = "([^"]+)"', info_text)
+if not m:
+    raise SystemExit("ERROR: cannot parse BundledMaxAdapterAarVersion")
+adapter_ver = m.group(1)
+aar_path = Path(f"Runtime/Plugins/Android/applovin-bidscube-max-adapter-{adapter_ver}.aar")
+with zipfile.ZipFile(aar_path) as aar:
+    classes_jar = aar.read("classes.jar")
+
+# Adapter signal must not advertise OpenRTB 2.6 parsing unless we explicitly claim support.
+if b"openrtb_2_6_response_parsing" in classes_jar:
+    signals_true = (
+        b'"openrtb_2_6_response_parsing",true' in classes_jar
+        or b'"openrtb_2_6_response_parsing":true' in classes_jar
+        or b"openrtb_2_6_response_parsing\", true" in classes_jar
+    )
+    if android_supported and not signals_true:
+        raise SystemExit(
+            "ERROR: AdapterPackageInfo claims Android OpenRTB 2.6 support but adapter AAR signal is false/missing"
+        )
+    if not android_supported and signals_true:
+        raise SystemExit(
+            "ERROR: bundled adapter AAR advertises openrtb_2_6_response_parsing=true "
+            "but AdapterPackageInfo.OpenRtb26AndroidResponseParsingSupported is false"
+        )
+else:
+    if android_supported:
+        raise SystemExit(
+            "ERROR: AdapterPackageInfo claims Android OpenRTB 2.6 support but adapter AAR has no openrtb signal"
+        )
+
+disclaimer = (
+    "OpenRTB 2.6 support, when available, is provided by the native Bidscube SDKs used by the "
+    "native AppLovin MAX adapters. The Unity package does not parse OpenRTB responses and does not "
+    "build or POST OpenRTB bid requests."
+)
+docs = ["README.md", "Documentation~/INSTALL.md", "RELEASE.md", "CHANGELOG.md"]
+for doc in docs:
+    p = Path(doc)
+    if not p.is_file():
+        raise SystemExit(f"ERROR: missing {doc}")
+    text = p.read_text(encoding="utf-8")
+    if disclaimer not in text:
+        raise SystemExit(f"ERROR: {doc} must include the OpenRTB Unity-delegation disclaimer")
+
+forbidden_claims = [
+    re.compile(r"OpenRTB 2\.6 supported(?!\s+by)", re.I),
+    re.compile(r"OpenRTB 2\.6-style response parsing is supported(?!\s+on)", re.I),
+    re.compile(r"full OpenRTB 2\.6 support", re.I),
+]
+if not android_supported and not ios_supported:
+    required_option_c = "OpenRTB 2.6-style response parsing is not implemented yet"
+    for doc in docs:
+        text = Path(doc).read_text(encoding="utf-8")
+        if required_option_c not in text:
+            raise SystemExit(
+                f"ERROR: {doc} must state Option C OpenRTB status when both platform flags are false"
+            )
+        for pat in forbidden_claims:
+            if pat.search(text):
+                raise SystemExit(
+                    f"ERROR: {doc} contains ambiguous OpenRTB support claim: {pat.pattern}"
+                )
+elif android_supported and not ios_supported:
+    for doc in docs:
+        text = Path(doc).read_text(encoding="utf-8")
+        if "Android:" not in text or "iOS:" not in text:
+            raise SystemExit(f"ERROR: {doc} must document Android/iOS OpenRTB status separately (Option A)")
+elif android_supported and ios_supported:
+    required = "OpenRTB 2.6-style response parsing is supported on Android and iOS"
+    for doc in docs:
+        if required not in Path(doc).read_text(encoding="utf-8"):
+            raise SystemExit(f"ERROR: {doc} must state Option B OpenRTB status")
+
+print(
+    "OpenRTB release status OK — Android:",
+    "supported" if android_supported else "not implemented",
+    "| iOS:",
+    "supported" if ios_supported else "not implemented",
+)
+PY
+
 if [[ ! -f "Runtime/BidscubeSDK/Mediation/AppLovinMaxUnityReflection.cs" ]]; then
   echo "ERROR: AppLovinMaxUnityReflection.cs is required" >&2
+  exit 1
+fi
+
+IOS_POST="Editor/iOS/BidscubeIosPodfilePostprocessor.cs"
+if [[ ! -f "$IOS_POST" ]]; then
+  echo "ERROR: $IOS_POST is required for iOS BidscubeSDKAppLovin pod injection" >&2
+  exit 1
+fi
+grep -q "AdapterPackageInfo.IosBidscubeAppLovinPodVersion" "$IOS_POST" || {
+  echo "ERROR: $IOS_POST must use AdapterPackageInfo.IosBidscubeAppLovinPodVersion" >&2
+  exit 1
+}
+
+if ! grep -q "EnableDirectSdkFallback { get; set; } = false" Runtime/BidscubeSDK/Mediation/AppLovinMaxRewardedBridge.cs; then
+  echo "ERROR: AppLovinMaxRewardedBridge.EnableDirectSdkFallback must default to false" >&2
   exit 1
 fi
 

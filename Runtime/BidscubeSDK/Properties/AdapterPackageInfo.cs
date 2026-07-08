@@ -3,15 +3,28 @@ namespace BidscubeSDK.Mediation
     /// <summary>Version metadata for <c>com.bidscube.applovin.max</c>; must stay aligned with <c>package.json</c> and release tooling.</summary>
     public static class AdapterPackageInfo
     {
-        public const string UpmVersion = "1.0.22";
+        public const string UpmVersion = "1.0.24";
 
-        /// <summary>Native Bidscube Android SDK semver bundled / Maven pin (may trail Unity UPM <c>com.bidscube.sdk</c> patch).</summary>
-        public const string NativeAndroidBidscubeSdkVersion = "1.2.5";
+        /// <summary>Native Bidscube Android SDK semver bundled / Maven pin (must match MAX adapter build line).</summary>
+        public const string NativeAndroidBidscubeSdkVersion = "1.2.10";
 
-        public const string BundledMaxAdapterAarVersion = "1.2.6";
+        public const string BundledMaxAdapterAarVersion = "1.2.10";
 
         /// <summary>iOS CocoaPods <c>BidscubeSDKAppLovin</c> pin (align with native releases).</summary>
-        public const string IosBidscubeAppLovinPodVersion = "1.0.4";
+        public const string IosBidscubeAppLovinPodVersion = "1.1.0";
+
+        /// <summary>
+        /// Native Android OpenRTB 2.6-style <em>response</em> parsing in the bundled MAX adapter / core SDK
+        /// (<c>NativeAndroidBidscubeSdkVersion</c> + <c>BundledMaxAdapterAarVersion</c>).
+        /// Must match native AppLovin-SDK-for-BidsCube-Android release notes before setting true.
+        /// </summary>
+        public const bool OpenRtb26AndroidResponseParsingSupported = false;
+
+        /// <summary>
+        /// Native iOS OpenRTB 2.6-style <em>response</em> parsing in <c>BidscubeSDKAppLovin</c>
+        /// (<c>IosBidscubeAppLovinPodVersion</c>). Must match native AppLovin-SDK-for-BidsCube-iOS before setting true.
+        /// </summary>
+        public const bool OpenRtb26IosResponseParsingSupported = false;
 
         public static string NativeAndroidBundledCoreAarLiteFileName =>
             $"bidscube-sdk-lite-no-video-{NativeAndroidBidscubeSdkVersion}.aar";

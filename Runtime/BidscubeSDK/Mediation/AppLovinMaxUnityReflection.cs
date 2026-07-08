@@ -6,8 +6,10 @@ using UnityEngine;
 namespace BidscubeSDK.Mediation
 {
     /// <summary>
-    /// Invokes AppLovin MAX Unity plugin (<c>MaxSdk</c> in assembly <c>MaxSdk.Scripts</c>) via reflection so the Bidscube package
-    /// compiles before MAX is imported. After you add the official MAX plugin, the same calls reach native MAX and your Bidscube adapter.
+    /// Convenience helper that forwards calls to the official AppLovin MAX Unity SDK (<c>MaxSdk</c>) when it is installed.
+    /// This class only forwards calls to the official AppLovin MAX Unity SDK when it is installed. It does not implement
+    /// mediation, bidding, waterfall, or ad prioritization. Production apps may call <c>MaxSdk</c> APIs directly.
+    /// Compiles before MAX is imported via reflection against assembly <c>MaxSdk.Scripts</c>.
     /// </summary>
     public static class AppLovinMaxUnityReflection
     {
@@ -296,6 +298,60 @@ namespace BidscubeSDK.Mediation
             if (string.IsNullOrEmpty(adUnitId))
                 return;
             InvokeStaticBestMatch("DestroyBanner", new object[] { adUnitId });
+        }
+
+        /// <summary>Creates an MREC at bottom-center when the installed MAX Unity SDK exposes <c>CreateMRec</c>.</summary>
+        public static bool TryCreateMRec(string adUnitId)
+        {
+            if (string.IsNullOrEmpty(adUnitId))
+                return false;
+            var type = ResolveMaxSdk();
+            if (type == null || _maxSdkBaseType == null)
+                return false;
+
+            var adViewPos = _maxSdkBaseType.GetNestedType("AdViewPosition", BindingFlags.Public);
+            if (adViewPos == null || !adViewPos.IsEnum)
+                adViewPos = _maxSdkBaseType.GetNestedType("BannerPosition", BindingFlags.Public);
+            if (adViewPos == null || !adViewPos.IsEnum)
+                return false;
+
+            object bottom;
+            try
+            {
+                bottom = Enum.Parse(adViewPos, "BottomCenter");
+            }
+            catch
+            {
+                return false;
+            }
+
+            var mi = type.GetMethod("CreateMRec", BindingFlags.Public | BindingFlags.Static, null,
+                new[] { typeof(string), adViewPos }, null);
+            if (mi == null)
+                return false;
+            mi.Invoke(null, new[] { adUnitId, bottom });
+            return true;
+        }
+
+        public static void TryShowMRec(string adUnitId)
+        {
+            if (string.IsNullOrEmpty(adUnitId))
+                return;
+            InvokeStaticBestMatch("ShowMRec", new object[] { adUnitId });
+        }
+
+        public static void TryHideMRec(string adUnitId)
+        {
+            if (string.IsNullOrEmpty(adUnitId))
+                return;
+            InvokeStaticBestMatch("HideMRec", new object[] { adUnitId });
+        }
+
+        public static void TryDestroyMRec(string adUnitId)
+        {
+            if (string.IsNullOrEmpty(adUnitId))
+                return;
+            InvokeStaticBestMatch("DestroyMRec", new object[] { adUnitId });
         }
 
         public static void TryShowMediationDebugger()

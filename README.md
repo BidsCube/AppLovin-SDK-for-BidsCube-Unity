@@ -1,6 +1,27 @@
 # Bidscube AppLovin MAX adapter (`com.bidscube.applovin.max`)
 
-UPM package **1.0.22** (Git tag **`v1.0.22`**) — adds the Bidscube **AppLovin MAX** Android/iOS bridge, bundled native AARs, and reflection hooks to **`MaxSdk`**. **Requires** the core Unity SDK **`com.bidscube.sdk`** (declared as **1.2.12** in this package’s `package.json`).
+UPM package **1.0.24** (Git tag **`v1.0.24`**) — wires the Bidscube **AppLovin MAX** native Android/iOS adapters into Unity and provides optional reflection helpers to **`MaxSdk`**. **Requires** the core Unity SDK **`com.bidscube.sdk`** (declared as **1.2.12** in this package’s `package.json`).
+
+This package does **not** implement AppLovin mediation logic. Load and show ads through the **official AppLovin MAX Unity SDK** (`MaxSdk`); native **`BidscubeMediationAdapter`** / **`ALBidscubeMediationAdapter`** handle inventory.
+
+**Supported through MAX:** Banner, MREC, Interstitial, Rewarded.
+
+**Not supported:** Native MAX (unless native Android/iOS adapters implement real native asset mapping — not advertised in this release).
+
+OpenRTB 2.6 support, when available, is provided by the native Bidscube SDKs used by the native AppLovin MAX adapters. The Unity package does not parse OpenRTB responses and does not build or POST OpenRTB bid requests.
+
+**Release status (Option C — current native artifacts):** OpenRTB 2.6-style response parsing is not implemented yet in the bundled native MAX stack. Do not claim OpenRTB 2.6 support for AppLovin MAX mediation in this UPM release.
+
+| Platform | OpenRTB 2.6-style response parsing | Native artifacts |
+|----------|-----------------------------------|------------------|
+| **Android** | Not implemented (native core **`1.2.10`** + adapter **`1.2.10`**) | Bundled AARs; adapter signal `openrtb_2_6_response_parsing: false` |
+| **iOS** | Not implemented | `BidscubeSDKAppLovin` **1.1.0** — OpenRTB 2.6-style podded video response parsing is not implemented on iOS yet. The adapter does not build or POST OpenRTB bid requests. |
+
+Expected flow when native support ships:
+
+```text
+Unity game → official MAX Unity SDK → native MAX adapter → native Bidscube SDK → OpenRTB 2.6-style response parser
+```
 
 Full install, manifest snippets, dashboard, and troubleshooting: **[Documentation~/INSTALL.md](Documentation~/INSTALL.md)**.
 
@@ -22,7 +43,7 @@ Full install, manifest snippets, dashboard, and troubleshooting: **[Documentatio
 {
   "dependencies": {
     "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.12",
-    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.22"
+    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.24"
   }
 }
 ```
@@ -95,7 +116,7 @@ public class BidscubeMaxBootstrap : MonoBehaviour
 }
 ```
 
-If you already reference the MAX assembly directly, you can use `MaxSdk` / `MaxSdkCallbacks` instead of `AppLovinMaxUnityReflection` for init and load calls.
+If you already reference the MAX assembly directly, use `MaxSdk` / `MaxSdkCallbacks` instead of `AppLovinMaxUnityReflection`. The reflection helper only forwards to the official MAX Unity SDK when installed; it is not a separate mediation layer.
 
 ### 3. Interstitial video (MAX only, no reward)
 
@@ -145,11 +166,13 @@ public class MaxInterstitialExample : MonoBehaviour
 }
 ```
 
-### 4. Rewarded video (MAX first, Bidscube SDK fallback)
+### 4. Rewarded video (MAX primary; optional direct SDK fallback)
 
 Primary path: **`MaxSdk.LoadRewardedAd`** / **`MaxSdk.ShowRewardedAd`**. MAX **`OnAdReceivedRewardEvent`** fires only after Bidscube core **`onUserRewarded`** (skip / close / error does not reward).
 
-When MAX has no fill or the ad is not ready, use **`AppLovinMaxRewardedBridge`** to fall back to Bidscube direct rewarded (`ShowRewardedVideoAd` on core **1.2.12+**, else `ShowVideoAd`):
+**Direct SDK fallback is disabled by default.** When MAX has no fill or the ad is not ready, you may opt in to **`AppLovinMaxRewardedBridge`** for Bidscube direct rewarded (`ShowRewardedVideoAd` on core **1.2.12+**, else `ShowVideoAd`):
+
+> Direct SDK fallback bypasses AppLovin MAX mediation priority and should not be enabled for the same inventory unless product/monetization explicitly approves it.
 
 ```csharp
 using BidscubeSDK;
@@ -208,10 +231,11 @@ public class MaxRewardedExample : MonoBehaviour, IAdCallback
 }
 ```
 
-Disable fallback to keep MAX-only behavior:
+Disable fallback to keep MAX-only behavior (default):
 
 ```csharp
-AppLovinMaxRewardedBridge.EnableDirectSdkFallback = false;
+// Default is false; set true only for explicit QA/debug fallback:
+AppLovinMaxRewardedBridge.EnableDirectSdkFallback = true;
 ```
 
 Check readiness before show:
@@ -223,9 +247,9 @@ if (AppLovinMaxRewardedBridge.IsMaxRewardedReady(rewardedAdUnitId))
 }
 ```
 
-### 5. Banner (optional)
+### 5. Banner and MREC (optional)
 
-Banners use the standard MAX banner APIs. The Bidscube adapter handles native banner inventory configured in the MAX dashboard.
+Banners and MRECs use standard MAX APIs. The Bidscube adapter handles native inventory configured in the MAX dashboard.
 
 ```csharp
 using BidscubeSDK.Mediation;
@@ -234,6 +258,12 @@ public void ShowMaxBanner(string bannerAdUnitId)
 {
     if (AppLovinMaxUnityReflection.TryCreateBannerBottomCenter(bannerAdUnitId))
         AppLovinMaxUnityReflection.TryShowBanner(bannerAdUnitId);
+}
+
+public void ShowMaxMRec(string mrecAdUnitId)
+{
+    if (AppLovinMaxUnityReflection.TryCreateMRec(mrecAdUnitId))
+        AppLovinMaxUnityReflection.TryShowMRec(mrecAdUnitId);
 }
 
 public void HideMaxBanner(string bannerAdUnitId)
@@ -322,6 +352,8 @@ Show failures are reported as MAX **display failed**, not load failed.
 
 ## Android modes
 
+**Android** uses the bundled Android AppLovin MAX adapter AAR and keeps Android-specific video modes:
+
 **LiteNoVideo**
 
 - uses `bidscube-sdk-lite-no-video`
@@ -363,13 +395,35 @@ coreLibraryDesugaringEnabled true
 coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
 ```
 
+## iOS
+
+**iOS** uses one **`BidscubeSDKAppLovin`** CocoaPods dependency (currently **1.1.0**). There are no Android-style video modes on iOS. On Xcode export, **`BidscubeIosPodfilePostprocessor`** appends **`pod 'BidscubeSDKAppLovin', '<version>'`** when missing. Verify **`Podfile.lock`** contains **`BidscubeSDKAppLovin`** and the final app contains **`ALBidscubeMediationAdapter`**.
+
 ## Bundled Android AARs
 
-- `bidscube-sdk-lite-no-video-1.2.5.aar`
-- `bidscube-sdk-webview-video-1.2.5.aar`
-- `bidscube-sdk-legacy-media-video-1.2.5.aar`
-- `bidscube-sdk-full-video-1.2.5.aar`
-- `applovin-bidscube-max-adapter-1.2.6.aar`
+- `bidscube-sdk-lite-no-video-1.2.10.aar`
+- `bidscube-sdk-webview-video-1.2.10.aar`
+- `bidscube-sdk-legacy-media-video-1.2.10.aar`
+- `bidscube-sdk-full-video-1.2.10.aar`
+- `applovin-bidscube-max-adapter-1.2.10.aar`
+
+Native core **`1.2.10`** matches MAX adapter **`1.2.10`** (required for `collectSignal`, preload APIs, and mediation init — avoids `NoSuchMethodError` at runtime).
+
+Full MAX QA: sibling project **`BidscubeUnityAppLovinTestApp`** (see its README).
+
+## AppLovin MAX server parameters
+
+The Unity package cannot set AppLovin MAX **server parameters** at runtime. Configure them in the **AppLovin MAX dashboard** (custom network → Bidscube).
+
+| Parameter | Status (native adapters **1.2.10** / **`BidscubeSDKAppLovin` 1.1.0**) |
+|-----------|------------------------------------------------------------------------|
+| **`request_authority`** | **Active** — SSP host override (also via `SDKConfig.Builder.AdRequestAuthority` before MAX init) |
+| **`ssp_host`** | **Active** — alias for `request_authority` when empty |
+| **`openrtb_pod_metadata_enabled`** | **Reserved / future** — not read by current native MAX adapters |
+| **`video_pod_duration_validation_mode`** | **Reserved / future** |
+| **`video_pod_skip_policy`** | **Reserved / future** |
+| **`video_pod_continue_on_slot_error`** | **Reserved / future** |
+| **`video_pod_show_counter`** | **Reserved / future** |
 
 ## More
 

@@ -5,15 +5,15 @@ using UnityEngine;
 namespace BidscubeSDK.Mediation
 {
     /// <summary>
-    /// MAX-first rewarded helper: when AppLovin rewarded is unavailable (no plugin, empty ad unit, not loaded/ready),
-    /// falls back to the Bidscube core SDK direct rewarded path.
+    /// MAX-first rewarded helper. Optional direct SDK fallback is disabled by default so load/show stay on MAX mediation.
+    /// Enable <see cref="EnableDirectSdkFallback"/> only for explicit QA/debug when product approves bypassing MAX priority.
     /// </summary>
     public static class AppLovinMaxRewardedBridge
     {
         private static MethodInfo _showRewardedVideoAdMethod;
 
-        /// <summary>When true (default), <see cref="ShowRewarded"/> uses Bidscube SDK if MAX rewarded cannot be shown.</summary>
-        public static bool EnableDirectSdkFallback { get; set; } = true;
+        /// <summary>When true, <see cref="ShowRewarded"/> uses Bidscube SDK if MAX rewarded cannot be shown. Default is false (MAX-only).</summary>
+        public static bool EnableDirectSdkFallback { get; set; } = false;
 
         /// <summary>Loads MAX rewarded when MAX is available; no-op otherwise.</summary>
         public static void LoadRewarded(string maxRewardedAdUnitId)
