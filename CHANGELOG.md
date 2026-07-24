@@ -2,6 +2,20 @@
 
 ---
 
+## [1.0.25] - 2026-07-24
+
+### Added
+
+- **Publisher `user_id`:** pass at init via **`SDKConfig.Builder().UserId(...)`** or after login via **`BidscubeSDK.SetUserId(...)`** — forwarded to native Android/iOS and sent as query param **`user_id`** on SSP ad requests for postback attribution.
+- Depends on **`com.bidscube.sdk` 1.2.16** (native Android/iOS bridge + C# direct ads).
+
+### Changed
+
+- Bundled Android core SDK + MAX adapter AARs **1.2.10 → 1.2.11** (native `user_id` / `SDKConfig.Builder.userId`).
+- iOS CocoaPods pin **`BidscubeSDKAppLovin` 1.1.1** (native `user_id` + MAX server parameter forwarding).
+
+---
+
 ## [1.0.24] - 2026-07-08
 
 ### Fixed

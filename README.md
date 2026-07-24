@@ -1,6 +1,6 @@
 # Bidscube AppLovin MAX adapter (`com.bidscube.applovin.max`)
 
-UPM package **1.0.24** (Git tag **`v1.0.24`**) — wires the Bidscube **AppLovin MAX** native Android/iOS adapters into Unity and provides optional reflection helpers to **`MaxSdk`**. **Requires** the core Unity SDK **`com.bidscube.sdk`** (declared as **1.2.12** in this package’s `package.json`).
+UPM package **1.0.25** (Git tag **`v1.0.25`**) — wires the Bidscube **AppLovin MAX** native Android/iOS adapters into Unity and provides optional reflection helpers to **`MaxSdk`**. **Requires** the core Unity SDK **`com.bidscube.sdk`** (declared as **1.2.16** in this package’s `package.json`).
 
 This package does **not** implement AppLovin mediation logic. Load and show ads through the **official AppLovin MAX Unity SDK** (`MaxSdk`); native **`BidscubeMediationAdapter`** / **`ALBidscubeMediationAdapter`** handle inventory.
 
@@ -43,7 +43,7 @@ Full install, manifest snippets, dashboard, and troubleshooting: **[Documentatio
 {
   "dependencies": {
     "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.12",
-    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.24"
+    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.25"
   }
 }
 ```
@@ -72,6 +72,7 @@ public class BidscubeMaxBootstrap : MonoBehaviour
         var config = new SDKConfig.Builder()
             .IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)
             .EnableLogging(true)
+            .UserId("your-publisher-user-id") // sent as user_id on SSP requests for postbacks
             .Build();
 
         BidscubeSDK.Initialize(config);
@@ -419,6 +420,7 @@ The Unity package cannot set AppLovin MAX **server parameters** at runtime. Conf
 |-----------|------------------------------------------------------------------------|
 | **`request_authority`** | **Active** — SSP host override (also via `SDKConfig.Builder.AdRequestAuthority` before MAX init) |
 | **`ssp_host`** | **Active** — alias for `request_authority` when empty |
+| **`user_id`** / **`userId`** | **Active** — publisher user id for postbacks (also via `SDKConfig.Builder().UserId(...)` / `BidscubeSDK.SetUserId(...)` before MAX init) |
 | **`openrtb_pod_metadata_enabled`** | **Reserved / future** — not read by current native MAX adapters |
 | **`video_pod_duration_validation_mode`** | **Reserved / future** |
 | **`video_pod_skip_policy`** | **Reserved / future** |

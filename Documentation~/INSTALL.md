@@ -8,7 +8,7 @@ In **`Packages/manifest.json`** add the core SDK and this adapter (use the Git t
 {
   "dependencies": {
     "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.12",
-    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.24"
+    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.25"
   }
 }
 ```
@@ -124,6 +124,7 @@ Configure in the **AppLovin MAX dashboard** (not from Unity C# at runtime):
 |-----------|--------|
 | **`request_authority`** | **Active** on Android/iOS native adapters |
 | **`ssp_host`** | **Active** (alias when `request_authority` empty) |
+| **`user_id`** / **`userId`** | **Active** — publisher user id on SSP ad requests (postback attribution). Prefer `SDKConfig.Builder().UserId(...)` at init or `BidscubeSDK.SetUserId(...)` after login; MAX dashboard value is optional fallback. |
 | **`openrtb_pod_metadata_enabled`** | **Reserved / future** |
 | **`video_pod_duration_validation_mode`** | **Reserved / future** |
 | **`video_pod_skip_policy`** | **Reserved / future** |
@@ -139,9 +140,13 @@ Configure in the **AppLovin MAX dashboard** (not from Unity C# at runtime):
 var config = new SDKConfig.Builder()
     .IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)
     .AdRequestAuthority("your-ssp-host.example.com")
+    .UserId("your-publisher-user-id")
     .Build();
 BidscubeSDK.BidscubeSDK.Initialize(config);
 // then MaxSdk.InitializeSdk(...) per AppLovin
+
+// After login:
+BidscubeSDK.BidscubeSDK.SetUserId(loggedInUserId);
 ```
 
 Core API details: **`com.bidscube.sdk`** repo.
@@ -151,7 +156,7 @@ Core API details: **`com.bidscube.sdk`** repo.
 1. Add **Bidscube** as a **custom SDK network**.
 2. **Android:** adapter class **`com.applovin.mediation.adapters.BidscubeMediationAdapter`** (bundled AAR).
 3. **iOS:** **`ALBidscubeMediationAdapter`** (name per your native build).
-4. Network **App ID** for Bidscube = **Bidscube placement ID**. Optional server parameters: **`request_authority`** / **`ssp_host`** (active). OpenRTB pod parameters are **reserved/future** until native adapters implement them — see **OpenRTB 2.6** section above.
+4. Network **App ID** for Bidscube = **Bidscube placement ID**. Optional server parameters: **`request_authority`** / **`ssp_host`**, **`user_id`** (active). OpenRTB pod parameters are **reserved/future** until native adapters implement them — see **OpenRTB 2.6** section above.
 
 ## 8. Common issues
 
