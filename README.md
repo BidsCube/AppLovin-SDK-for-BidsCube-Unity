@@ -14,7 +14,7 @@ OpenRTB 2.6 support, when available, is provided by the native Bidscube SDKs use
 
 | Platform | OpenRTB 2.6-style response parsing | Native artifacts |
 |----------|-----------------------------------|------------------|
-| **Android** | Not implemented (native core **`1.2.18`** + adapter **`1.2.18`**) | Bundled AARs; adapter signal `openrtb_2_6_response_parsing: false` |
+| **Android** | Not implemented (native core **`1.2.19`** + adapter **`1.2.19`**) | Bundled AARs; adapter signal `openrtb_2_6_response_parsing: false` |
 | **iOS** | Not implemented | `BidscubeSDKAppLovin` **1.1.2** — OpenRTB 2.6-style podded video response parsing is not implemented on iOS yet. The adapter does not build or POST OpenRTB bid requests. |
 
 Expected flow when native support ships:
@@ -403,13 +403,13 @@ coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
 
 ## Bundled Android AARs
 
-- `bidscube-sdk-lite-no-video-1.2.18.aar`
-- `bidscube-sdk-webview-video-1.2.18.aar`
-- `bidscube-sdk-legacy-media-video-1.2.18.aar`
-- `bidscube-sdk-full-video-1.2.18.aar`
-- `applovin-bidscube-max-adapter-1.2.18.aar`
+- `bidscube-sdk-lite-no-video-1.2.19.aar`
+- `bidscube-sdk-webview-video-1.2.19.aar`
+- `bidscube-sdk-legacy-media-video-1.2.19.aar`
+- `bidscube-sdk-full-video-1.2.19.aar`
+- `applovin-bidscube-max-adapter-1.2.19.aar`
 
-Native core **`1.2.18`** matches MAX adapter **`1.2.18`**. Android TV fullscreen and remote focus follow the direct BidsCube SDK. See `Documentation~/TV.md`.
+Native core **`1.2.19`** matches MAX adapter **`1.2.19`**. Android TV fullscreen and remote focus follow the direct BidsCube SDK. See `Documentation~/TV.md`.
 
 Full MAX QA: sibling project **`BidscubeUnityAppLovinTestApp`** (see its README).
 
@@ -417,10 +417,13 @@ Full MAX QA: sibling project **`BidscubeUnityAppLovinTestApp`** (see its README)
 
 The Unity package cannot set AppLovin MAX **server parameters** at runtime. Configure them in the **AppLovin MAX dashboard** (custom network → Bidscube).
 
-| Parameter | Status (native adapters **1.2.18** / **`BidscubeSDKAppLovin` 1.1.2**) |
+`app_id` is an optional AppLovin MAX server parameter. It is not a BidsCube id and it is not sent on SSP requests. The ad-unit **Placement ID** is the only id sent as query `id`.
+
+| Parameter | Status (native adapters **1.2.19** / **`BidscubeSDKAppLovin` 1.1.2**) |
 |-----------|------------------------------------------------------------------------|
-| **`request_authority`** | **Active** — SSP host override (also via `SDKConfig.Builder.AdRequestAuthority` before MAX init) |
-| **`ssp_host`** | **Active** — alias for `request_authority` when empty |
+| **`app_id`** | **Optional.** Empty does not block Android init. When set, it is passed to `SDKConfig.appId` and does not replace `bundle`. |
+| **`request_authority`** | **Optional.** SSP host override (also via `SDKConfig.Builder.AdRequestAuthority` before MAX init). Empty keeps **`ssp-bcc-ads.com`**. |
+| **`ssp_host`** | **Optional.** Alias for `request_authority` when that key is empty. Same default host. |
 | **`user_id`** / **`userId`** | **Active** — publisher user id for postbacks (also via `SDKConfig.Builder().UserId(...)` / `BidscubeSDK.SetUserId(...)` before MAX init) |
 | **`auto_close`** / **`autoClose`** | **Active** — init server parameter; `true` auto-dismisses fullscreen video after linear complete/skip; default **`false`** (Companion end card / last frame until manual close). Also via `SDKConfig.Builder().AutoClose(...)` before MAX init. |
 | **`openrtb_pod_metadata_enabled`** | **Reserved / future** — not read by current native MAX adapters |
@@ -428,6 +431,18 @@ The Unity package cannot set AppLovin MAX **server parameters** at runtime. Conf
 | **`video_pod_skip_policy`** | **Reserved / future** |
 | **`video_pod_continue_on_slot_error`** | **Reserved / future** |
 | **`video_pod_show_counter`** | **Reserved / future** |
+
+### Placement 22701
+
+Rewarded traffic for a BidsCube placement is the MAX **Placement ID** on that ad unit. **22701** is that placement. **22340** is a different placement: a load with Placement ID 22340 never requests 22701.
+
+After the SDK initializes, rewarded load builds:
+
+`https://ssp-bcc-ads.com/sdk?c=v&m=xml&id=22701&app=1&bundle=io.shusmo.idle.blockcraft&...`
+
+`bundle` is the Android package name. `id` is the Placement ID. Leave `request_authority` and `ssp_host` empty unless the host is not `ssp-bcc-ads.com`. Leave `app_id` empty. Do not put `22701` or `22340` in that field.
+
+Bundled AARs are **1.2.19**. Unity package **v1.0.25** bundled **1.2.11**, which still failed init when `app_id` was empty. **1.2.4** is not this line.
 
 ## More
 

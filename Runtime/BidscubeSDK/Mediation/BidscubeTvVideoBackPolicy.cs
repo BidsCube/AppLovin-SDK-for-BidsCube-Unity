@@ -1,9 +1,9 @@
 namespace BidscubeSDK.Mediation
 {
     /// <summary>
-    /// Menu / Back for direct Unity video on TV. Matches native
-    /// <c>VideoDialogRemoteUx.dispatchBack</c>: close wins, rewarded never skips,
-    /// interstitial skips only when Skip is armed, otherwise the key is consumed.
+    /// Back / Menu for direct Unity video. Same rules as Android SDK 1.2.17
+    /// <c>FullscreenBackPolicy</c>: close wins, rewarded never skips, interstitial
+    /// skips only when Skip is armed.
     /// </summary>
     public static class BidscubeTvVideoBackPolicy
     {
@@ -13,6 +13,15 @@ namespace BidscubeSDK.Mediation
             Skip,
             Close,
             ConfirmRewardForfeit
+        }
+
+        /// <summary>
+        /// Home or closing the app before the linear video ends. The view is not counted
+        /// and a rewarded ad does not grant a reward.
+        /// </summary>
+        public static bool LeavingBeforeCompleteVoidsView(bool linearCompleted)
+        {
+            return !linearCompleted;
         }
 
         public static Action OnMenu(bool rewarded, bool canClose, bool canSkip)

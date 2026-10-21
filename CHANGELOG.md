@@ -6,8 +6,20 @@
 
 ### Added
 
-- **Android TV:** bundled core and MAX adapter AARs **1.2.18**. Same fullscreen and remote rules as the direct BidsCube Android SDK: Leanback / Fire TV detection, fullscreen on TV, D-pad focus on Skip / Close / rewarded **Keep watching**, video surface does not take focus. Manifest merges `touchscreen` and `leanback` as not required.
+- **Android TV:** bundled core and MAX adapter AARs **1.2.19**. Same fullscreen and remote rules as the direct BidsCube Android SDK: Leanback / Fire TV detection, fullscreen on TV, D-pad focus on Skip / Close / rewarded **Keep watching**, video surface does not take focus. Manifest merges `touchscreen` and `leanback` as not required.
 - **Apple TV:** `BidscubeSDKAppLovin` is not injected into tvOS exports. `BidscubeTvRemoteDriver` starts on tvOS, focuses Skip/Close, hides Skip on rewarded, and maps Siri Remote Menu to the Android TV Back rules (including the leave-reward confirm). See `Documentation~/TV.md`.
+- **Edit Mode tests** for `BidscubeTvVideoBackPolicy` (`Tests/EditMode`).
+
+### Fixed
+
+- **MAX dashboard docs** match adapter **1.2.19**: Server Parameter `app_id` is optional and is not sent to BidsCube. The ad-unit Placement ID is query `id` (example rewarded placement **22701**, not **22340**). `request_authority` and `ssp_host` stay optional (`ssp-bcc-ads.com`).
+- **`attr/colorOnSurface` on Unity Android export:** the Android SDK already depends on Material Components. A bundled AAR copied into `libs/` does not. The Gradle postprocessor adds `com.google.android.material:material:1.12.0`.
+- **`CS0103` / 31-character GUIDs** in `com.bidscube.sdk` **1.2.16** and **1.2.17**: an editor script that does not reference that package rewrites `BidscubeAndroidSdkInterop.cs.meta` and `BidscubeIosSdkInterop.cs.meta` to 32 hex characters.
+
+### Changed
+
+- Bundled Android core and MAX adapter AARs **1.2.18 → 1.2.19**. Empty MAX `app_id` no longer fails initialization.
+- **Rewarded and interstitial video** follow Android SDK **1.2.17**: native MAX playback has no Skip on rewarded, Back confirms that leaving forfeits the reward, and leaving the app before the linear video ends does not count the view. The same rules apply to direct Unity `VideoAdView` through `BidscubeTvRemoteDriver`.
 
 ---
 

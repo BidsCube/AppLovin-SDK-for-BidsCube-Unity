@@ -7,9 +7,10 @@ using UnityEngine.Video;
 namespace BidscubeSDK.Mediation
 {
     /// <summary>
-    /// Apple TV (and Android TV direct-SDK) remote for <see cref="VideoAdView"/>.
-    /// Menu follows the same Back rules as the Android TV activity. Select uses the focused Skip or Close button.
-    /// Android MAX ads play in the native activity and are ignored here.
+    /// Direct Unity <see cref="VideoAdView"/> follows the Android 1.2.17 fullscreen rules:
+    /// rewarded has no Skip, Back asks before forfeiting the reward, and leaving the app
+    /// before the video ends does not count the view. Android MAX playback stays in the
+    /// native activity and is not touched here. Larger remote chrome is TV-only.
     /// </summary>
     [DefaultExecutionOrder(100)]
     public sealed class BidscubeTvRemoteDriver : MonoBehaviour
@@ -37,24 +38,31 @@ namespace BidscubeSDK.Mediation
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
         {
-            if (!BidscubeTvPlatform.IsTelevision)
-                return;
             var go = new GameObject("BidscubeTvRemoteDriver");
             DontDestroyOnLoad(go);
             go.AddComponent<BidscubeTvRemoteDriver>();
         }
 
+        private void OnApplicationPause(bool paused)
+        {
+            if (!paused)
+                return;
+            ForfeitIncompleteRewarded();
+        }
+
         private void Update()
         {
-            if (!BidscubeTvPlatform.IsTelevision)
+            var views = Object.FindObjectsOfType<VideoAdView>();
+            if (views == null || views.Length == 0)
                 return;
 
-            EnsureEventSystem();
-            var views = Object.FindObjectsOfType<VideoAdView>();
+            if (BidscubeTvPlatform.IsTelevision)
+                EnsureEventSystem();
+
             for (var i = 0; i < views.Length; i++)
                 ApplyChrome(views[i]);
 
-            if (_confirmOpen || !BidscubeTvPlatform.WasMenuPressed() || views.Length == 0)
+            if (_confirmOpen || !BidscubeTvPlatform.WasMenuPressed())
                 return;
 
             var view = views[0];
@@ -83,6 +91,25 @@ namespace BidscubeSDK.Mediation
             }
         }
 
+        private void ForfeitIncompleteRewarded()
+        {
+            var views = Object.FindObjectsOfType<VideoAdView>();
+            if (views == null)
+                return;
+            for (var i = 0; i < views.Length; i++)
+            {
+                var view = views[i];
+                if (view == null || !IsRewarded(view) || CanClose(view) || IsClosed(view))
+                    continue;
+                if (!BidscubeTvVideoBackPolicy.LeavingBeforeCompleteVoidsView(linearCompleted: false))
+                    continue;
+                DismissConfirm(resume: false);
+                var close = FindChildButton(view, "CloseButton");
+                if (close != null)
+                    close.onClick.Invoke();
+            }
+        }
+
         private void ApplyChrome(VideoAdView view)
         {
             if (view == null || IsClosed(view))
@@ -98,6 +125,9 @@ namespace BidscubeSDK.Mediation
                 skip.interactable = false;
                 skip.gameObject.SetActive(false);
             }
+
+            if (!BidscubeTvPlatform.IsTelevision)
+                return;
 
             if (close != null)
             {

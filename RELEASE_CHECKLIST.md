@@ -5,7 +5,7 @@ Full process: [RELEASE.md](RELEASE.md).
 ## Before tagging
 
 - [ ] Run **`bash tools/verify-release-ready.sh`** (exit **0**)
-- [ ] Bundled Android adapter AAR replaced with fixed version (**`applovin-bidscube-max-adapter-1.2.18.aar`**)
+- [ ] Bundled Android adapter AAR replaced with fixed version (**`applovin-bidscube-max-adapter-1.2.19.aar`**)
 - [ ] No **`bidscube_test_signal`** in bundled adapter AAR (forbidden-string check passes)
 - [ ] No Native MAX dummy/support claim in docs or adapter AAR
 - [ ] **`AdapterPackageInfo`** versions match AAR filenames and iOS pod pin (**`BidscubeSDKAppLovin` 1.1.2**)
@@ -13,7 +13,7 @@ Full process: [RELEASE.md](RELEASE.md).
 - [ ] **`AppLovinMaxRewardedBridge.EnableDirectSdkFallback`** defaults to **`false`**
 - [ ] **`README.md`** / **`Documentation~/INSTALL.md`** — MAX is primary load/show path; direct fallback is opt-in only
 - [ ] **`package.json`** and **`AdapterPackageInfo.UpmVersion`** match the UPM version you are releasing (currently **1.0.27**)
-- [ ] Bundled core AARs **`bidscube-sdk-*-1.2.18.aar`** match MAX adapter **`1.2.18`**
+- [ ] Bundled core AARs **`bidscube-sdk-*-1.2.19.aar`** match MAX adapter **`1.2.19`**
 - [ ] **`./tools/verify-release-ready.sh`** reports **Android adapter/core method compatibility OK**
 - [ ] **`CHANGELOG.md`** has a **`## [version]`** section for this release
 - [ ] Sibling **`BidscubeUnityAppLovinTestApp`** exists for MAX QA

@@ -4,12 +4,13 @@ This package (`com.bidscube.applovin.max`) wires TV behavior. Interstitial and r
 
 ## Android TV
 
-Bundled AARs **1.2.18** follow the direct BidsCube Android SDK:
+Bundled AARs **1.2.19** follow the direct BidsCube Android SDK:
 
 - Leanback, television UI mode, Fire TV, and Amazon `AFT*` count as TV.
 - `AUTO` opens video fullscreen on TV. On a phone, full-screen and unknown positions are fullscreen; header, footer, and sidebar stay windowed.
 - Native `BidscubeSDK.setVideoFullscreenPolicy(FORCE_WINDOWED)` stays windowed on TV (QA).
 - D-pad focus is on Skip when it is armed, on Close after the video, and on **Keep watching** in the rewarded leave dialog. The video surface does not take focus.
+- **Direct Unity video** (`VideoAdView`, including Apple TV): rewarded hides Skip, Back / Escape asks “Leave video?” before the end, and pausing or leaving the app before completion does not grant a reward. Android MAX video uses the bundled native activity instead of this driver.
 - Rewarded video has no Skip. Back before the end asks to leave and does not grant a reward.
 
 ```csharp

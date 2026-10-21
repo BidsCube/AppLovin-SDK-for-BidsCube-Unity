@@ -6,9 +6,9 @@ namespace BidscubeSDK.Mediation
         public const string UpmVersion = "1.0.27";
 
         /// <summary>Native Bidscube Android SDK semver bundled / Maven pin (must match MAX adapter build line).</summary>
-        public const string NativeAndroidBidscubeSdkVersion = "1.2.18";
+        public const string NativeAndroidBidscubeSdkVersion = "1.2.19";
 
-        public const string BundledMaxAdapterAarVersion = "1.2.18";
+        public const string BundledMaxAdapterAarVersion = "1.2.19";
 
         /// <summary>iOS CocoaPods <c>BidscubeSDKAppLovin</c> pin (align with native releases).</summary>
         public const string IosBidscubeAppLovinPodVersion = "1.1.2";

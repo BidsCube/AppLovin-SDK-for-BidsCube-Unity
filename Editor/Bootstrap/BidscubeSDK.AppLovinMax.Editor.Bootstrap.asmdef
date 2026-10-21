@@ -1,0 +1,16 @@
+{
+    "name": "BidscubeSDK.AppLovinMax.Editor.Bootstrap",
+    "rootNamespace": "BidscubeSDK.Editor.Bootstrap",
+    "references": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
