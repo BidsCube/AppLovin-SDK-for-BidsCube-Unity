@@ -1,6 +1,6 @@
 # Bidscube AppLovin MAX adapter (`com.bidscube.applovin.max`)
 
-UPM package **1.0.25** (Git tag **`v1.0.25`**) — wires the Bidscube **AppLovin MAX** native Android/iOS adapters into Unity and provides optional reflection helpers to **`MaxSdk`**. **Requires** the core Unity SDK **`com.bidscube.sdk`** (declared as **1.2.16** in this package’s `package.json`).
+UPM package **1.0.27** (Git tag **`v1.0.27`**) — wires the Bidscube **AppLovin MAX** native Android/iOS adapters into Unity and provides optional reflection helpers to **`MaxSdk`**. **Requires** the core Unity SDK **`com.bidscube.sdk`** (declared as **1.2.17** in this package’s `package.json`).
 
 This package does **not** implement AppLovin mediation logic. Load and show ads through the **official AppLovin MAX Unity SDK** (`MaxSdk`); native **`BidscubeMediationAdapter`** / **`ALBidscubeMediationAdapter`** handle inventory.
 
@@ -14,8 +14,8 @@ OpenRTB 2.6 support, when available, is provided by the native Bidscube SDKs use
 
 | Platform | OpenRTB 2.6-style response parsing | Native artifacts |
 |----------|-----------------------------------|------------------|
-| **Android** | Not implemented (native core **`1.2.10`** + adapter **`1.2.10`**) | Bundled AARs; adapter signal `openrtb_2_6_response_parsing: false` |
-| **iOS** | Not implemented | `BidscubeSDKAppLovin` **1.1.0** — OpenRTB 2.6-style podded video response parsing is not implemented on iOS yet. The adapter does not build or POST OpenRTB bid requests. |
+| **Android** | Not implemented (native core **`1.2.18`** + adapter **`1.2.18`**) | Bundled AARs; adapter signal `openrtb_2_6_response_parsing: false` |
+| **iOS** | Not implemented | `BidscubeSDKAppLovin` **1.1.2** — OpenRTB 2.6-style podded video response parsing is not implemented on iOS yet. The adapter does not build or POST OpenRTB bid requests. |
 
 Expected flow when native support ships:
 
@@ -28,7 +28,7 @@ Full install, manifest snippets, dashboard, and troubleshooting: **[Documentatio
 ## AppLovin MAX Setup
 
 1. Add this package to the Unity project.
-2. Add or verify **`com.bidscube.sdk`** (see `package.json`; host app usually pins [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) **#v1.2.12**) and the **official AppLovin MAX Unity SDK** — this adapter does **not** ship **`MaxSdk`**.
+2. Add or verify **`com.bidscube.sdk`** (see `package.json`; host app usually pins [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) **#v1.2.17**) and the **official AppLovin MAX Unity SDK** — this adapter does **not** ship **`MaxSdk`**. Android TV and Apple TV: [Documentation~/TV.md](Documentation~/TV.md).
 3. Open the sample scene (**Package Manager → Samples → SDK Demo**) or your integration scene.
 4. Enter the AppLovin MAX **SDK key**.
 5. Enter AppLovin **ad unit IDs**.
@@ -42,8 +42,8 @@ Full install, manifest snippets, dashboard, and troubleshooting: **[Documentatio
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.12",
-    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.25"
+    "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.17",
+    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.27"
   }
 }
 ```
@@ -72,6 +72,7 @@ public class BidscubeMaxBootstrap : MonoBehaviour
         var config = new SDKConfig.Builder()
             .IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)
             .EnableLogging(true)
+            .AutoClose(false) // default: keep end card / last frame until user closes
             .UserId("your-publisher-user-id") // sent as user_id on SSP requests for postbacks
             .Build();
 
@@ -398,17 +399,17 @@ coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
 
 ## iOS
 
-**iOS** uses one **`BidscubeSDKAppLovin`** CocoaPods dependency (currently **1.1.0**). There are no Android-style video modes on iOS. On Xcode export, **`BidscubeIosPodfilePostprocessor`** appends **`pod 'BidscubeSDKAppLovin', '<version>'`** when missing. Verify **`Podfile.lock`** contains **`BidscubeSDKAppLovin`** and the final app contains **`ALBidscubeMediationAdapter`**.
+**iOS** uses one **`BidscubeSDKAppLovin`** CocoaPods dependency (currently **1.1.2**). There are no Android-style video modes on iOS. On Xcode export, **`BidscubeIosPodfilePostprocessor`** appends **`pod 'BidscubeSDKAppLovin', '<version>'`** when missing. Verify **`Podfile.lock`** contains **`BidscubeSDKAppLovin`** and the final app contains **`ALBidscubeMediationAdapter`**.
 
 ## Bundled Android AARs
 
-- `bidscube-sdk-lite-no-video-1.2.10.aar`
-- `bidscube-sdk-webview-video-1.2.10.aar`
-- `bidscube-sdk-legacy-media-video-1.2.10.aar`
-- `bidscube-sdk-full-video-1.2.10.aar`
-- `applovin-bidscube-max-adapter-1.2.10.aar`
+- `bidscube-sdk-lite-no-video-1.2.18.aar`
+- `bidscube-sdk-webview-video-1.2.18.aar`
+- `bidscube-sdk-legacy-media-video-1.2.18.aar`
+- `bidscube-sdk-full-video-1.2.18.aar`
+- `applovin-bidscube-max-adapter-1.2.18.aar`
 
-Native core **`1.2.10`** matches MAX adapter **`1.2.10`** (required for `collectSignal`, preload APIs, and mediation init — avoids `NoSuchMethodError` at runtime).
+Native core **`1.2.18`** matches MAX adapter **`1.2.18`**. Android TV fullscreen and remote focus follow the direct BidsCube SDK. See `Documentation~/TV.md`.
 
 Full MAX QA: sibling project **`BidscubeUnityAppLovinTestApp`** (see its README).
 
@@ -416,11 +417,12 @@ Full MAX QA: sibling project **`BidscubeUnityAppLovinTestApp`** (see its README)
 
 The Unity package cannot set AppLovin MAX **server parameters** at runtime. Configure them in the **AppLovin MAX dashboard** (custom network → Bidscube).
 
-| Parameter | Status (native adapters **1.2.10** / **`BidscubeSDKAppLovin` 1.1.0**) |
+| Parameter | Status (native adapters **1.2.18** / **`BidscubeSDKAppLovin` 1.1.2**) |
 |-----------|------------------------------------------------------------------------|
 | **`request_authority`** | **Active** — SSP host override (also via `SDKConfig.Builder.AdRequestAuthority` before MAX init) |
 | **`ssp_host`** | **Active** — alias for `request_authority` when empty |
 | **`user_id`** / **`userId`** | **Active** — publisher user id for postbacks (also via `SDKConfig.Builder().UserId(...)` / `BidscubeSDK.SetUserId(...)` before MAX init) |
+| **`auto_close`** / **`autoClose`** | **Active** — init server parameter; `true` auto-dismisses fullscreen video after linear complete/skip; default **`false`** (Companion end card / last frame until manual close). Also via `SDKConfig.Builder().AutoClose(...)` before MAX init. |
 | **`openrtb_pod_metadata_enabled`** | **Reserved / future** — not read by current native MAX adapters |
 | **`video_pod_duration_validation_mode`** | **Reserved / future** |
 | **`video_pod_skip_policy`** | **Reserved / future** |

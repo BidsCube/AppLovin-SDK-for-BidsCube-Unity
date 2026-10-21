@@ -279,7 +279,8 @@ namespace BidscubeSDK.Controllers
                 .EnableDebugMode(_enableDebugMode)
                 .EnableTestMode(_enableTestMode)
                 .DefaultAdTimeout(30000)
-                .DefaultAdPosition(AdPosition.Unknown);
+                .DefaultAdPosition(AdPosition.Unknown)
+                .AutoClose(false);
 
             SampleSspAuthorityConfig.ApplyTo(builder, _baseURL, _adRequestAuthority);
 

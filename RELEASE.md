@@ -60,7 +60,21 @@ git tag -a "v1.0.22" -m "com.bidscube.applovin.max 1.0.22"
 git push origin "v1.0.22"
 ```
 
-4. The **Release (GitHub)** workflow (`.github/workflows/release.yml`) validates `package.json`, builds a ZIP without `.git`, and creates a GitHub Release with **`Bidscube-SDK-Unity-{version}.zip`** (e.g. **`Bidscube-SDK-Unity-1.0.21.zip`**).
+4. The **Release (GitHub)** workflow (`.github/workflows/release.yml`) validates `package.json`, builds a ZIP without `.git`, and creates a GitHub Release with **`Bidscube-SDK-Unity-{version}.zip`** (e.g. **`Bidscube-SDK-Unity-1.0.27.zip`**).
+
+### Release `v1.0.27` (2026-10-21)
+
+- Bump **`package.json`** / **`AdapterPackageInfo.UpmVersion`** to **1.0.27**.
+- Bundle Android core and MAX adapter AARs **1.2.18** (Android TV fullscreen, D-pad focus, rewarded Back confirm).
+- Apple TV: do not inject **`BidscubeSDKAppLovin`** on tvOS; **`BidscubeTvRemoteDriver`** handles Siri Remote Menu. See **`Documentation~/TV.md`**.
+- Run **`./tools/verify-release-ready.sh`**.
+
+**UPM consumers:**
+
+```json
+"com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.17",
+"com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.27"
+```
 
 ### Release `v1.0.24` (2026-07-08)
 

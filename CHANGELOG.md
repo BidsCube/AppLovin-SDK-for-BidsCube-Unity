@@ -2,6 +2,30 @@
 
 ---
 
+## [1.0.27] - 2026-10-21
+
+### Added
+
+- **Android TV:** bundled core and MAX adapter AARs **1.2.18**. Same fullscreen and remote rules as the direct BidsCube Android SDK: Leanback / Fire TV detection, fullscreen on TV, D-pad focus on Skip / Close / rewarded **Keep watching**, video surface does not take focus. Manifest merges `touchscreen` and `leanback` as not required.
+- **Apple TV:** `BidscubeSDKAppLovin` is not injected into tvOS exports. `BidscubeTvRemoteDriver` starts on tvOS, focuses Skip/Close, hides Skip on rewarded, and maps Siri Remote Menu to the Android TV Back rules (including the leave-reward confirm). See `Documentation~/TV.md`.
+
+---
+
+## [1.0.26] - 2026-08-05
+
+### Added
+
+- **`SDKConfig.Builder().AutoClose(bool)`** (default **`false`**) — forwarded to native Android/iOS via **`com.bidscube.sdk` 1.2.17**; controls fullscreen video post-playback lifecycle (end card, last frame, manual close vs auto-dismiss). MAX init server parameter **`auto_close`** (alias **`autoClose`**) is supported by bundled native adapters.
+- **VAST Companion end cards** in native Android **1.2.13+**: `StaticResource`, `HTMLResource`, `IFrameResource`, click/view tracking; priority HTML → IFrame → Static.
+
+### Changed
+
+- Bundled Android core SDK + MAX adapter AARs **1.2.11 → 1.2.13** (native `autoClose`, Companion HTML/IFrame, centralized fullscreen close).
+- iOS CocoaPods pin **`BidscubeSDKAppLovin` 1.1.1 → 1.1.2** (native `autoClose` + MAX server parameter forwarding).
+- Depends on **`com.bidscube.sdk` 1.2.16 → 1.2.17**.
+
+---
+
 ## [1.0.25] - 2026-07-24
 
 ### Added

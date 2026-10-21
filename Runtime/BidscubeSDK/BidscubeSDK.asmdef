@@ -2,7 +2,8 @@
     "name": "BidscubeSDK.AppLovinMax",
     "rootNamespace": "BidscubeSDK",
     "references": [
-        "BidscubeSDK"
+        "BidscubeSDK",
+        "Unity.ugui"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -7,8 +7,8 @@ In **`Packages/manifest.json`** add the core SDK and this adapter (use the Git t
 ```json
 {
   "dependencies": {
-    "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.12",
-    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.25"
+    "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.17",
+    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.27"
   }
 }
 ```
@@ -86,16 +86,16 @@ When MAX rewarded is not ready, you may opt in to **`AppLovinMaxRewardedBridge.S
 ## 4. Android
 
 - **Minimum:** API **26+** for the bundled AARs; align **compileSdk** / Gradle with your Unity template.
-- **LiteNoVideo (default):** uses **`bidscube-sdk-lite-no-video-1.2.10.aar`** — no video support; rewarded video and interstitial video (video path) fail as unsupported; no Media3 / Google IMA; no forced **`coreLibraryDesugaring`** on the launcher.
-- **WebViewVideoNoDesugar:** uses **`bidscube-sdk-webview-video-1.2.10.aar`** — HTML5 video in Android WebView; reward depends on core SDK completion/reward callback; no Media3 / Google IMA; no forced **`coreLibraryDesugaring`**.
-- **LegacyMediaVideoNoDesugar:** uses **`bidscube-sdk-legacy-media-video-1.2.10.aar`** — `VideoView` / `MediaPlayer` video; reward depends on core SDK completion/reward callback; no Media3 / Google IMA; no forced **`coreLibraryDesugaring`**.
-- **FullWithVideo:** uses **`bidscube-sdk-full-video-1.2.10.aar`** (or Maven **`com.bidscube:sdk-full-video`** per postprocessor). Full video through Media3/IMA; may require **`coreLibraryDesugaring`**. Editor: **Tools → Bidscube SDK → Android Build Features** or **Bidscube → Android Export Settings** → **FullWithVideo**.
-- **MAX adapter AAR:** **`applovin-bidscube-max-adapter-1.2.10.aar`** (bundled; release-ready — no test signal / dummy Native MAX).
+- **LiteNoVideo (default):** uses **`bidscube-sdk-lite-no-video-1.2.18.aar`** — no video support; rewarded video and interstitial video (video path) fail as unsupported; no Media3 / Google IMA; no forced **`coreLibraryDesugaring`** on the launcher.
+- **WebViewVideoNoDesugar:** uses **`bidscube-sdk-webview-video-1.2.18.aar`** — HTML5 video in Android WebView; reward depends on core SDK completion/reward callback; no Media3 / Google IMA; no forced **`coreLibraryDesugaring`**.
+- **LegacyMediaVideoNoDesugar:** uses **`bidscube-sdk-legacy-media-video-1.2.18.aar`** — `VideoView` / `MediaPlayer` video; reward depends on core SDK completion/reward callback; no Media3 / Google IMA; no forced **`coreLibraryDesugaring`**.
+- **FullWithVideo:** uses **`bidscube-sdk-full-video-1.2.18.aar`** (or Maven **`com.bidscube:sdk-full-video`** per postprocessor). Full video through Media3/IMA; may require **`coreLibraryDesugaring`**. Editor: **Tools → Bidscube SDK → Android Build Features** or **Bidscube → Android Export Settings** → **FullWithVideo**.
+- **MAX adapter AAR:** **`applovin-bidscube-max-adapter-1.2.18.aar`** (bundled; release-ready — no test signal / dummy Native MAX).
 - **Duplicate AAR:** if the postprocessor copies AARs into **`unityLibrary/libs/`**, disable **Android** import on the duplicate **`bidscube-sdk-*.aar`** in the Inspector so Gradle does not merge the same binary twice.
 
 ## 5. iOS (MAX)
 
-**iOS** uses one **`BidscubeSDKAppLovin`** pod (currently **1.1.0**). There are no Android-style video modes on iOS.
+**iOS** uses one **`BidscubeSDKAppLovin`** pod (currently **1.1.2**). There are no Android-style video modes on iOS. tvOS export does not add this pod; Apple TV uses the direct Unity video path. See [TV.md](TV.md).
 
 On Xcode export, **`BidscubeIosPodfilePostprocessor`** appends **`pod 'BidscubeSDKAppLovin', '<version>'`** when that pod is not already declared. It does **not** duplicate **`AppLovinSDK`** if the official AppLovin MAX Unity SDK already adds it.
 
@@ -111,8 +111,8 @@ OpenRTB 2.6 support, when available, is provided by the native Bidscube SDKs use
 
 | Platform | Status |
 |----------|--------|
-| **Android** (`bidscube-sdk-*` **1.2.10** + `applovin-bidscube-max-adapter` **1.2.10**) | Not implemented — raw VAST and root JSON **`adm`** only; no `bids[]`, `seatbid[].bid[]`, `slotinpod`, `poddur`, `rqddurs` pod playback |
-| **iOS** (`BidscubeSDKAppLovin` **1.1.0**) | OpenRTB 2.6-style podded video response parsing is not implemented on iOS yet. The adapter does not build or POST OpenRTB bid requests. |
+| **Android** (`bidscube-sdk-*` **1.2.18** + `applovin-bidscube-max-adapter` **1.2.18**) | Not implemented — raw VAST and root JSON **`adm`** only; no `bids[]`, `seatbid[].bid[]`, `slotinpod`, `poddur`, `rqddurs` pod playback |
+| **iOS** (`BidscubeSDKAppLovin` **1.1.2**) | OpenRTB 2.6-style podded video response parsing is not implemented on iOS yet. The adapter does not build or POST OpenRTB bid requests. |
 
 When native support ships, pod ordering priority in the native parser is: **`slotinpod`** → VAST **`<Ad sequence>`** → response order.
 
@@ -125,6 +125,7 @@ Configure in the **AppLovin MAX dashboard** (not from Unity C# at runtime):
 | **`request_authority`** | **Active** on Android/iOS native adapters |
 | **`ssp_host`** | **Active** (alias when `request_authority` empty) |
 | **`user_id`** / **`userId`** | **Active** — publisher user id on SSP ad requests (postback attribution). Prefer `SDKConfig.Builder().UserId(...)` at init or `BidscubeSDK.SetUserId(...)` after login; MAX dashboard value is optional fallback. |
+| **`auto_close`** / **`autoClose`** | **Active** — init server parameter (read once at first SDK init). `true` auto-dismisses fullscreen video after linear complete/skip; default **`false`** (VAST Companion end card, last frame, or manual close). Also via `SDKConfig.Builder().AutoClose(...)` before MAX init. |
 | **`openrtb_pod_metadata_enabled`** | **Reserved / future** |
 | **`video_pod_duration_validation_mode`** | **Reserved / future** |
 | **`video_pod_skip_policy`** | **Reserved / future** |
@@ -140,6 +141,7 @@ Configure in the **AppLovin MAX dashboard** (not from Unity C# at runtime):
 var config = new SDKConfig.Builder()
     .IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)
     .AdRequestAuthority("your-ssp-host.example.com")
+    .AutoClose(false) // default: keep end card / last frame until user closes
     .UserId("your-publisher-user-id")
     .Build();
 BidscubeSDK.BidscubeSDK.Initialize(config);
@@ -156,7 +158,7 @@ Core API details: **`com.bidscube.sdk`** repo.
 1. Add **Bidscube** as a **custom SDK network**.
 2. **Android:** adapter class **`com.applovin.mediation.adapters.BidscubeMediationAdapter`** (bundled AAR).
 3. **iOS:** **`ALBidscubeMediationAdapter`** (name per your native build).
-4. Network **App ID** for Bidscube = **Bidscube placement ID**. Optional server parameters: **`request_authority`** / **`ssp_host`**, **`user_id`** (active). OpenRTB pod parameters are **reserved/future** until native adapters implement them — see **OpenRTB 2.6** section above.
+4. Network **App ID** for Bidscube = **Bidscube placement ID**. Optional server parameters: **`request_authority`** / **`ssp_host`**, **`user_id`**, **`auto_close`** (active). OpenRTB pod parameters are **reserved/future** until native adapters implement them — see **OpenRTB 2.6** section above.
 
 ## 8. Common issues
 

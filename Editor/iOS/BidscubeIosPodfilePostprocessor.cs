@@ -18,6 +18,14 @@ namespace BidscubeSDK.Editor.iOS
         [PostProcessBuild(49)]
         public static void OnPostProcessBuild(BuildTarget target, string pathToBuiltProject)
         {
+            if (target == BuildTarget.tvOS)
+            {
+                UnityEngine.Debug.Log(
+                    "[Bidscube AppLovin] tvOS export skipped. BidscubeSDKAppLovin is an iOS pod (IMA/UIKit). " +
+                    "Apple TV uses the direct Unity video path in com.bidscube.sdk.");
+                return;
+            }
+
             if (target != BuildTarget.iOS)
                 return;
 

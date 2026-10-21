@@ -3,15 +3,15 @@ namespace BidscubeSDK.Mediation
     /// <summary>Version metadata for <c>com.bidscube.applovin.max</c>; must stay aligned with <c>package.json</c> and release tooling.</summary>
     public static class AdapterPackageInfo
     {
-        public const string UpmVersion = "1.0.25";
+        public const string UpmVersion = "1.0.27";
 
         /// <summary>Native Bidscube Android SDK semver bundled / Maven pin (must match MAX adapter build line).</summary>
-        public const string NativeAndroidBidscubeSdkVersion = "1.2.11";
+        public const string NativeAndroidBidscubeSdkVersion = "1.2.18";
 
-        public const string BundledMaxAdapterAarVersion = "1.2.11";
+        public const string BundledMaxAdapterAarVersion = "1.2.18";
 
         /// <summary>iOS CocoaPods <c>BidscubeSDKAppLovin</c> pin (align with native releases).</summary>
-        public const string IosBidscubeAppLovinPodVersion = "1.1.1";
+        public const string IosBidscubeAppLovinPodVersion = "1.1.2";
 
         /// <summary>
         /// Native Android OpenRTB 2.6-style <em>response</em> parsing in the bundled MAX adapter / core SDK
