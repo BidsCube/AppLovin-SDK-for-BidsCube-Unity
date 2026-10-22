@@ -23,17 +23,16 @@ Expected flow when native support ships:
 Unity game → official MAX Unity SDK → native MAX adapter → native Bidscube SDK → OpenRTB 2.6-style response parser
 ```
 
-Full install, manifest snippets, dashboard, and troubleshooting: **[Documentation~/INSTALL.md](Documentation~/INSTALL.md)**.
+Full install, manifest snippets, dashboard, and troubleshooting: **[Documentation~/INSTALL.md](Documentation~/INSTALL.md)**. Developer connection steps (packages, MAX dashboard, Placement ID, logs): **[Connect BidsCube](Documentation~/INSTALL.md#connect-bidscube-developer-guide)**.
 
 ## AppLovin MAX Setup
 
-1. Add this package to the Unity project.
-2. Add or verify **`com.bidscube.sdk`** (see `package.json`; host app usually pins [bidscube-sdk-unity](https://github.com/BidsCube/bidscube-sdk-unity) **#v1.2.17**) and the **official AppLovin MAX Unity SDK** — this adapter does **not** ship **`MaxSdk`**. Android TV and Apple TV: [Documentation~/TV.md](Documentation~/TV.md).
-3. Open the sample scene (**Package Manager → Samples → SDK Demo**) or your integration scene.
-4. Enter the AppLovin MAX **SDK key**.
-5. Enter AppLovin **ad unit IDs**.
-6. Run **External Dependency Manager → Android Resolver → Force Resolve**.
-7. Build an **Android APK** (**File → Build Settings → Android**).
+1. Add this package and **`com.bidscube.sdk` v1.2.17**. Install the **official AppLovin MAX Unity SDK**. This adapter does **not** ship **`MaxSdk`**.
+2. For video, set Android **FullWithVideo** (**Tools → Bidscube SDK → Android Build Features**). TV notes: [Documentation~/TV.md](Documentation~/TV.md).
+3. In the MAX dashboard add a **Custom SDK** network. Android class `com.applovin.mediation.adapters.BidscubeMediationAdapter`. iOS class `ALBidscubeMediationAdapter`.
+4. On each ad unit set **Placement ID** to the BidsCube placement (`22340` and `22701` are different ids). Leave **`app_id`**, **`request_authority`**, and **`ssp_host`** empty.
+5. In the game call only `MaxSdk.InitializeSdk`, then `LoadRewardedAd` / `ShowRewardedAd` or the interstitial pair. Grant the reward only in `OnAdReceivedRewardEvent`.
+6. Enter the AppLovin MAX **SDK key** and **ad unit IDs**, then **External Dependency Manager → Android Resolver → Force Resolve** and build Android.
 
 ## Usage examples
 

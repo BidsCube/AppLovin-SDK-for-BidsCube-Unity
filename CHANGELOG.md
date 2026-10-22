@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Changed
+
+- Developer connection steps in `Documentation~/INSTALL.md` and the Android SDK README: packages, MAX custom network, Placement ID, optional `app_id`, and rewarded/interstitial playback.
+
 ---
 
 ## [1.0.27] - 2026-10-21

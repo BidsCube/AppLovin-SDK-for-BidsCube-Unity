@@ -1,5 +1,99 @@
 # Install: `com.bidscube.applovin.max` + `com.bidscube.sdk`
 
+## Connect BidsCube (developer guide)
+
+Game code does not call BidsCube load or show. Ads go through the official MAX Unity SDK. This package only ships the native adapter.
+
+**Versions to pin**
+
+| Piece | Version |
+| --- | --- |
+| `com.bidscube.applovin.max` | **v1.0.27** |
+| `com.bidscube.sdk` | **v1.2.17** |
+| Official MAX Unity SDK | your existing pin (tested with **8.6.5**) |
+| Bundled Android AARs | **1.2.19** |
+| iOS pod `BidscubeSDKAppLovin` | **1.1.2** |
+
+Do not stay on Unity package **v1.0.25** / AAR **1.2.11**. That adapter stops initialization when MAX `app_id` is empty, so MAX records attempts that never reach BidsCube. **1.2.4** is not this package.
+
+### 1. Packages
+
+```json
+{
+  "dependencies": {
+    "com.bidscube.sdk": "https://github.com/BidsCube/bidscube-sdk-unity.git#v1.2.17",
+    "com.bidscube.applovin.max": "https://github.com/BidsCube/AppLovin-SDK-for-BidsCube-Unity.git#v1.0.27",
+    "com.applovin.mediation.ads": "8.6.5"
+  }
+}
+```
+
+`com.applovin.mediation.ads` comes from the AppLovin scoped registry, not from this git URL. For rewarded and interstitial video, set the Android build feature to **FullWithVideo** (**Tools → Bidscube SDK → Android Build Features**). The export adds `coreLibraryDesugaring` and `com.google.android.material:material:1.12.0`.
+
+### 2. Init in the game
+
+```csharp
+MaxSdk.SetVerboseLogging(true);
+MaxSdk.SetSdkKey("YOUR_MAX_SDK_KEY");
+MaxSdk.InitializeSdk();
+
+MaxSdkCallbacks.Rewarded.OnAdReceivedRewardEvent += (adUnitId, reward, adInfo) =>
+{
+    // grant the reward only here
+};
+MaxSdk.LoadRewardedAd(rewardedAdUnitId);
+// when ready:
+MaxSdk.ShowRewardedAd(rewardedAdUnitId);
+```
+
+Interstitial is `MaxSdk.LoadInterstitial` / `MaxSdk.ShowInterstitial`. It never grants a reward.
+
+Optional, before `MaxSdk.InitializeSdk`, if you need a publisher user id on SSP requests:
+
+```csharp
+var config = new SDKConfig.Builder()
+    .IntegrationMode(BidscubeIntegrationMode.AppLovinMaxMediation)
+    .EnableLogging(true)
+    .UserId("your-publisher-user-id")
+    .AutoClose(false)
+    .Build();
+BidscubeSDK.Initialize(config);
+```
+
+Leave `AdRequestAuthority` unset. The default SSP host is `ssp-bcc-ads.com`.
+
+### 3. MAX dashboard
+
+1. **MAX → Mediation → Manage → Networks → Custom Network**, type **SDK**, name **Bidscube**.
+2. Android adapter class: `com.applovin.mediation.adapters.BidscubeMediationAdapter`.
+3. iOS adapter class: `ALBidscubeMediationAdapter`.
+4. On each ad unit, enable Bidscube and set **Placement ID** to the BidsCube placement for that unit. **22340** and **22701** are different placements. A load for one does not request the other.
+5. Leave server parameter **`app_id`** empty. It is an AppLovin field, not the placement, and it is not sent on the SSP request. Do not paste `22340` or `22701` into `app_id`.
+6. Leave **`request_authority`** and **`ssp_host`** empty unless BidsCube gave you a non-default host.
+
+### 4. What a successful request looks like
+
+After MAX init, a rewarded load uses the Placement ID as query `id` and the Android package name as `bundle`:
+
+`https://ssp-bcc-ads.com/sdk?c=v&m=xml&id=22701&app=1&bundle=io.shusmo.idle.blockcraft&...`
+
+Logcat with verbose MAX logging:
+
+- `Loading rewarded ad for placement: 22701`
+- `video ad: bid response OK ... responsePos=...`
+- `onUserRewarded` only after the linear video finishes
+
+`responsePos=2` (`MAYBE_DEPENDING_ON_SCREEN_SIZE`) opens a **window** on a phone and **fullscreen** on Android TV. That is the SSP position, not a failed fullscreen layout. Fullscreen on a phone is only for `FULL_SCREEN`, `UNKNOWN`, or an empty position.
+
+### 5. Rewarded and interstitial playback
+
+- **Rewarded:** no Skip button. Back before the end asks “Leave video?”. Leaving forfeits the reward. Leaving the app before the video ends does not count the view. The reward callback fires only from `onUserRewarded`.
+- **Interstitial:** Skip appears after the countdown. Back does nothing until Skip is armed. No reward.
+
+Android MAX plays this inside the native activity from the bundled AAR. Apple TV and other direct `VideoAdView` playback uses the same Back / Skip rules in this package. See [TV.md](TV.md).
+
+The AppLovin creative debugger window cannot show BidsCube. Debug notes in the changelog are logcat lines.
+
 ## 1. Unity packages (UPM)
 
 In **`Packages/manifest.json`** add the core SDK and this adapter (use the Git tags you ship against):
@@ -164,7 +258,7 @@ Core API details: **`com.bidscube.sdk`** repo.
 6. Leave **`request_authority`** and **`ssp_host`** unset unless the SSP host is not **`ssp-bcc-ads.com`**.
 7. Optional server parameters: **`user_id`**, **`auto_close`**. OpenRTB pod parameters are **reserved/future**.
 
-Successful Android init logs `initialize: server app_id=...`. A rewarded load for this placement then requests `https://ssp-bcc-ads.com/sdk?id=22701&bundle=io.shusmo.idle.blockcraft&...`.
+Look for `Loading rewarded ad for placement: 22701` and then `https://ssp-bcc-ads.com/sdk?...&id=22701&bundle=io.shusmo.idle.blockcraft`. Empty `app_id` does not stop this request on adapter **1.2.19**. Full steps: [Connect BidsCube](#connect-bidscube-developer-guide).
 
 ## 8. Common issues
 
